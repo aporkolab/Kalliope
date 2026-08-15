@@ -295,6 +295,36 @@ describe('App — új verstani funkciók', () => {
     expect(internals.showSummary()).toBe(false);
   });
 
+  it('a nyomtatás a böngésző párbeszédét hívja, és bezárja az összegzőt', () => {
+    run(analysis());
+    const internals = fixture.componentInstance as unknown as {
+      showSummary: { set: (v: boolean) => void; (): boolean };
+    };
+    internals.showSummary.set(true);
+    let printed = false;
+    const real = window.print;
+    window.print = () => {
+      printed = true;
+    };
+
+    const button = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (b: HTMLButtonElement) => b.textContent?.trim() === 'Nyomtatás',
+    ) as HTMLButtonElement;
+    button.click();
+    window.print = real;
+
+    expect(printed).toBe(true);
+    expect(internals.showSummary()).toBe(false);
+  });
+
+  it('az összegzés részletei a lapra is rákerülnek nyomtatáshoz', () => {
+    run(analysis());
+    // képernyőn rejtve, de a DOM-ban ott van, hogy a print stíluslap megmutassa
+    const details = fixture.nativeElement.querySelectorAll('.print-details li');
+    expect(details.length).toBe(1);
+    expect(fixture.nativeElement.querySelector('.print-title').textContent).toContain('Kalliopé');
+  });
+
   it('a rímfajták és az ütemtagolás magyar nevet kapnak', () => {
     expect(app.rhymeKindLabel('ONRIM')).toBe('önrím');
     expect(app.rhymeKindLabel('TISZTA')).toBe('tiszta rím');

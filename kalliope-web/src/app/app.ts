@@ -155,6 +155,16 @@ export class App {
     this.showSummary.set(false);
   }
 
+  /**
+   * Nyomtatás. Nem PDF-könyvtárral: a böngésző nyomtatási párbeszéde tud
+   * PDF-be menteni, a lapot pedig egy print stíluslap alakítja — így nincs
+   * külön renderelő, ami elcsúszhat a képernyős változattól.
+   */
+  protected print(): void {
+    this.showSummary.set(false);
+    window.print();
+  }
+
   protected cycleTheme(): void {
     const order: ('system' | 'light' | 'dark')[] = ['system', 'light', 'dark'];
     const next = order[(order.indexOf(this.theme()) + 1) % order.length];

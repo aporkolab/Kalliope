@@ -78,6 +78,7 @@
         <button class="ghost" (click)="share()" [disabled]="!poem().trim()">
           {{ copied() ? 'Vágólapon ✓' : 'Link' }}
         </button>
+        <button class="ghost" (click)="print()" [disabled]="!analysis()">Nyomtatás</button>
         <button class="ghost" (click)="exportJson()" [disabled]="!analysis()">JSON</button>
         <button class="ghost" (click)="clear()" [disabled]="!poem()">Törlés</button>
         @if (overrides().length) {
@@ -118,8 +119,14 @@
 
       @if (analysis(); as a) {
         <article class="verdict">
+          <p class="print-only print-title">Kalliopé — verstani elemzés</p>
           <p class="kicker">{{ systemLabel(a.verse.system) }}</p>
           <h2>{{ a.verse.headline }}</h2>
+          <ul class="print-only print-details">
+            @for (d of a.verse.details; track d) {
+              <li>{{ d }}</li>
+            }
+          </ul>
           <div class="verdict-foot">
             <span>{{ a.summary.stanzaCount }} szakasz</span>
             <span>{{ a.summary.lineCount }} sor</span>

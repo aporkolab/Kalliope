@@ -30,6 +30,7 @@ docker compose up --build          # → http://localhost:8080
 | **Felülbírálás** | a szótagra kattintva átállítható a hosszúság, és az elemzés újrafut — a verstan értelmezés kérdése, nem orákulumé |
 | **Összegzés** | egy mondat + részletek: szerkezet, szakaszmérték, sorfajták, ütemtagolás, rím, licenciák, metszet |
 | **Ritmustérkép** | egy negyvensoros eposzrészlet ritmusa egy pillantással befogható; a sorra kattintva odaugrik |
+| **Nyomtatás / PDF** | a böngésző nyomtatási párbeszédén át; a lapra az ítélet, a részletek és a skandált sorok kerülnek, a szerkesztő és a kezelőfelület nem |
 
 A felület színrendszere a [Radix Colors](https://www.radix-ui.com/colors) skáláira épül (slate alap,
 iris akcentus), mert azok hitelesített kontrasztarányokkal és párosított sötét változattal jönnek.
@@ -103,7 +104,7 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 |---|---:|---:|
 | `kalliope-core` | 91 | 95% |
 | `kalliope-api` | 20 | 84% |
-| `kalliope-web` | 31 | 88% |
+| `kalliope-web` | 33 | 88% |
 
 A 80%-os küszöb mindhárom modulban ki van kényszerítve (JaCoCo `check`, illetve
 `vitest-base.config.ts`), tehát a build elbukik, ha valaki lerontja.
@@ -137,6 +138,15 @@ egyszer kéri le induláskor: a magyar feliratok egyetlen forrása a motor, ninc
 
 A hash-nevű Angular-fájlok egy évig gyorsítótárazhatók, az `index.html` viszont `no-store` — enélkül
 a friss telepítés után is a régi bundle töltődne be.
+
+### Nyomtatás
+
+A „Nyomtatás" gomb a böngésző saját párbeszédét nyitja, ahonnan PDF-be is menthető. Nincs mögötte
+PDF-könyvtár: egy `@media print` stíluslap alakítja a lapot, így nincs külön renderelő, ami
+elcsúszhatna a képernyős változattól. A lapra az ítélet, az összegzés részletei és a skandált sorok
+kerülnek — a szerkesztő, a fejléc, a ritmustérkép és a gombok nem. A hosszúságot nyomtatásban a jel
+hordozza (— ∪ ×), mert fekete-fehér nyomtatón a szín eltűnik; egy sor pedig sosem törik ketté
+lapok között.
 
 ## Hogyan skandál
 

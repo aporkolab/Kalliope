@@ -883,6 +883,11 @@ tr.fictive {
   border-top: 1px solid var(--line);
 }
 
+/* Csak nyomtatásban látszik. */
+.print-only {
+  display: none;
+}
+
 /* ============================ mobil ============================ */
 @media (max-width: 960px) {
   .layout {
@@ -989,5 +994,141 @@ tr.fictive {
   .modal footer button {
     width: 100%;
     min-height: 44px;
+  }
+}
+
+/* ============================ nyomtatás ============================ */
+/*
+ * A böngésző „Mentés PDF-be" funkciója adja a kimenetet, ezért nincs külön
+ * renderelő, ami elcsúszhatna a képernyős változattól. A lapra az kerül, ami
+ * a versről szól: az ítélet, a részletek és a skandált sorok. A hosszúságot
+ * itt a jel hordozza (— ∪ ×), mert fekete-fehér nyomtatón a szín eltűnik.
+ */
+@media print {
+  :host {
+    --bg: #fff;
+    --panel: #fff;
+    --ink: #000;
+    --muted: #333;
+    --faint: #555;
+    --line: #bbb;
+    --accent: #000;
+    --accent-ink: #000;
+    --accent-soft: #fff;
+    --accent-line: #999;
+    --long-ink: #000;
+    --short-ink: #000;
+    --anceps-ink: #000;
+
+    font-size: 11pt;
+  }
+
+  @page {
+    margin: 18mm 16mm;
+  }
+
+  .topbar,
+  .editor,
+  .inspector,
+  .rhythm,
+  .overlay,
+  .verdict-foot,
+  .canon {
+    display: none !important;
+  }
+
+  .print-only {
+    display: revert;
+  }
+
+  .layout {
+    display: block;
+    padding: 0;
+  }
+
+  .card,
+  .verdict {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .verdict {
+    margin-bottom: 1.2em;
+    padding-bottom: 0.8em;
+    border-bottom: 1pt solid #000;
+  }
+
+  .print-title {
+    margin: 0 0 0.4em;
+    color: #555;
+    font-size: 8pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .verdict h2 {
+    font-size: 15pt;
+  }
+
+  .print-details {
+    margin: 0.6em 0 0;
+    padding-left: 1.1em;
+  }
+
+  .print-details li {
+    font-size: 9.5pt;
+    line-height: 1.45;
+  }
+
+  /* Egy sor soha ne törjön ketté lapok között. */
+  .line,
+  .stanza-foot {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .stanza {
+    break-inside: auto;
+  }
+
+  .line {
+    padding: 0.25em 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .line:hover,
+  .line.focused {
+    background: none;
+  }
+
+  .syllable {
+    border: 0;
+  }
+
+  .syllable .text {
+    font-size: 12pt;
+  }
+
+  .syllable .mark {
+    font-size: 8.5pt;
+  }
+
+  .divider {
+    background: #000;
+  }
+
+  .divider.caesura {
+    border-color: #000;
+  }
+
+  .badge {
+    border-color: #999;
+  }
+
+  .stanza-label {
+    color: #555;
   }
 }
