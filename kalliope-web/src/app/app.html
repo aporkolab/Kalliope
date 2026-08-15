@@ -153,6 +153,11 @@
                 </span>
                 <div class="syllables">
                   @for (s of line.syllables; track $index) {
+                    @if (startsCaesura(line, $index)) {
+                      <span class="divider caesura" aria-hidden="true">‖</span>
+                    } @else if (startsFoot(line, $index)) {
+                      <span class="divider" aria-hidden="true">|</span>
+                    }
                     <button
                       type="button"
                       class="syllable"

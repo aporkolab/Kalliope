@@ -238,7 +238,9 @@ class CorpusTest {
                             line.syllables().stream()
                                     .map(Scansion.Syllable::text)
                                     .toList());
-                    assertThat(fromSyllables)
+                    // a szóközök nem számítanak: a magánhangzó nélküli szó (az „s”
+                    // kötőszó) az előző szótaghoz tapad, szóközzel elválasztva
+                    assertThat(fromSyllables.replace(" ", ""))
                             .as("%s — „%s” szótagjai", poem.title(), line.text())
                             .isEqualTo(String.join("", TextNormalizer.words(line.text(), false)));
                 }

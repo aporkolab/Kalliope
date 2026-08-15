@@ -208,6 +208,54 @@ export class App {
     return line.syllables[index].quantity;
   }
 
+  /**
+   * Verslábat kezd-e ez a szótag. Az illeszkedő mérték lábhatárait az illesztés
+   * adja (a minta '|' jelei a szkennelt sorra vetítve). Ha nincs időmértékes
+   * találat, de van ütemhangsúlyos forma, annak az ütemhatárait rajzoljuk.
+   */
+  protected startsFoot(line: Line, index: number): boolean {
+    if (index === 0) {
+      return false;
+    }
+    if (line.meters.length) {
+      return line.meters[0].ictusSyllables.includes(index);
+    }
+    const measures = line.accentual[0]?.form.measures;
+    if (!measures) {
+      return false;
+    }
+    let at = 0;
+    for (const m of measures) {
+      at += m;
+      if (at === index) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Sormetszet (cezúra) van-e a szótag előtt — vastagabb elválasztó. */
+  protected startsCaesura(line: Line, index: number): boolean {
+    if (index === 0) {
+      return false;
+    }
+    if (line.caesurae.some((c) => c.afterSyllable === index)) {
+      return true;
+    }
+    if (line.meters.length) {
+      return false;
+    }
+    const acc = line.accentual[0];
+    if (!acc || !acc.form.caesuraAfter) {
+      return false;
+    }
+    let at = 0;
+    for (let i = 0; i < acc.form.caesuraAfter; i++) {
+      at += acc.form.measures[i];
+    }
+    return at === index;
+  }
+
   /** Közös volt-e a szótag, mielőtt a mérték eldöntötte. */
   protected wasAnceps(line: Line, index: number): boolean {
     return line.syllables[index].quantity === '?';

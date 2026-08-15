@@ -198,6 +198,63 @@ describe('App — új verstani funkciók', () => {
     expect(app.overrides()).toEqual([]);
   });
 
+  it('kirajzolja a lábhatárokat és a sormetszetet', () => {
+    run(
+      analysis({
+        meters: [
+          {
+            meter: {
+              id: 'hexameter',
+              name: 'hexameter',
+              pattern: '-=|-=',
+              kind: 'LINE',
+              fictive: false,
+              note: null,
+              correction: null,
+            },
+            realization: '-UU',
+            ictusSyllables: [0, 2],
+          },
+        ],
+        realized: '-UU',
+        caesurae: [{ afterSyllable: 1, name: 'penthémimerész' }],
+      }),
+    );
+    const dividers = fixture.nativeElement.querySelectorAll('.divider');
+    expect(dividers.length).toBe(2);
+    // az 1. szótag előtt sormetszet, a 2. előtt lábhatár
+    expect(dividers[0].classList.contains('caesura')).toBe(true);
+    expect(dividers[0].textContent.trim()).toBe('‖');
+    expect(dividers[1].classList.contains('caesura')).toBe(false);
+    expect(dividers[1].textContent.trim()).toBe('|');
+  });
+
+  it('mérték híján az ütemhatárokat rajzolja ki', () => {
+    run(
+      analysis({
+        accentual: [
+          {
+            form: {
+              id: 'x',
+              name: 'próba',
+              measures: [1, 2],
+              caesuraAfter: 1,
+              note: null,
+              division: '1 || 2',
+            },
+            wordBoundaryMeasures: 1,
+            caesuraOnWordBoundary: true,
+            pure: true,
+            quality: 'tiszta ütemtagolás',
+          },
+        ],
+      }),
+    );
+    const dividers = fixture.nativeElement.querySelectorAll('.divider');
+    expect(dividers.length).toBe(1);
+    expect(dividers[0].classList.contains('caesura')).toBe(true);
+  });
+
   it('a rímfajták és az ütemtagolás magyar nevet kapnak', () => {
     expect(app.rhymeKindLabel('ONRIM')).toBe('önrím');
     expect(app.rhymeKindLabel('TISZTA')).toBe('tiszta rím');

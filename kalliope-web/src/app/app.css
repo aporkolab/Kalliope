@@ -358,6 +358,20 @@ button:disabled {
   cursor: pointer;
 }
 
+.divider {
+  align-self: stretch;
+  padding-top: 0.75rem;
+  color: var(--border);
+  font-size: 0.9rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.divider.caesura {
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .syllable.overridden {
   border-color: var(--accent);
 }

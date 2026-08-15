@@ -51,22 +51,28 @@ public final class Caesura {
             }
         }
 
-        // 2. a hexameter hagyományos metszetei
+        // 2. a hexameter hagyományos metszetei — a sornak EGY fő metszete van,
+        // ezért a hagyomány sorrendjében az elsőt fogadjuk el: a penthémimerész
+        // a leggyakoribb, utána a kata triton trokhaion, végül a hephthémimerész.
         if (meter.equals(MetricCanon.HEXAMETER) || meter.equals(MetricCanon.VERSUS_SPONDIACUS)) {
             int[] footStarts = footStarts(scanned, meter.pattern());
             if (footStarts != null && footStarts.length >= 5) {
-                addIfWordBoundary(out, wordStart, footStarts[2] + 1, "penthémimerész");
-                addIfWordBoundary(out, wordStart, footStarts[2] + 2, "kata triton trokhaion");
-                addIfWordBoundary(out, wordStart, footStarts[3] + 1, "hephthémimerész");
+                if (!addIfWordBoundary(out, wordStart, footStarts[2] + 1, "penthémimerész")
+                        && !addIfWordBoundary(out, wordStart, footStarts[2] + 2, "kata triton trokhaion")) {
+                    addIfWordBoundary(out, wordStart, footStarts[3] + 1, "hephthémimerész");
+                }
             }
         }
         return List.copyOf(out);
     }
 
-    private static void addIfWordBoundary(List<Found> out, boolean[] wordStart, int at, String name) {
+    /** @return igaz, ha a metszet ott valóban szóhatárra esik, és felvettük */
+    private static boolean addIfWordBoundary(List<Found> out, boolean[] wordStart, int at, String name) {
         if (at > 0 && at < wordStart.length && wordStart[at]) {
             out.add(new Found(at, name));
+            return true;
         }
+        return false;
     }
 
     /** A verslábak kezdő szótagindexei a szkennelt sorban. */

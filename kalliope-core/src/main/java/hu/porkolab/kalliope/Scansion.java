@@ -385,9 +385,9 @@ public final class Scansion {
                     }
                 }
                 if (target >= 0) {
-                    out.set(target, out.get(target) + words.get(w));
+                    out.set(target, out.get(target) + " " + words.get(w));
                 } else {
-                    out.set(0, words.get(w) + out.get(0));
+                    out.set(0, words.get(w) + " " + out.get(0));
                 }
             }
         }
