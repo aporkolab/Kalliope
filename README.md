@@ -31,6 +31,8 @@ java Kalliope.java        # JDK 21+; külön fordítás nem kell, forrásból in
 
 **7. Kiegészítések.** A beágyazott kánon kiegészült néhány standard, szisztematikus klasszikus mértékkel (jambikus mono-/di-/tetrameter, anapesztikus dimeter, ión a minore/maiore dimeter, daktilikus tetrameter), konzervatív anceps-kódolással, külön `.Kiegészítő antik sorfajták:` szekcióban. A ritka, hagyományfüggő formák (archilochoszi kombinációk, priapeus, elegiambus) szándékosan kimaradtak, mert mintájuk nem egyértelmű.
 
+**8. Hitelesítés az eredeti binárisból.** Utóbb előkerült maga a `kalliope.exe`. Ebből statikusan kihúzhatóvá vált az az adat, ami a Ghidra-exportból hiányzott, és ez **igazolta** a rekonstruált szkenner magját: a program tényleges **digráf-listája** (`ty, gy, ny, ly, dzs, dz, sz, zs, cs`, `cc`) és **muta cum liquida** halmaza (zárhangok `p, b, t, d, k, g` + likvidák `l, r`) pontosan egyezik ezzel a változattal, és az „s" tényleg kötőszóként kezelt (nincs a betűnév-táblában). Egy dolog került be újként, a bináris valódi adatából: a **normalizáló előfeldolgozó** (rövidítés-kiejtés `tv→tévé`, `cd→cédé`, `vc→vécé`, `w→v`; magában álló mássalhangzók betűnévvé bontása `b→bé`, `f→eff`, `x→iksz`…). A bináris **futtatásához** (bit-pontos diff a kimenethez) Wine kellene; a jelen hitelesítés az adat és a szabályok egyezésén alapul, nem a futásidejű kimenet összevetésén.
+
 ## Felépítés (egy fájlon belül)
 
 | Rész | Felelős |
@@ -43,6 +45,14 @@ java Kalliope.java        # JDK 21+; külön fordítás nem kell, forrásból in
 | Illesztő | `matchLine` — szigorú, közös-kezeléssel |
 | Rímdetektor | `rhymeScheme` — sorvégi kulcs, mohó betűkiosztás |
 | Beállítások | `Settings` — a valódi (adatbázisból vett) default-okkal |
+
+## Hitelesség (állapot)
+
+- **Metrikai adatbázis:** teljes, szó szerinti, tesztelt.
+- **Szkenner magja** (természetes + helyzeti hossz, digráfok, muta cum liquida): a binárisból **igazolt** — az adat egyezik.
+- **Normalizáló tábla:** a bináris valódi adata.
+- **Rímdetektor és összetett/strófa-szintű illesztés:** még rekonstrukció, nem a bináris pontos algoritmusa.
+- **Futásidejű bit-pontos egyezés:** nem mérve (nincs Wine); a hitelesség az adat/szabály egyezésén nyugszik.
 
 ## Ismert korlátok
 
