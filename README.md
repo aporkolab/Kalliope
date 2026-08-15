@@ -20,6 +20,13 @@ Amit tud:
 | **Ha nem illeszkedik** | a legközelebbi mérték és a pontos eltérés: „hexameter lenne, ha az 1. szótag hosszú volna" |
 | **Felülbírálás** | a szótagra kattintva átállítható a hosszúság, és az elemzés újrafut — a verstan értelmezés kérdése |
 | **Összegzés** | egy mondatban, ahogy egy verstani jegyzet fogalmazna: „Időmértékes verselés: disztichonok", „Szimultán verselés: aszklepiadeszi strófa, felező tizenkettes ütemtagolással" |
+| **Ritmustérkép** | egy negyvensoros eposzrészlet ritmusa egy pillantással befogható; a sorra kattintva odaugrik |
+
+A felület színrendszere a [Radix Colors](https://www.radix-ui.com/colors) skáláira épül (slate alap,
+iris akcentus), mert azok hitelesített kontrasztarányokkal és párosított sötét változattal jönnek.
+A szótaghosszúság három jelentése három elkülönülő hue-t kap — hosszú: iris, rövid: jade, közös:
+amber —, de a jelentés nem csak a színen múlik: ott a jel is (— ∪ ×). Világos, sötét és
+rendszerkövető téma; mobilon a sorok kártyákra tördelődnek, a gombok legalább 44 képpont magasak.
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope:latest

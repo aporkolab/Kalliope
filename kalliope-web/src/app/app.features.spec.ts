@@ -228,10 +228,11 @@ describe('App — új verstani funkciók', () => {
     const dividers = fixture.nativeElement.querySelectorAll('.divider');
     expect(dividers.length).toBe(2);
     // az 1. szótag előtt sormetszet, a 2. előtt lábhatár
+    // a jelet a CSS rajzolja, ezért az osztály hordozza a jelentést, nem a szöveg
     expect(dividers[0].classList.contains('caesura')).toBe(true);
-    expect(dividers[0].textContent.trim()).toBe('‖');
+    expect(dividers[0].getAttribute('title')).toBe('sormetszet');
     expect(dividers[1].classList.contains('caesura')).toBe(false);
-    expect(dividers[1].textContent.trim()).toBe('|');
+    expect(dividers[1].getAttribute('title')).toBe('lábhatár');
   });
 
   it('mérték híján az ütemhatárokat rajzolja ki', () => {

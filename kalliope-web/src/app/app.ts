@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, HostBinding, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { KalliopeService } from './kalliope.service';
 import {
@@ -35,6 +35,21 @@ export class App {
   protected readonly canonQuery = signal('');
   protected readonly copied = signal(false);
   protected readonly showSummary = signal(false);
+  protected readonly focusedLine = signal<number | null>(null);
+
+  /** Téma: rendszerkövető, világos vagy sötét — a választás megmarad. */
+  protected readonly theme = signal<'system' | 'light' | 'dark'>(readTheme());
+
+  @HostBinding('attr.data-theme')
+  get themeAttribute(): string | null {
+    const t = this.theme();
+    return t === 'system' ? null : t;
+  }
+
+  /** Minden sor egyben — a ritmustérkép ezen fut végig. */
+  protected readonly allLines = computed<Line[]>(() =>
+    (this.analysis()?.stanzas ?? []).flatMap((s) => s.lines),
+  );
 
   /** Kézi szótaghosszúság-felülbírálások — kattintásra körbejárnak. */
   protected readonly overrides = signal<Override[]>([]);
@@ -138,6 +153,52 @@ export class App {
 
   protected closeSummary(): void {
     this.showSummary.set(false);
+  }
+
+  protected cycleTheme(): void {
+    const order: ('system' | 'light' | 'dark')[] = ['system', 'light', 'dark'];
+    const next = order[(order.indexOf(this.theme()) + 1) % order.length];
+    this.theme.set(next);
+    try {
+      localStorage.setItem('kalliope-theme', next);
+    } catch {
+      // privát böngészés: a téma csak erre a munkamenetre marad meg
+    }
+  }
+
+  protected themeIcon(): string {
+    return this.theme() === 'light' ? '☀' : this.theme() === 'dark' ? '☾' : '◐';
+  }
+
+  protected themeLabel(): string {
+    return this.theme() === 'light'
+      ? 'világos'
+      : this.theme() === 'dark'
+        ? 'sötét'
+        : 'rendszerkövető';
+  }
+
+  /** A ritmustérképről a megfelelő sorra ugrunk. */
+  protected focusLine(index: number): void {
+    this.focusedLine.set(index);
+    document
+      .getElementById('sor-' + index)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+
+  protected systemLabel(system: string): string {
+    switch (system) {
+      case 'IDOMERTEKES':
+        return 'időmértékes';
+      case 'UTEMHANGSULYOS':
+        return 'ütemhangsúlyos';
+      case 'SZIMULTAN':
+        return 'szimultán';
+      case 'VEGYES':
+        return 'vegyes ritmus';
+      default:
+        return 'nincs szabályos rend';
+    }
   }
 
   protected clear(): void {
@@ -319,4 +380,17 @@ export class App {
         return 'összetett';
     }
   }
+}
+
+/** A mentett témabeállítás; hiba esetén rendszerkövető. */
+function readTheme(): 'system' | 'light' | 'dark' {
+  try {
+    const stored = localStorage.getItem('kalliope-theme');
+    if (stored === 'light' || stored === 'dark' || stored === 'system') {
+      return stored;
+    }
+  } catch {
+    // a localStorage letiltható; ilyenkor a rendszerbeállítás dönt
+  }
+  return 'system';
 }

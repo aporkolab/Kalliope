@@ -175,7 +175,7 @@ describe('App megjelenítés', () => {
     const syllable = fixture.nativeElement.querySelector('.syllable') as HTMLElement;
     syllable.dispatchEvent(new MouseEvent('mouseenter'));
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.reason').textContent).toContain(
+    expect(fixture.nativeElement.querySelector('.inspector').textContent).toContain(
       'helyzeténél fogva hosszú',
     );
   });

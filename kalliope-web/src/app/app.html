@@ -1,12 +1,13 @@
 <header class="topbar">
   <div class="brand">
-    <span class="logo" aria-hidden="true">Κ</span>
+    <span class="mark" aria-hidden="true">Κ</span>
     <div>
       <h1>Kalliopé</h1>
-      <p class="tagline">magyar időmértékes verselés és rímképlet elemzője</p>
+      <p>magyar verstani elemző</p>
     </div>
   </div>
-  <nav class="tabs" role="tablist">
+
+  <nav class="tabs" role="tablist" aria-label="Nézetek">
     <button
       role="tab"
       [attr.aria-selected]="tab() === 'elemzes'"
@@ -21,27 +22,28 @@
       [class.active]="tab() === 'adatbazis'"
       (click)="tab.set('adatbazis')"
     >
-      Metrikai kánon
+      Kánon
     </button>
   </nav>
+
+  <button
+    class="theme-toggle"
+    (click)="cycleTheme()"
+    [attr.aria-label]="'Téma: ' + themeLabel()"
+    [title]="'Téma: ' + themeLabel()"
+  >
+    {{ themeIcon() }}
+  </button>
 </header>
 
 @if (tab() === 'elemzes') {
   <main class="layout">
-    <section class="pane input-pane" aria-label="Vers bevitele">
-      <div class="pane-head">
+    <section class="card editor" aria-label="Vers bevitele">
+      <div class="card-head">
         <h2>Vers</h2>
-        <div class="actions">
-          <button class="ghost" (click)="clear()" [disabled]="!poem()">Törlés</button>
-          <button class="ghost" (click)="showSettings.set(!showSettings())">
-            Beállítások
-            @if (showSettings()) {
-              ▲
-            } @else {
-              ▼
-            }
-          </button>
-        </div>
+        <button class="ghost" (click)="showSettings.set(!showSettings())">
+          Beállítások {{ showSettings() ? '▲' : '▼' }}
+        </button>
       </div>
 
       @if (showSettings()) {
@@ -68,25 +70,16 @@
         aria-label="A vers szövege"
       ></textarea>
 
-      <div class="pane-foot">
+      <div class="actions">
         <button class="primary" (click)="analyze()" [disabled]="busy() || !poem().trim()">
-          @if (busy()) {
-            Elemzés…
-          } @else {
-            Elemzés
-          }
+          {{ busy() ? 'Elemzés…' : 'Elemzés' }}
         </button>
+        <button class="ghost" (click)="openSummary()" [disabled]="!analysis()">Összegzés</button>
         <button class="ghost" (click)="share()" [disabled]="!poem().trim()">
-          @if (copied()) {
-            Link a vágólapon ✓
-          } @else {
-            Megosztható link
-          }
-        </button>
-        <button class="primary-soft" (click)="openSummary()" [disabled]="!analysis()">
-          Összegzés
+          {{ copied() ? 'Vágólapon ✓' : 'Link' }}
         </button>
         <button class="ghost" (click)="exportJson()" [disabled]="!analysis()">JSON</button>
+        <button class="ghost" (click)="clear()" [disabled]="!poem()">Törlés</button>
         @if (overrides().length) {
           <button class="ghost" (click)="clearOverrides()">
             Felülbírálás törlése ({{ overrides().length }})
@@ -96,7 +89,7 @@
 
       @if (examples().length) {
         <div class="examples">
-          <h3>Példatár</h3>
+          <h2 class="visually-hidden">Példatár</h2>
           @for (e of examples(); track e.id) {
             <button class="example" (click)="loadExample(e)">
               <strong>{{ e.title }}</strong>
@@ -107,139 +100,178 @@
       }
     </section>
 
-    <section class="pane result-pane" aria-label="Elemzés" aria-live="polite">
+    <section class="results" aria-label="Elemzés" aria-live="polite">
       @if (error()) {
         <p class="error" role="alert">{{ error() }}</p>
       }
 
       @if (!analysis() && !error()) {
-        <div class="empty">
-          <p>Írj be egy verset, vagy válassz a példatárból.</p>
-          <p class="hint">
-            A skandálás jelei: <span class="long">—</span> hosszú,
-            <span class="short">∪</span> rövid, <span class="anceps">×</span> közös (mindkettőnek
-            számít). Vidd az egeret egy szótagra, és megmondja, miért olyan hosszú.
+        <div class="card empty">
+          <h2>Írj be egy verset, vagy válassz a példatárból.</h2>
+          <p>
+            A skandálás jelei: <strong>—</strong> hosszú, <strong>∪</strong> rövid,
+            <strong>×</strong> közös. A szótagra mutatva megmondja, miért olyan hosszú; rákattintva
+            felülbírálhatod.
           </p>
         </div>
       }
 
       @if (analysis(); as a) {
-        <div class="summary">
-          <span>{{ a.summary.stanzaCount }} szakasz</span>
-          <span>{{ a.summary.lineCount }} sor</span>
-          <span>{{ a.summary.syllableCount }} szótag</span>
-          @if (a.summary.meters.length) {
-            <span class="found">{{ a.summary.meters.join(', ') }}</span>
-          } @else {
-            <span class="notfound">nincs klasszikus mérték</span>
-          }
-        </div>
+        <article class="verdict">
+          <p class="kicker">{{ systemLabel(a.verse.system) }}</p>
+          <h2>{{ a.verse.headline }}</h2>
+          <div class="verdict-foot">
+            <span>{{ a.summary.stanzaCount }} szakasz</span>
+            <span>{{ a.summary.lineCount }} sor</span>
+            <span>{{ a.summary.syllableCount }} szótag</span>
+            <button class="ghost" (click)="openSummary()">Részletek</button>
+          </div>
+        </article>
 
-        <p class="reason" role="status" [class.empty]="!reasonText()">
-          {{ reasonText() || 'Vidd az egeret egy szótagra a magyarázatért.' }}
+        @if (a.summary.lineCount > 3) {
+          <section class="card rhythm" aria-label="Ritmustérkép">
+            <div class="card-head">
+              <h2>Ritmustérkép</h2>
+              <span class="muted">soronként a szótaghosszak</span>
+            </div>
+            <div class="rhythm-rows">
+              @for (line of allLines(); track line.index) {
+                <button
+                  class="rhythm-row"
+                  (click)="focusLine(line.index)"
+                  [attr.aria-label]="line.index + 1 + '. sor'"
+                  [title]="line.text"
+                >
+                  @for (s of line.syllables; track $index) {
+                    <span class="cell" [class]="quantityClass(shownQuantity(line, $index))"></span>
+                  }
+                </button>
+              }
+            </div>
+            <p class="legend">
+              <span><i class="swatch cell long"></i> hosszú</span>
+              <span><i class="swatch cell short"></i> rövid</span>
+              <span><i class="swatch cell anceps"></i> közös</span>
+            </p>
+          </section>
+        }
+
+        <p class="inspector" [class.idle]="!hovered()" role="status">
+          @if (hovered(); as s) {
+            <span class="chip">{{ s.text }}</span>
+            <span>{{ reasonText() }}</span>
+          } @else {
+            <span>Vidd az egeret egy szótagra a magyarázatért — kattints a felülbíráláshoz.</span>
+          }
         </p>
 
-        @for (stanza of a.stanzas; track stanza.index) {
-          <article class="stanza">
-            @if (a.stanzas.length > 1) {
-              <h3>{{ stanza.index + 1 }}. szakasz</h3>
-            }
+        <div class="card">
+          @for (stanza of a.stanzas; track stanza.index) {
+            <section class="stanza">
+              @if (a.stanzas.length > 1) {
+                <p class="stanza-label">{{ stanza.index + 1 }}. szakasz</p>
+              }
 
-            @for (line of stanza.lines; track line.index) {
-              <div class="line" [class.unmatched]="!line.meters.length">
-                <span
-                  class="rhyme"
-                  [attr.data-label]="line.rhymeLabel"
-                  [title]="'rímkulcs: ' + line.rhymeKey"
+              @for (line of stanza.lines; track line.index) {
+                <div
+                  class="line"
+                  [class.focused]="focusedLine() === line.index"
+                  [id]="'sor-' + line.index"
                 >
-                  {{ line.rhymeLabel }}
-                </span>
-                <div class="syllables">
-                  @for (s of line.syllables; track $index) {
-                    @if (startsCaesura(line, $index)) {
-                      <span class="divider caesura" aria-hidden="true">‖</span>
-                    } @else if (startsFoot(line, $index)) {
-                      <span class="divider" aria-hidden="true">|</span>
+                  <span
+                    class="rhyme"
+                    [class.blank]="line.rhymeLabel === 'x'"
+                    [title]="'rímkulcs: ' + line.rhymeKey + ' — ' + rhymeKindLabel(line.rhymeKind)"
+                  >
+                    {{ line.rhymeLabel }}
+                  </span>
+
+                  <div class="syllables">
+                    @for (s of line.syllables; track $index) {
+                      @if (startsCaesura(line, $index)) {
+                        <span class="divider caesura" title="sormetszet" aria-hidden="true"></span>
+                      } @else if (startsFoot(line, $index)) {
+                        <span class="divider" title="lábhatár" aria-hidden="true"></span>
+                      }
+                      <button
+                        class="syllable"
+                        [class]="quantityClass(shownQuantity(line, $index))"
+                        [class.resolved]="wasAnceps(line, $index)"
+                        [class.overridden]="isOverridden(line, $index)"
+                        title="Kattints a hosszúság felülbírálásához"
+                        (click)="cycleQuantity(line, $index)"
+                        (mouseenter)="hovered.set(s)"
+                        (mouseleave)="hovered.set(null)"
+                        (focus)="hovered.set(s)"
+                        (blur)="hovered.set(null)"
+                      >
+                        <span class="mark" aria-hidden="true">{{
+                          quantityMark(shownQuantity(line, $index))
+                        }}</span>
+                        <span class="text">{{ s.text }}</span>
+                      </button>
                     }
-                    <button
-                      type="button"
-                      class="syllable"
-                      [class]="quantityClass(shownQuantity(line, $index))"
-                      [class.resolved]="wasAnceps(line, $index)"
-                      [class.overridden]="isOverridden(line, $index)"
-                      [title]="'Kattints a hosszúság felülbírálásához'"
-                      (click)="cycleQuantity(line, $index)"
-                      (mouseenter)="hovered.set(s)"
-                      (mouseleave)="hovered.set(null)"
-                      (focus)="hovered.set(s)"
-                      (blur)="hovered.set(null)"
-                    >
-                      <span class="mark" aria-hidden="true">{{
-                        quantityMark(shownQuantity(line, $index))
-                      }}</span>
-                      <span class="text">{{ s.text }}</span>
-                    </button>
-                  }
-                </div>
-                <div class="verdict">
-                  @if (line.meters.length) {
-                    <span class="meter">{{ meterNames(line) }}</span>
-                  }
-                  @if (!line.meters.length && line.nearMiss) {
-                    <span class="nearmiss">{{ line.nearMiss.summary }}</span>
-                  }
-                  @for (c of line.caesurae; track c.name) {
-                    <span class="badge" [title]="c.afterSyllable + 1 + '. szótag előtt'">{{
-                      c.name
-                    }}</span>
-                  }
-                  @if (line.rhymeKind !== 'VAKSOR') {
-                    <span class="badge rhyme-kind">{{ rhymeKindLabel(line.rhymeKind) }}</span>
-                  }
-                  @if (line.synizesis) {
-                    <span class="badge" title="A sor csak összevont kettőshangzóval illeszkedik">
-                      összevonással
-                    </span>
-                  }
-                  @if (line.ictusRow) {
-                    <code class="ictus">{{ line.ictusRow }}</code>
-                  }
-                </div>
-              </div>
-            }
+                  </div>
 
-            <footer class="stanza-foot">
-              <span class="scheme"
-                >rímképlet: <strong>{{ stanza.rhymePattern }}</strong>
-                @if (stanza.rhymePatternName) {
-                  <em> ({{ stanza.rhymePatternName }})</em>
-                }
-              </span>
-              @if (stanza.accentual.form; as acc) {
-                <span class="form accentual"
-                  >{{ acc.name }} ({{ acc.division }}) —
-                  {{ strengthLabel(stanza.accentual.strength) }}</span
-                >
+                  <div class="verdict-line">
+                    @if (line.meters.length) {
+                      <span class="meter">{{ meterNames(line) }}</span>
+                    }
+                    @if (!line.meters.length && line.nearMiss) {
+                      <span class="nearmiss">{{ line.nearMiss.summary }}</span>
+                    }
+                    @for (c of line.caesurae; track c.name) {
+                      <span class="badge" [title]="c.afterSyllable + 1 + '. szótag előtt'">{{
+                        c.name
+                      }}</span>
+                    }
+                    @if (line.rhymeKind !== 'VAKSOR') {
+                      <span class="badge" [title]="'rímkulcs: ' + line.rhymeKey">{{
+                        rhymeKindLabel(line.rhymeKind)
+                      }}</span>
+                    }
+                    @if (line.synizesis) {
+                      <span class="badge" title="A sor csak összevont kettőshangzóval illeszkedik"
+                        >összevonással</span
+                      >
+                    }
+                    @if (line.ictusRow) {
+                      <code class="ictus">{{ line.ictusRow }}</code>
+                    }
+                  </div>
+                </div>
               }
-              @if (stanza.dualRhythm) {
-                <span class="badge dual" title="Időmértékes és ütemhangsúlyos rend is illeszkedik"
-                  >kettős ritmus</span
-                >
-              }
-              @for (f of stanza.forms; track f.form.id) {
-                <span class="form">
-                  {{ f.form.name }}
-                  @if (f.repetitions > 1) {
-                    ×{{ f.repetitions }}
-                  }
-                  @if (f.form.rhymeScheme && !f.rhymeSchemeMatches) {
-                    <em title="a forma kötött rímképlete eltér">(a rímképlet eltér)</em>
+
+              <footer class="stanza-foot">
+                <span
+                  >rímképlet: <strong>{{ stanza.rhymePattern }}</strong>
+                  @if (stanza.rhymePatternName) {
+                    <em>({{ stanza.rhymePatternName }})</em>
                   }
                 </span>
-              }
-            </footer>
-          </article>
-        }
+                @for (f of stanza.forms; track f.form.id) {
+                  <span class="meter"
+                    >{{ f.form.name }}
+                    @if (f.repetitions > 1) {
+                      ×{{ f.repetitions }}
+                    }
+                  </span>
+                }
+                @if (stanza.accentual.form; as acc) {
+                  <span
+                    >{{ acc.name }} ({{ acc.division }}) —
+                    {{ strengthLabel(stanza.accentual.strength) }}</span
+                  >
+                }
+                @if (stanza.dualRhythm) {
+                  <span class="badge dual" title="Időmértékes és ütemhangsúlyos rend is illeszkedik"
+                    >kettős ritmus</span
+                  >
+                }
+              </footer>
+            </section>
+          }
+        </div>
       }
     </section>
   </main>
@@ -264,42 +296,44 @@
       />
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Név</th>
-          <th scope="col">Minta</th>
-          <th scope="col">Fajta</th>
-          <th scope="col">Megjegyzés</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (m of filteredMeters(); track m.id) {
-          <tr [class.fictive]="m.fictive">
-            <td>{{ m.name }}</td>
-            <td>
-              <code>{{ m.pattern }}</code>
-            </td>
-            <td>{{ kindLabel(m.kind) }}</td>
-            <td class="note">
-              @if (m.note) {
-                <span>{{ m.note }}</span>
-              }
-              @if (m.correction; as c) {
-                <details>
-                  <summary>javítva</summary>
-                  <p>
-                    Eredeti minta: <code>{{ c.original }}</code>
-                  </p>
-                  <p>{{ c.reason }}</p>
-                  <a [href]="c.source" target="_blank" rel="noopener noreferrer">forrás</a>
-                </details>
-              }
-            </td>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Név</th>
+            <th scope="col">Minta</th>
+            <th scope="col">Fajta</th>
+            <th scope="col">Megjegyzés</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (m of filteredMeters(); track m.id) {
+            <tr [class.fictive]="m.fictive">
+              <td>{{ m.name }}</td>
+              <td>
+                <code>{{ m.pattern }}</code>
+              </td>
+              <td>{{ kindLabel(m.kind) }}</td>
+              <td class="note">
+                @if (m.note) {
+                  <span>{{ m.note }}</span>
+                }
+                @if (m.correction; as c) {
+                  <details>
+                    <summary>javítva</summary>
+                    <p>
+                      Eredeti minta: <code>{{ c.original }}</code>
+                    </p>
+                    <p>{{ c.reason }}</p>
+                    <a [href]="c.source" target="_blank" rel="noopener noreferrer">forrás</a>
+                  </details>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </main>
 }
 
@@ -315,9 +349,7 @@
       tabindex="-1"
     >
       <header>
-        <p class="system">
-          {{ a.verse.system === 'SZABAD' ? 'nincs szabályos rend' : 'verselés' }}
-        </p>
+        <p class="kicker">{{ systemLabel(a.verse.system) }}</p>
         <h2 id="osszegzes-cim">{{ a.verse.headline }}</h2>
       </header>
       <ul>
