@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +32,15 @@ public final class Kalliope {
      *                      | foot boundary    || caesura (reminder only)     *
      * ===================================================================== */
     static final char SHORT = 'U', LONG = '-', ANCEPS = '?', RESOLVE = '=';
+
+    /** Product identity, from the binary. */
+    static final String VERSION = "VNP's Kalliope 1.71 beta";
+    /** Punctuation stripped before scansion — the binary's own list (0x463114). */
+    static final String PUNCT = "?.,:\"[]()!-=+/\\{}<>'0123456789";
+    /** Metric stress marks on the Greek row, from the binary (0x46c740): the
+     *  ictus-bearing variants of short/long. */
+    static final char STRESS_SHORT = 'U', STRESS_SHORT_ICTUS = 'Ú',
+                      STRESS_LONG  = '-', STRESS_LONG_ICTUS  = '÷';
 
     static String symbolsOnly(String pattern) {
         StringBuilder sb = new StringBuilder(pattern.length());
@@ -89,12 +97,16 @@ public final class Kalliope {
         final Map<String, String> settings = new LinkedHashMap<>();
         final List<StoredStanza> storedStanzas = new ArrayList<>();
 
+        /** osn -> meter, plus canonical (accent/alias-folded) keys so formulas
+         *  written with a variant spelling still resolve (binary behaviour). */
         Map<String, NamedMeter> byOsn() {
             Map<String, NamedMeter> m = new LinkedHashMap<>();
             for (NamedMeter n : feet) m.putIfAbsent(n.osn(), n);
             for (NamedMeter n : cola) m.putIfAbsent(n.osn(), n);
             for (NamedMeter n : lineMeters) m.putIfAbsent(n.osn(), n);
-            return m;
+            Map<String, NamedMeter> withCanon = new LinkedHashMap<>(m);
+            for (NamedMeter n : m.values()) withCanon.putIfAbsent(canonKey(n.name()), n);
+            return withCanon;
         }
         Map<String, String> constantsByName() {
             Map<String, String> m = new LinkedHashMap<>();
@@ -108,6 +120,15 @@ public final class Kalliope {
     /* ===================================================================== *
      *  osn — name up to first '(', trimmed, spaces → underscores.           *
      * ===================================================================== */
+    /* Meter-name aliases EXTRACTED FROM kalliope.exe (0x460d5c…): the program
+     * accepts several spellings/accentings of the same classical name, so a
+     * formula written "alkaiosi_12" resolves against "alkaioszi 12". */
+    static final String[][] NAME_ALIASES = {
+        {"alkaioiszi", "alkaioszi"}, {"alkaiosi", "alkaioszi"},
+        {"szapphoi", "szapphói"}, {"sapphoi", "szapphói"},
+        {"adonisi", "adoniszi"}, {"adonis", "adoniszi"}, {"adonisz", "adoniszi"}, {"adónisz", "adoniszi"},
+        {"kolon", "kolón"}, {"kretikus", "krétikus"}, {"lab", "láb"},
+    };
     static String osnOf(String name) {
         // Latent: a name containing '/' (e.g. "hendecasyllabus/B") yields an osn
         // with '/', which split("/") in a formula would break. Not triggered by
@@ -115,6 +136,22 @@ public final class Kalliope {
         int paren = name.indexOf('(');
         String s = (paren >= 0 ? name.substring(0, paren) : name).trim();
         return s.replace(' ', '_');
+    }
+    /** Canonical lookup key: osn, lowercased, accents folded and known
+     *  spelling variants mapped, so "alkaiosi_12" == "alkaioszi_12". */
+    static String canonKey(String name) {
+        String s = osnOf(name).toLowerCase();
+        for (String[] a : NAME_ALIASES) s = s.replace(a[0], a[1]);
+        return fold(s);
+    }
+    /** Fold Hungarian accents for tolerant name matching. */
+    static String fold(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+        for (char c : s.toCharArray()) {
+            int i = "áéíóöőúüű".indexOf(c);
+            sb.append(i >= 0 ? "aeiooouuu".charAt(i) : c);
+        }
+        return sb.toString();
     }
     static boolean isFictive(String name) {
         String n = name.toLowerCase();
@@ -263,6 +300,8 @@ public final class Kalliope {
             }
         } else if (meters.containsKey(tok)) {
             out.add(meters.get(tok).pattern());
+        } else if (meters.containsKey(canonKey(tok))) {      // alias / accent-tolerant
+            out.add(meters.get(canonKey(tok)).pattern());
         } else {
             out.add("<?" + tok + ">");
         }
@@ -358,9 +397,27 @@ public final class Kalliope {
         {" q ", " kú "}, {" r ", " err "}, {" t ", " té "}, {" v ", " vé "},
         {" x ", " iksz "}, {" z ", " zé "},
     };
-    /** Apply the binary's normalization table (lowercased, space-padded). */
+    /** Apply the binary's normalization table (lowercased, space-padded).
+     *  @param letterSyllables when false, standalone letters are NOT expanded to
+     *         their letter-names (setting az_abece_betuinek_kulon_szotag=0). */
+    static String normalize(String line, boolean letterSyllables) {
+        StringBuilder clean0 = new StringBuilder(line.length());
+        for (char c : line.toCharArray()) clean0.append(PUNCT.indexOf(c) >= 0 ? ' ' : c);
+        String s0 = " " + clean0.toString().toLowerCase().replace('w', 'v') + " ";
+        for (String[] p : NORMALIZE) {
+            boolean isLetterName = p[0].length() == 3;  // " b " style entries
+            if (isLetterName && !letterSyllables) continue;
+            int i;
+            while ((i = s0.indexOf(p[0])) >= 0)
+                s0 = s0.substring(0, i) + p[1] + s0.substring(i + p[0].length());
+        }
+        return s0.trim();
+    }
+    /** Backwards-compatible overload: full normalization (letters expanded). */
     static String normalize(String line) {
-        String s = " " + line.toLowerCase().replace('w', 'v') + " ";
+        StringBuilder clean = new StringBuilder(line.length());
+        for (char c : line.toCharArray()) clean.append(PUNCT.indexOf(c) >= 0 ? ' ' : c);
+        String s = " " + clean.toString().toLowerCase().replace('w', 'v') + " ";
         for (String[] p : NORMALIZE) {
             int i;
             while ((i = s.indexOf(p[0])) >= 0)
@@ -381,13 +438,15 @@ public final class Kalliope {
      *      * the definite article "a"/"az" (standalone word),
      *      * the line-final syllable (brevis in longo).
      */
-    static String scanLine(String line, boolean sNeutral) {
+    static String scanLine(String line, boolean sNeutral) { return scanLine(line, sNeutral, true); }
+    /** @param letterSyllables az_abece_betuinek_kulon_szotag */
+    static String scanLine(String line, boolean sNeutral, boolean letterSyllables) {
         // Build a letter stream with per-char flags for the neutral "s" clitic
         // and the article, keeping word boundaries as spaces.
         StringBuilder cs = new StringBuilder();
         List<Boolean> soft = new ArrayList<>(); // char belongs to a neutral s/és clitic
         List<Boolean> art  = new ArrayList<>(); // char belongs to article a/az
-        for (String tokRaw : normalize(line).split("\\s+")) {
+        for (String tokRaw : normalize(line, letterSyllables).split("\\s+")) {
             String t = tokRaw.replaceAll("[^a-záéíóőúűöü]", "");
             if (t.isEmpty()) continue;
             boolean sClit   = sNeutral && (t.equals("s") || t.equals("és"));
@@ -508,19 +567,109 @@ public final class Kalliope {
         return scheme.toString();
     }
 
+    /** True if the word is in the binary's unstressed-word list ($ entries):
+     *  postpositions, articles, conjunctions that never carry the beat. */
+    static boolean isUnstressed(Database db, String word) {
+        String w = fold(word.toLowerCase().replaceAll("[^a-záéíóőúűöü]", ""));
+        for (String u : db.unstressedWords) if (fold(u.toLowerCase()).equals(w)) return true;
+        return false;
+    }
+    /** Words of a line that carry no stress (reported alongside the analysis). */
+    static List<String> unstressedIn(Database db, String line) {
+        List<String> out = new ArrayList<>();
+        for (String w : line.trim().split("\\s+")) if (isUnstressed(db, w)) out.add(w);
+        return out;
+    }
+
+    /** Render the metric-stress row for a scanned line against a meter, using
+     *  the binary's own marks (0x46c740): ictus positions are marked Ú / ÷.
+     *  Governed by the setting latszik_az_utemhangsuly_a_gorogon. */
+    static String stressRow(String scan, String meterPattern) {
+        String best = null;
+        for (String r : expand(meterPattern))
+            if (r.length() == scan.length()) { best = r; break; }
+        if (best == null) return "";
+        StringBuilder sb = new StringBuilder();
+        boolean footStart = true; int mi = 0;
+        // walk the meter pattern to know which realized positions begin a foot
+        boolean[] ict = new boolean[best.length()];
+        for (int i = 0; i < meterPattern.length() && mi < ict.length; i++) {
+            char c = meterPattern.charAt(i);
+            if (c == '|') { footStart = true; continue; }
+            if (c != SHORT && c != LONG && c != ANCEPS && c != RESOLVE) continue;
+            int span = (c == RESOLVE && mi + 1 < ict.length && best.charAt(mi) == 'U') ? 2 : 1;
+            ict[mi] = footStart; mi += span; footStart = false;
+        }
+        for (int i = 0; i < best.length(); i++) {
+            char q = best.charAt(i);
+            sb.append(q == LONG ? (ict[i] ? STRESS_LONG_ICTUS : STRESS_LONG)
+                                : (ict[i] ? STRESS_SHORT_ICTUS : STRESS_SHORT));
+        }
+        return sb.toString();
+    }
+
+    /** Match a whole stanza (list of scanned lines) against the ':' stanza meters:
+     *  resolve the stanza formula to per-line patterns and require every line to
+     *  fit strictly, in order. Returns the matching stanza meters. */
+    static List<StanzaMeter> matchStanza(Database db, List<String> lineScans) {
+        List<StanzaMeter> hits = new ArrayList<>();
+        for (StanzaMeter sm : db.stanzaMeters) {
+            List<String> pats = resolveFormula(db, sm.formula());
+            if (pats.isEmpty() || pats.size() != lineScans.size()) continue;
+            boolean all = true;
+            for (int i = 0; i < pats.size(); i++) {
+                String p = pats.get(i);
+                if (p.startsWith("<")) { all = false; break; }   // unresolved reference
+                Set<String> scanSet = new HashSet<>(expand(lineScans.get(i)));
+                boolean fit = false;
+                for (String r : expand(p)) if (scanSet.contains(r)) { fit = true; break; }
+                if (!fit) { all = false; break; }
+            }
+            if (all) hits.add(sm);
+        }
+        return hits;
+    }
+
     /** End-to-end: scan each line, meter-guided match, detect the rhyme scheme. */
     static void analyze(Database db, String poem) {
         List<String> lines = new ArrayList<>();
         for (String l : poem.strip().split("\n")) if (!l.isBlank()) lines.add(l.strip());
-        boolean sN = db.boolSetting("az_s_kotoszo_kozombos");
+        boolean sN      = db.boolSetting("az_s_kotoszo_kozombos");
+        boolean letters = db.boolSetting("az_abece_betuinek_kulon_szotag");
+        boolean multi   = db.boolSetting("egynel_tobb_telitalalat_keresese");
+        boolean human   = db.boolSetting("emberi_nyelvu_mit_tudok");
+        boolean stress  = db.boolSetting("latszik_az_utemhangsuly_a_gorogon");
         String scheme = rhymeScheme(lines, db.boolSetting("az_asszonanc_rimkent_valo_kezelese"));
+        List<String> scans = new ArrayList<>();
         for (int i = 0; i < lines.size(); i++) {
-            String scan = scanLine(lines.get(i), sN);
+            String scan = scanLine(lines.get(i), sN, letters);
+            scans.add(scan);
             List<NamedMeter> hits = matchLine(db, scan); // strict: long<->long, short<->short, ?<->either
-            String info = hits.isEmpty() ? "" : "= " + hits.get(0).name();
+            String info = "";
+            if (!hits.isEmpty()) {
+                info = "= " + hits.get(0).name();
+                if (multi && hits.size() > 1) {           // egynel_tobb_telitalalat_keresese
+                    StringBuilder more = new StringBuilder();
+                    for (int k = 1; k < Math.min(hits.size(), 4); k++)
+                        more.append(k == 1 ? " ~ " : ", ").append(hits.get(k).name());
+                    info += more;
+                }
+                if (stress) {
+                    String sr = stressRow(scan, hits.get(0).pattern());
+                    if (!sr.isEmpty()) info += "  [" + sr + "]";
+                }
+            }
             System.out.printf("  [%c] %-46s %-20s %s%n", scheme.charAt(i), lines.get(i), scan, info);
         }
         System.out.println("  rímképlet: " + scheme);
+        List<StanzaMeter> st = matchStanza(db, scans);
+        if (!st.isEmpty()) System.out.println("  szakaszmérték: " + st.get(0).name()
+                + (st.get(0).rhyme().isEmpty() ? "" : " (rimkeplet=" + st.get(0).rhyme() + ")"));
+        if (human) {                                       // emberi_nyelvu_mit_tudok
+            List<String> un = new ArrayList<>();
+            for (String l : lines) un.addAll(unstressedIn(db, l));
+            if (!un.isEmpty()) System.out.println("  hangsúlytalan szavak: " + String.join(", ", un));
+        }
     }
 
     /* ===================================================================== *
@@ -558,6 +707,18 @@ public final class Kalliope {
         analyze(db, SZIGETI);
         System.out.println("\n=== Iliász (Devecseri ford.) — hexameter ===");
         analyze(db, ILIASZ);
+
+        System.out.println("\n=== szakaszmérték-illesztés (szintetikus szkennelés) ===");
+        // disztichon = hexameter / pentameter -> feed one valid realization of each
+        List<String> pats = resolveFormula(db, "hexameter/pentameter");
+        List<String> synth = new ArrayList<>();
+        for (String p : pats) synth.add(expand(p).get(0));
+        System.out.println("  minták:  " + pats);
+        System.out.println("  szkennelt: " + synth);
+        for (StanzaMeter sm : matchStanza(db, synth))
+            System.out.println("  -> szakaszmérték: " + sm.name());
+        // alias tolerance: "alkaiosi_12" must resolve even though the DB says "alkaioszi"
+        System.out.println("  alias-teszt 'alkaiosi_12' -> " + resolveFormula(db, "alkaiosi_12"));
 
         System.out.println("\n=== rím-felismerés (kalliope.exe normalizáló táblájával) ===");
         for (String[] pr : new String[][]{{"kard","part"},{"hegy","megy"},{"bot","sok"}}) {
