@@ -27,13 +27,13 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 # ---------- 3. Rétegekre bontás ----------
 # Spring Boot 4.1: a -Djarmode=layertools MEGSZŰNT, a helyes hívás a tools jarmode.
-FROM eclipse-temurin:25.0.3_9-jre-alpine AS extract
+FROM eclipse-temurin:26.0.1_8-jre-alpine AS extract
 WORKDIR /builder
 COPY --from=build /src/application.jar ./application.jar
 RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
 
 # ---------- 4. Futtatás ----------
-FROM eclipse-temurin:25.0.3_9-jre-alpine
+FROM eclipse-temurin:26.0.1_8-jre-alpine
 
 # A felhasználó ELŐBB jön létre, és minden COPY rögtön neki másol. A záró
 # `chown -R` ugyanis az egész könyvtárról új réteget csinálna — nyolcvan
