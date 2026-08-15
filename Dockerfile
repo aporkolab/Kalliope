@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.20
 
 # ---------- 1. Angular felület ----------
-FROM node:24-alpine AS web
+FROM node:26-alpine AS web
 WORKDIR /web
 COPY kalliope-web/package.json kalliope-web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
