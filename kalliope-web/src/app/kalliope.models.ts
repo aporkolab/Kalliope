@@ -37,6 +37,7 @@ export interface AccentualFormRef {
   measures: number[];
   caesuraAfter: number;
   note: string | null;
+  division: string;
 }
 
 export interface AccentualMatch {

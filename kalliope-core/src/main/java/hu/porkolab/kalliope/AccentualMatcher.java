@@ -25,17 +25,20 @@ public final class AccentualMatcher {
      * @param wordBoundaryMeasures hány ütemhatár esik valódi szóhatárra
      * @param caesuraOnWordBoundary a FŐ sormetszet szóhatárra esik-e
      */
-    public record Match(AccentualForm form, int wordBoundaryMeasures, boolean caesuraOnWordBoundary, boolean pure) {
+    public record Match(
+            AccentualForm form, int wordBoundaryMeasures, boolean caesuraOnWordBoundary, boolean pure, String quality) {
 
-        /** Emberi nyelvű minősítés a felületnek. */
-        public String quality() {
+        /** Az emberi nyelvű minősítést is eltároljuk, hogy a REST-válaszban is ott legyen. */
+        static Match of(AccentualForm form, int wordBoundaryMeasures, boolean caesuraOnWordBoundary, boolean pure) {
+            String quality;
             if (pure) {
-                return "tiszta ütemtagolás";
+                quality = "tiszta ütemtagolás";
+            } else if (caesuraOnWordBoundary) {
+                quality = "a metszet szóhatáron van, de nem minden ütemhatár";
+            } else {
+                quality = "a metszet szóba esik";
             }
-            if (caesuraOnWordBoundary) {
-                return "a metszet szóhatáron van, de nem minden ütemhatár";
-            }
-            return "a metszet szóba esik";
+            return new Match(form, wordBoundaryMeasures, caesuraOnWordBoundary, pure, quality);
         }
     }
 
@@ -62,7 +65,7 @@ public final class AccentualMatcher {
             int caesura = form.caesuraSyllable();
             boolean caesuraOk = caesura > 0 && caesura < wordStart.length && wordStart[caesura];
             boolean pure = onBoundary == form.measures().size() - 1;
-            hits.add(new Match(form, onBoundary, caesuraOk, pure));
+            hits.add(Match.of(form, onBoundary, caesuraOk, pure));
         }
         hits.sort((a, b) -> {
             if (a.pure() != b.pure()) {

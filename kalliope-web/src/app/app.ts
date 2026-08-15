@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { KalliopeService } from './kalliope.service';
 import {
-  AccentualFormRef,
   Analysis,
   Canon,
   Example,
@@ -241,18 +240,6 @@ export class App {
       default:
         return 'vaksor';
     }
-  }
-
-  /**
-   * Az ütemtagolás olvasható alakja, pl. „6 || 6" vagy „4 | 4 | 3".
-   * A motor rekordja csak az ütemhosszakat adja; a jelölést itt rakjuk össze.
-   */
-  protected division(form: AccentualFormRef): string {
-    return form.measures
-      .map((m: number, i: number) =>
-        i === 0 ? `${m}` : `${i === form.caesuraAfter ? ' || ' : ' | '}${m}`,
-      )
-      .join('');
   }
 
   protected strengthLabel(strength: string): string {

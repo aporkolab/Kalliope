@@ -16,13 +16,26 @@ import java.util.List;
  * @param measures az ütemek szótagszáma sorrendben (pl. felező tizenkettes: 6, 6)
  * @param caesuraAfter hányadik ütem után áll a fő sormetszet; 0, ha nincs kitüntetett
  */
-public record AccentualForm(String id, String name, List<Integer> measures, int caesuraAfter, String note) {
+public record AccentualForm(
+        String id, String name, List<Integer> measures, int caesuraAfter, String note, String division) {
 
     public AccentualForm {
         if (measures == null || measures.isEmpty()) {
             throw new IllegalArgumentException("Üres ütemtagolás: " + name);
         }
         measures = List.copyOf(measures);
+    }
+
+    /** A tagolás olvasható alakját is eltároljuk, hogy a REST-válaszban is ott legyen. */
+    public static AccentualForm of(String id, String name, List<Integer> measures, int caesuraAfter, String note) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < measures.size(); i++) {
+            if (i > 0) {
+                sb.append(i == caesuraAfter ? " || " : " | ");
+            }
+            sb.append(measures.get(i));
+        }
+        return new AccentualForm(id, name, measures, caesuraAfter, note, sb.toString());
     }
 
     public int syllableCount() {
@@ -54,17 +67,5 @@ public record AccentualForm(String id, String name, List<Integer> measures, int 
             at += measures.get(i);
         }
         return at;
-    }
-
-    /** Olvasható tagolás, pl. {@code 6 || 6} vagy {@code 4 | 4 | 3}. */
-    public String division() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < measures.size(); i++) {
-            if (i > 0) {
-                sb.append(i == caesuraAfter ? " || " : " | ");
-            }
-            sb.append(measures.get(i));
-        }
-        return sb.toString();
     }
 }

@@ -84,6 +84,6 @@ public final class AccentualCanon {
     }
 
     private static AccentualForm form(String name, List<Integer> measures, int caesuraAfter, String note) {
-        return new AccentualForm(MetricCanon.slugOf(name), name, measures, caesuraAfter, note);
+        return AccentualForm.of(MetricCanon.slugOf(name), name, measures, caesuraAfter, note);
     }
 }

@@ -53,6 +53,7 @@ function analysis(over: Partial<Line> = {}): Analysis {
             measures: [6, 6],
             caesuraAfter: 1,
             note: null,
+            division: '6 || 6',
           },
           strength: 'LAZA',
           cleanLines: 1,

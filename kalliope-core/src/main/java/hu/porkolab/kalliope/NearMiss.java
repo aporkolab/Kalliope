@@ -17,10 +17,14 @@ import java.util.List;
 public final class NearMiss {
 
     /** Egy eltérés: hányadik szótagon, mi van ott, és mi kellene. */
-    public record Difference(int syllable, char actual, char expected) {
+    public record Difference(int syllable, char actual, char expected, String explanation) {
 
-        public String explanation() {
-            return (syllable + 1) + ". szótag: " + quantity(actual) + " helyett " + quantity(expected) + " kellene";
+        static Difference of(int syllable, char actual, char expected) {
+            return new Difference(
+                    syllable,
+                    actual,
+                    expected,
+                    (syllable + 1) + ". szótag: " + quantity(actual) + " helyett " + quantity(expected) + " kellene");
         }
 
         private static String quantity(char c) {
@@ -33,19 +37,18 @@ public final class NearMiss {
     }
 
     /** A legközelebbi mérték és az eltérések. */
-    public record Result(Meter meter, List<Difference> differences) {
+    public record Result(Meter meter, List<Difference> differences, String summary) {
 
         public Result {
             differences = List.copyOf(differences);
         }
 
-        public String summary() {
-            if (differences.isEmpty()) {
-                return meter.name();
-            }
+        static Result of(Meter meter, List<Difference> differences) {
             List<String> parts =
                     differences.stream().map(Difference::explanation).toList();
-            return meter.name() + " lenne, ha — " + String.join("; ", parts);
+            String summary =
+                    differences.isEmpty() ? meter.name() : meter.name() + " lenne, ha — " + String.join("; ", parts);
+            return new Result(meter, differences, summary);
         }
     }
 
@@ -82,7 +85,7 @@ public final class NearMiss {
                     || diff.size() < best.differences().size()
                     || (diff.size() == best.differences().size()
                             && MetricCanon.LINES.indexOf(meter) < MetricCanon.LINES.indexOf(best.meter()))) {
-                best = new Result(meter, diff);
+                best = Result.of(meter, diff);
             }
         }
         return best;
@@ -110,11 +113,11 @@ public final class NearMiss {
                 char expected = consumed == 1 ? Notation.LONG : Notation.SHORT;
                 for (int k = 0; k < consumed; k++) {
                     if (!fits(expected, scanned.charAt(j + k))) {
-                        out.add(new Difference(j + k, scanned.charAt(j + k), expected));
+                        out.add(Difference.of(j + k, scanned.charAt(j + k), expected));
                     }
                 }
             } else if (!fits(sym, scanned.charAt(j))) {
-                out.add(new Difference(j, scanned.charAt(j), sym));
+                out.add(Difference.of(j, scanned.charAt(j), sym));
             }
             j += consumed;
             i++;
