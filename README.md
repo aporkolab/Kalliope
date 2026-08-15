@@ -1,25 +1,34 @@
 # Kalliopé
 
-Magyar időmértékes (klasszikus) verselés és rímképlet elemzője — motor, REST API és webes felület.
+Magyar verstani elemző: **skandál**, **versmértéket ismer fel**, és **rímképletet** ad — mindkét
+magyar ritmusrendben, időmértékesben és ütemhangsúlyosban egyaránt.
 
-A Kalliopé **skandál** (rövid / hosszú / közös szótagok), klasszikus **versmértékekre illeszt**
-(hexameter, disztichon, szapphói, alkaioszi, aszklepiadeszi…), felismeri az **ütemhangsúlyos
-(magyaros)** sorfajtákat is, és **rímképletet** ad, a rím fajtájának megnevezésével. Minden
-szótagról megmondja, **miért** olyan hosszú — és ha egy sor nem illeszkedik, megmondja, **min
-múlik**.
+Minden szótagról megmondja, **miért** olyan hosszú; ha egy sor nem illeszkedik, megmondja, **min
+múlik**; a végén pedig egy mondatban összegzi, milyen vers ez: *„Időmértékes verselés:
+disztichonok."*
 
-Amit tud:
+```bash
+git clone https://github.com/aporkolab/Kalliope.git && cd Kalliope
+docker compose up --build          # → http://localhost:8080
+```
+
+> A CI a `main` ágról feltölt egy image-et a `ghcr.io/aporkolab/kalliope:latest` címre is, de a
+> GitHub a csomagokat alapból **privátra** állítja. Amíg a repó Packages beállításánál nem teszed
+> publikussá, a `docker run ghcr.io/...` idegennek nem fog működni — a fenti build viszont mindig.
+
+## Amit tud
 
 | | |
 |---|---|
-| **Időmértékes** | 53 sorfajta, 38 kolón, 11 versláb, 18 szakaszmérték; szigorú illesztés, kapcsolható licenciákkal |
+| **Időmértékes** | 53 sorfajta, 38 kolón, 11 versláb, 8 összetett sor, 18 szakaszmérték; szigorú illesztés, kapcsolható licenciákkal |
 | **Ütemhangsúlyos** | 20 magyaros sorfajta ütemtagolással; a metszet minősége (tiszta vagy laza) külön látszik |
-| **Kettős ritmus** | ha a szakasz mindkét rendnek megfelel, jelezzük — de nem állítjuk, hogy „szimultán vers" |
-| **Rím** | képlet vaksorral (x), a képlet neve (keresztrím, bokorrím…), és soronként a rím fajtája (tiszta rím, ragrím, asszonánc, önrím) |
-| **Cezúra** | a mérték jelölt metszete, és a hexameter penthémimerész / hephthémimerész / kata triton trokhaion metszete |
-| **Ha nem illeszkedik** | a legközelebbi mérték és a pontos eltérés: „hexameter lenne, ha az 1. szótag hosszú volna" |
-| **Felülbírálás** | a szótagra kattintva átállítható a hosszúság, és az elemzés újrafut — a verstan értelmezés kérdése |
-| **Összegzés** | egy mondatban, ahogy egy verstani jegyzet fogalmazna: „Időmértékes verselés: disztichonok", „Szimultán verselés: aszklepiadeszi strófa, felező tizenkettes ütemtagolással" |
+| **Kettős ritmus** | ha a szakasz mindkét rendnek megfelel, jelezzük — de nem állítjuk, hogy „szimultán vers": az ahhoz kell, hogy *maradéktalanul* megfeleljen mindkettőnek |
+| **Rím** | képlet vaksorral (`x`), a képlet neve (keresztrím, bokorrím, félrím…), és soronként a rím fajtája (tiszta rím, ragrím, asszonánc, önrím) |
+| **Cezúra** | a mérték jelölt metszete, és a hexameter penthémimerész / kata triton trokhaion / hephthémimerész metszete |
+| **Ha nem illeszkedik** | a legközelebbi mérték és a pontos eltérés: *„hexameter lenne, ha — 1. szótag: rövid helyett hosszú kellene"* |
+| **Szótagszintű indoklás** | 12-féle ok: természeténél fogva hosszú, helyzeténél fogva hosszú, sorvégi közös, névelő, muta cum liquida, összevont kettőshangzó… |
+| **Felülbírálás** | a szótagra kattintva átállítható a hosszúság, és az elemzés újrafut — a verstan értelmezés kérdése, nem orákulumé |
+| **Összegzés** | egy mondat + részletek: szerkezet, szakaszmérték, sorfajták, ütemtagolás, rím, licenciák, metszet |
 | **Ritmustérkép** | egy negyvensoros eposzrészlet ritmusa egy pillantással befogható; a sorra kattintva odaugrik |
 
 A felület színrendszere a [Radix Colors](https://www.radix-ui.com/colors) skáláira épül (slate alap,
@@ -27,11 +36,6 @@ iris akcentus), mert azok hitelesített kontrasztarányokkal és párosított s�
 A szótaghosszúság három jelentése három elkülönülő hue-t kap — hosszú: iris, rövid: jade, közös:
 amber —, de a jelentés nem csak a színen múlik: ott a jel is (— ∪ ×). Világos, sötét és
 rendszerkövető téma; mobilon a sorok kártyákra tördelődnek, a gombok legalább 44 képpont magasak.
-
-```bash
-docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope:latest
-# → http://localhost:8080
-```
 
 ## Felépítés
 
@@ -52,27 +56,30 @@ kalliope/
 ├─ kalliope-core/    Notation · Phonology · TextNormalizer · Scansion · Caesura
 │                    MetricCanon · MeterMatcher · NearMiss · RhymeDetector
 │                    AccentualCanon · AccentualMatcher · VerseSummary
-│                    Analyzer · KalliopeCli
+│                    Analyzer · Examples · KalliopeCli
 ├─ kalliope-api/     AnalyzeController · CanonController · SpaConfig
 │                    ApiExceptionHandler · RateLimitFilter
 ├─ kalliope-web/     Angular (standalone, signals, zoneless)
 ├─ Dockerfile        node build → maven build → rétegelt JRE image, AOT-gyorsítótárral
+├─ compose.yaml
 └─ .github/workflows/ci.yml
 ```
+
+Verziók: Java 25 (LTS), Spring Boot 4.1, Angular 22, Node 24, Maven 3.9 (wrapper a repóban).
 
 ## Futtatás
 
 **Konténerből** (nem kell se JDK, se Node):
 
 ```bash
-docker compose up --build      # vagy: docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope
+docker compose up --build
 ```
 
 **Fejlesztéshez** két terminál:
 
 ```bash
 ./mvnw -pl kalliope-api -am spring-boot:run       # API a 8080-on
-cd kalliope-web && npm start                      # felület a 4200-on, /api proxyzva
+cd kalliope-web && npm ci && npm start            # felület a 4200-on, /api proxyzva
 ```
 
 **Parancssorból**, felület nélkül:
@@ -81,27 +88,55 @@ cd kalliope-web && npm start                      # felület a 4200-on, /api pro
 ./mvnw -pl kalliope-core -am package
 java -jar kalliope-core/target/kalliope-core-*.jar            # a példatár elemzése
 java -jar kalliope-core/target/kalliope-core-*.jar vers.txt   # fájl elemzése
+cat vers.txt | java -jar kalliope-core/target/kalliope-core-*.jar -
 java -jar kalliope-core/target/kalliope-core-*.jar --canon    # a metrikai kánon
 ```
 
 **Ellenőrzés** (ezt futtatja a CI is):
 
 ```bash
-./mvnw verify                                   # tesztek + Spotless + lefedettségi küszöb
+./mvnw verify        # tesztek + Spotless + 80%-os lefedettségi küszöb
 cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src/**/*.{ts,html,css}"
 ```
+
+| | Teszt | Lefedettség (sor) |
+|---|---:|---:|
+| `kalliope-core` | 91 | 95% |
+| `kalliope-api` | 20 | 84% |
+| `kalliope-web` | 31 | 88% |
+
+A 80%-os küszöb mindhárom modulban ki van kényszerítve (JaCoCo `check`, illetve
+`vitest-base.config.ts`), tehát a build elbukik, ha valaki lerontja.
 
 ## API
 
 | Végpont | Mit ad |
 |---|---|
-| `POST /api/analyze` | `{ text, settings? }` → a teljes elemzés szakaszonként, soronként, szótagonként |
+| `POST /api/analyze` | a teljes elemzés szakaszonként, soronként, szótagonként |
 | `GET /api/canon` | a mértékek, szakaszmértékek, beállítás-leírások és a hosszúság-indoklások szótára |
 | `GET /api/canon/{id}` | egy mérték |
-| `GET /api/examples` | példatár |
+| `GET /api/examples` | a példatár (a korpusz) |
 
-Hibák RFC 9457 (`application/problem+json`) szerint. A felület a `/api/canon`-t egyszer kéri le
-induláskor: a magyar feliratok egyetlen forrása a motor, nincs kétszer leírva.
+```jsonc
+POST /api/analyze
+{
+  "text": "Jót s jól! Ebben áll a nagy titok. Ezt ha nem érted,\nSzánts és vess, s hagyjad másnak az áldozatot.",
+  "settings": { "a_szokezdo_hangsuly_nyujthat": true },   // opcionális
+  "overrides": [ { "line": 0, "syllable": 0, "quantity": "-" } ]  // opcionális, kézi hosszúság
+}
+```
+
+A válasz `verse` mezője az összegzés (`system`, `headline`, `details`), a `stanzas` a szakaszok,
+soronként a skandálással (`scansion`), a megvalósult hosszúsággal (`realized`), a szótagokkal és
+indoklásukkal, a mértéktalálatokkal, a metszetekkel, a rím fajtájával és — találat híján — a
+`nearMiss` magyarázattal.
+
+Hibák RFC 9457 (`application/problem+json`) szerint. Az elemzésre percenkénti kérésszám-korlát él
+(alapból 60, `kalliope.rate-limit.requests-per-minute`); 0 kikapcsolja. A felület a `/api/canon`-t
+egyszer kéri le induláskor: a magyar feliratok egyetlen forrása a motor, nincs kétszer leírva.
+
+A hash-nevű Angular-fájlok egy évig gyorsítótárazhatók, az `index.html` viszont `no-store` — enélkül
+a friss telepítés után is a régi bundle töltődne be.
 
 ## Hogyan skandál
 
@@ -121,12 +156,59 @@ Csehy Zoltán–Polgár Anikó: *Gyakorlati magyar verstan*; Magyartanár / Kecs
 
 **A skandáló szigorú.** Költői licenciát alapból nem feltételez: ha egy sor így nem illeszkedik, az
 a hű válasz, nem hiba. Ahol viszont a hagyomány valóban kétféle olvasatot enged, ott nem dönt
-helyettünk:
+helyettünk: a görög-latin **kettőshangzókra** (`Európa`, `Zeusz`, `Péleidész`) *változatokat* állít
+elő, és a mérték választ — így lesz az Íliász kezdősora hexameter.
 
-- a görög-latin **kettőshangzókra** (`Európa`, `Zeusz`, `Péleidész`) *változatokat* állít elő, és a
-  mérték választ — így lesz az Íliász kezdősora hexameter;
-- két kapcsolható licencia — a *szóvégi mássalhangzó zárhatja a szótagot* (latinos hagyomány) és a
-  *szókezdő hangsúly nyújthat* — külön beállítás, hogy látszódjon, mikor kell hozzá engedmény.
+A **megjelenítés a döntést mutatja**, nem a nyers `?`-eket: a „Még nyílnak a völgyben" sorban a
+„nak" önmagában kétféle olvasatú, de amint az anapesztus illeszkedik, eldőlt, hogy rövid. A közös
+eredetet pontozott aláhúzás jelzi.
+
+### Beállítások
+
+Az első hat az eredeti 2006-os adatbázis kapcsolója, az utolsó négy ennek a változatnak a
+dokumentált kiegészítése:
+
+| Kulcs | Alap | Mit tesz |
+|---|:--:|---|
+| `az_s_kotoszo_kozombos` | be | az „s" kötőszó mássalhangzója elhagyható |
+| `az_abece_betuinek_kulon_szotag` | ki | a magában álló betű betűnévvé bomlik (`b` → `bé`) |
+| `emberi_nyelvu_mit_tudok` | be | jelöli a hangsúlytalan szavakat |
+| `egynel_tobb_telitalalat_keresese` | be | egynél több teljes találatot is felsorol |
+| `az_asszonanc_rimkent_valo_kezelese` | be | az asszonánc is rímnek számít |
+| `latszik_az_utemhangsuly_a_gorogon` | ki | kiírja az iktussort (`÷`/`Ú`) |
+| `a_rovid_kotoszok_kozombosek` | be | a rövid, nyílt szótagú kötőszók közösek (*ha, de, te, mi*…) |
+| `a_gorog_diftongusok_osszevonhatok` | be | az `eu`/`au`/`ei` egy szótagnak is vehető |
+| `a_szovegi_massalhangzo_kozosse_tesz` | be | latinos hagyomány: a szóvégi mássalhangzó zárhatja a szótagot |
+| `a_szokezdo_hangsuly_nyujthat` | **ki** | költői licencia: a szókezdő hangsúly megnyújthat (ettől lesz az Íliász kezdősora hexameter) |
+
+A három tisztán ablakkezelési beállítás (`a_jobb_oldali_szoveg_formazott_legyen`,
+`a_fuggoleges_toszogalos_mutyur_helye`, `a_beallitasokat_tartalmazo_felulet_elrejtve`) az eredeti
+Delphi-felülethez tartozott; itt nincs értelmük, és nem is teszünk úgy, mintha lenne.
+
+## Korpusz-riport
+
+A példatár tizenegy valódi vers, lehetőleg teljes egészében, hiteles forrásból. Ez egyben a motor
+regressziós hálója: a `CorpusTest` elbukik, ha az arány romlik.
+
+| Vers | Sor | Illeszkedik | Az összegzés ítélete |
+|---|---:|---:|---|
+| Zrínyi: Szigeti veszedelem (részlet) | 4 | 0% | ütemhangsúlyos: felező tizenkettes |
+| Arany: Toldi, Első ének | 21 | 0% | ütemhangsúlyos: felező tizenkettes |
+| Homérosz–Devecseri: Íliász I. 1–40. | 40 | 92% | időmértékes: hexameterek |
+| Homérosz–Devecseri: Odüsszeia I. 1–40. | 40 | 90% | időmértékes: hexameterek |
+| Vörösmarty: Zalán futása, előhang | 34 | 97% | időmértékes: hexameterek |
+| Radnóti: Hetedik ecloga (teljes) | 36 | 94% | időmértékes: hexameterek |
+| Kazinczy: A nagy titok | 2 | 100% | időmértékes: disztichonok |
+| Berzsenyi: A magyarokhoz I. (részlet) | 4 | 100% | időmértékes: alkaioszi strófa |
+| Berzsenyi: A közelítő tél (teljes) | 24 | 100% | szimultán: aszklepiadeszi + felező tizenkettes |
+| Berzsenyi: Horác (teljes) | 16 | 93% | szimultán: aszklepiadeszi + felező tizenkettes |
+| Petőfi: Szeptember végén (teljes) | 24 | 95% | időmértékes |
+| **Összesen** | **245** | **84%** | |
+
+A két nulla százalék nem hiba, hanem a helyes válasz: Zrínyi és Arany verse ütemhangsúlyos, nem
+időmértékes — a motor ezeket a másik ágon ismeri fel, és Zrínyinél külön kimondja, hogy a metszet
+gyakran szóba esik. A hiányzó néhány százalék a költői licencia: azoknál a soroknál a „miért nem
+illeszkedik?" megmondja, min múlik.
 
 ## Mi változott ehhez a kiadáshoz
 
@@ -166,15 +248,16 @@ csere miatti önrontása (`adoniszi` → `adonisziizi`), a körkörös hivatkoz�
   nem törhető szóközök, `null` bemenet.
 
 **3. A README állításai.** A korábbi szöveg azt írta, „minden beállítás ténylegesen befolyásolja a
-kimenetet" — négy közülük sehol nem volt beolvasva. A három tisztán ablakkezelési beállítás
-(`a_jobb_oldali_szoveg_formazott_legyen`, `a_fuggoleges_toszogalos_mutyur_helye`,
-`a_beallitasokat_tartalmazo_felulet_elrejtve`) az eredeti Delphi-felülethez tartozott; itt nincs
-értelmük, és nem is teszünk úgy, mintha lenne.
+kimenetet" — négy közülük sehol nem volt beolvasva.
+
+A valódi verskorpusz utólag még két hibát fogott, amit szintetikus teszt nem talált volna meg: a
+magánhangzó nélküli „s" kötőszó kiesett a megjelenítésből (a felület „Fegyvert, vitézt…"-et írt
+volna), a kánon-kereső pedig lekisbetűsítve kereste a mintát is, így `-UU-?`-re sosem talált.
 
 ### Javítások a 2006-os kánonban
 
 Csak ott nyúltunk az adathoz, ahol a minta bizonyíthatóan **más formát ír le, mint a neve**. Minden
-javítás megőrzi az eredeti mintát és a forrást — a felület `Metrikai kánon` nézetében kinyithatók:
+javítás megőrzi az eredeti mintát és a forrást — a felület `Kánon` nézetében kinyithatók:
 
 | Mérték | Eredeti | Javítva | Miért |
 |---|---|---|---|
@@ -191,44 +274,19 @@ javítás megőrzi az eredeti mintát és a forrást — a felület `Metrikai k�
 pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovitziánus`, a
 `téleszilleion` és az anakreóni sorok az eredeti szerző saját, védhető kódolásai maradtak.
 
-## Korpusz-riport
-
-A példatár tizenegy valódi vers, lehetőleg teljes egészében, hiteles forrásból. Ez egyben a motor
-regressziós hálója: a `CorpusTest` elbukik, ha az arány romlik.
-
-| Vers | Sor | Illeszkedik |
-|---|---:|---:|
-| Zrínyi: Szigeti veszedelem (részlet) | 4 | 0% — helyesen: hangsúlyos vers |
-| Arany: Toldi, Első ének | 21 | 0% — helyesen: hangsúlyos vers |
-| Homérosz–Devecseri: Íliász I. 1–40. | 40 | 92% |
-| Homérosz–Devecseri: Odüsszeia I. 1–40. | 40 | 90% |
-| Vörösmarty: Zalán futása, előhang | 34 | 97% |
-| Radnóti: Hetedik ecloga (teljes) | 36 | 94% |
-| Kazinczy: A nagy titok | 2 | 100% |
-| Berzsenyi: A magyarokhoz I. (részlet) | 4 | 100% |
-| Berzsenyi: A közelítő tél (teljes) | 24 | 100% |
-| Berzsenyi: Horác (teljes) | 16 | 93% |
-| Petőfi: Szeptember végén (teljes) | 24 | 95% |
-| **Összesen** | **245** | **84%** |
-
-A két nulla százalék nem hiba, hanem a helyes válasz: Zrínyi és Arany verse ütemhangsúlyos, nem
-időmértékes — a motor ezeket felező tizenkettesként ismeri fel a másik ágon. A hiányzó néhány
-százalék a költői licencia: azoknál a soroknál a „miért nem illeszkedik?" megmondja, min múlik.
-
 ## Ismert korlátok
 
 - A rímdetektor a sorvégeket veszi. A magyar **ragrím** ezért összecseng: egy rímtelen hexameteres
-  szövegben két `-nak` végű sor rímelőnek látszik. Ez nem hiba, hanem a jelenség — de érdemes tudni.
+  szövegben két `-nak` végű sor rímelőnek látszik. A motor ezt ragrímnek is nevezi, és hosszú,
+  szakaszra nem tagolt szövegben nem is állít rímképletet — de nem tudja, mit gondolt a költő.
 - A kétjegyű betűk felismerése írásképi: a szóösszetételi határon álló `z+s`, `d+z`, `c+s`
   (`község`, `vadzab`) egy hangnak látszik. A binárisból örökölt kiejtési tábla ezt csak az
   `igazság` típusra kezeli.
+- Az ütemhangsúlyos illesztés szótagszámon és szóhatáron alapul, nem valódi hangsúlyelemzésen.
 - A szótagszintű indoklás az elsődleges olvasatra vonatkozik; ha a sor csak összevont
   kettőshangzóval illeszkedik, azt a felület külön jelzi („összevonással").
-- Az ütemhangsúlyos illesztés szótagszámon és szóhatáron alapul, nem valódi hangsúlyelemzésen. Egy
-  hosszabb rímtelen hexametersorozat sorvégei között is akadnak véletlen egybecsengések — a
-  detektor ezeket ragrímként meg is nevezi, de nem tudja, hogy a költő nem így gondolta.
-- A `kalliope.exe` futásidejű, bit-pontos összevetése továbbra sem történt meg (ahhoz Wine kellene);
-  a hitelesség az adat és a szabályok egyezésén nyugszik.
+- A `kalliope.exe` futásidejű, bit-pontos összevetése nem történt meg (ahhoz Wine kellene); a
+  hitelesség az adat és a szabályok egyezésén nyugszik.
 
 ## A projekt története
 
@@ -248,10 +306,20 @@ nincs mögötte adatbázis: a kánon a forrásban él, típusos adatként.
 végigvizsgálva. Ez igazolta a rekonstruált szkenner magját (a **digráf-lista** és a **muta cum
 liquida** halmaz pontosan egyezik), és innen való a **normalizáló előfeldolgozó** (`tv→tévé`,
 `w→v`, betűnevek), a **központozás-lista**, a **név-alias tábla**, az **ütemhangsúly-jelek**
-(`U`/`Ú`/`-`/`÷`) és a **verzió** (`VNP's Kalliope 1.71 beta`). Futásidejű bit-pontos összevetés
-nem történt (ahhoz Wine kellene); a hitelesség az adat és a szabályok egyezésén nyugszik.
+(`U`/`Ú`/`-`/`÷`) és a **verzió** (`VNP's Kalliope 1.71 beta`).
 
 **5. Ez a kiadás.** Mélyaudit, a talált hibák javítása, modularizálás, REST API, webes felület,
-konténerezés. A rímdetektor a binárisból portolt tábla helyett Arany János rokonsági rendszerére és
-a mai verstani szakirodalomra épül — a portolt tábla ugyanis a szó végén is egyesített, ami épp az
-ellenkezője Arany kódaszabályának.
+konténerezés, majd az elemzés kiterjesztése az ütemhangsúlyos verselésre. A rímdetektor a binárisból
+portolt tábla helyett Arany János rokonsági rendszerére és a mai verstani szakirodalomra épül — a
+portolt tábla ugyanis a szó végén is egyesített, ami épp az ellenkezője Arany kódaszabályának.
+
+## Szövegek és jogi helyzet
+
+A példatár szövegei hiteles forrásból valók (Wikiforrás, Magyar Elektronikus Könyvtár, Sulinet
+szöveggyűjtemény). Nagy részük közkincs — a szerző halála után hetven évvel. **Két kivétel**
+Devecseri Gábor (1917–1971) Homérosz-fordítása: az Íliász és az Odüsszeia negyven-negyven sora
+szemléltetésként, oktatási célú szabad felhasználás keretében szerepel (Szjt. 33–35. §), a forrás és
+a fordító megjelölésével. Ha a projektet más célra használod, ezt a két szöveget cseréld le.
+
+A kódnak jelenleg **nincs licencfájlja**; amíg nincs, a GitHub alapértelmezése szerint minden jog
+fenntartva. Ha nyílt forrásúvá tennéd, tegyél a repóba egy `LICENSE` fájlt.
