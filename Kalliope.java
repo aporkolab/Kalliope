@@ -315,6 +315,31 @@ public final class Kalliope {
         return ul.toString();
     }
 
+    /* Text normalization EXTRACTED FROM kalliope.exe (FUN_00462a94): expand
+     * abbreviations and standalone consonant letters to their pronounceable
+     * forms so they can be syllabified. These pairs are the binary's own data.
+     * (The binary also confirmed the digraph list and the muta-cum-liquida
+     * stop/liquid sets used below match this port exactly.) */
+    static final String[][] NORMALIZE = {
+        {" vc ", " vécé "}, {" tv ", " tévé "}, {" cd ", " cédé "},
+        {"gazság ", "gasság "}, {"cság ", "csség "},
+        {" b ", " bé "}, {" c ", " cé "}, {" d ", " dé "}, {" f ", " eff "},
+        {" g ", " gé "}, {" h ", " há "}, {" j ", " jé "}, {" k ", " ká "},
+        {" l ", " ell "}, {" m ", " emm "}, {" n ", " enn "}, {" p ", " pé "},
+        {" q ", " kú "}, {" r ", " err "}, {" t ", " té "}, {" v ", " vé "},
+        {" x ", " iksz "}, {" z ", " zé "},
+    };
+    /** Apply the binary's normalization table (lowercased, space-padded). */
+    static String normalize(String line) {
+        String s = " " + line.toLowerCase().replace('w', 'v') + " ";
+        for (String[] p : NORMALIZE) {
+            int i;
+            while ((i = s.indexOf(p[0])) >= 0)
+                s = s.substring(0, i) + p[1] + s.substring(i + p[0].length());
+        }
+        return s.trim();
+    }
+
     /**
      * Scan a whole line into U / - / ?, per sourced Hungarian rules
      * (Fazekas-enciklopédia, Magyartanár, Pannon Enciklopédia):
@@ -333,7 +358,7 @@ public final class Kalliope {
         StringBuilder cs = new StringBuilder();
         List<Boolean> soft = new ArrayList<>(); // char belongs to a neutral s/és clitic
         List<Boolean> art  = new ArrayList<>(); // char belongs to article a/az
-        for (String tokRaw : line.trim().toLowerCase().split("\\s+")) {
+        for (String tokRaw : normalize(line).split("\\s+")) {
             String t = tokRaw.replaceAll("[^a-záéíóőúűöü]", "");
             if (t.isEmpty()) continue;
             boolean sClit   = sNeutral && (t.equals("s") || t.equals("és"));
@@ -476,6 +501,10 @@ public final class Kalliope {
         analyze(db, SZIGETI);
         System.out.println("\n=== Iliász (Devecseri ford.) — hexameter ===");
         analyze(db, ILIASZ);
+
+        System.out.println("\n=== normalizálás (kalliope.exe táblájából) ===");
+        for (String t : new String[]{"A tv meg a cd", "x y z", "gazság"})
+            System.out.printf("  %-16s -> %-22s  %s%n", t, normalize(t), scanLine(t, true));
     }
 
     // --- Demo texts (user-provided) ---
