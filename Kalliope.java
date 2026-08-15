@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -270,11 +271,38 @@ public final class Kalliope {
     /* ===================================================================== *
      *  Matcher                                                             *
      * ===================================================================== */
+    /** Resolve a #complex meter ("part1+part2+…") to one concatenated pattern:
+     *  each part is a component meter name (by osn) or already a raw pattern. */
+    static String resolveComplex(Database db, ComplexMeter cm) {
+        Map<String, NamedMeter> byOsn = db.byOsn();
+        Map<String, NamedMeter> byName = new LinkedHashMap<>();
+        for (NamedMeter n : db.lineMeters) byName.put(n.name(), n);
+        for (NamedMeter n : db.cola) byName.put(n.name(), n);
+        for (NamedMeter n : db.feet) byName.put(n.name(), n);
+        StringBuilder sb = new StringBuilder();
+        for (String part : cm.expr().split("\\+")) {
+            String p = part.strip();
+            if (p.startsWith("||")) { sb.append("||"); p = p.substring(2).strip(); }
+            NamedMeter m = byOsn.get(osnOf(p));
+            if (m == null) m = byName.get(p);
+            if (m != null) sb.append(m.pattern());
+            else sb.append(p); // already a raw U/-/? pattern (e.g. "--|--|U-|?")
+        }
+        return sb.toString();
+    }
+    /** Line meters (and #complex meters) whose realization the scanned line fits.
+     *  Strict: long<->long, short<->short, közös (?)<->either. */
     static List<NamedMeter> matchLine(Database db, String scanned) {
         Set<String> scanSet = new HashSet<>(expand(scanned)); // scanned may contain '?'
         List<NamedMeter> hits = new ArrayList<>();
         for (NamedMeter m : db.lineMeters) {
             for (String r : expand(m.pattern())) if (scanSet.contains(r)) { hits.add(m); break; }
+        }
+        for (ComplexMeter cm : db.complexes) {
+            String pat = resolveComplex(db, cm);
+            for (String r : expand(pat)) if (scanSet.contains(r)) {
+                hits.add(new NamedMeter(pat, cm.name(), osnOf(cm.name()), isFictive(cm.name()))); break;
+            }
         }
         return hits;
     }
@@ -292,6 +320,7 @@ public final class Kalliope {
         return LONG_V.indexOf(l) >= 0 || SHORT_V.indexOf(l) >= 0;
     }
     static boolean isLongVowel(char c) { return LONG_V.indexOf(Character.toLowerCase(c)) >= 0; }
+    static boolean isConsonantLetter(char c) { return Character.isLetter(c) && !isVowel(c); }
 
     /* ===================================================================== *
      *  RECONSTRUCTED front-end #1 — text → U/- scansion.                    *
@@ -425,16 +454,44 @@ public final class Kalliope {
      *  assignment (a, b, c…). The binary's exact predicate (and the         *
      *  assonance/anceps tables) were not in the decompile — verify.         *
      * ===================================================================== */
+    /* Rhyme-consonant normalization EXTRACTED FROM kalliope.exe (FUN_00468788):
+     * collapse phonologically near consonants so near-rhymes match. Devoicing /
+     * merges are applied PHONEME-wise (digraphs like gy, ty are one unit and are
+     * left intact); the cluster rules run afterwards. This is the substance of
+     * the binary's assonance / near-rhyme recognition. */
+    private static final Map<String, String> DEVOICE = Map.of(
+        "b", "p", "d", "t", "g", "k", "r", "l", "m", "n");     // digraphs are not keys → untouched
+    private static final String[][] CLUSTER_NORM = {
+        {"mf", "mv"}, {"nt", "nn"}, {"lt", "tt"}, {"nk", "ń"}, {"ól", "ol"}, {"űl", "ül"},
+    };
+    /** Rhyme key of a line, faithful to the binary: normalize pronunciation,
+     *  take the ending from the last vowel; with assonance on keep only the
+     *  vowel skeleton, otherwise phoneme-devoice/merge the consonants. */
     static String rhymeKey(String line, boolean assonanceAsRhyme) {
-        String w = line.toLowerCase().replaceAll("[^a-záéíóőúűöü]", "");
+        String w = normalize(line);
         int lastV = -1;
         for (int i = w.length() - 1; i >= 0; i--) if (isVowel(w.charAt(i))) { lastV = i; break; }
-        if (lastV < 0) return w;
-        String tail = w.substring(lastV);
-        if (!assonanceAsRhyme) return tail;
-        StringBuilder vowels = new StringBuilder();
-        for (int i = 0; i < tail.length(); i++) if (isVowel(tail.charAt(i))) vowels.append(tail.charAt(i));
-        return vowels.toString();
+        if (lastV < 0) return "";
+        // tokenize the ending into phonemes (digraph = one unit)
+        List<String> ph = new ArrayList<>();
+        for (int i = lastV; i < w.length(); ) {
+            char c = w.charAt(i);
+            if (isVowel(c)) { ph.add(String.valueOf(c)); i++; continue; }
+            if (!isConsonantLetter(c)) { i++; continue; }
+            int adv = 1; String rep = String.valueOf(c);
+            for (String dg : DIGRAPHS) if (w.regionMatches(i, dg, 0, dg.length())) { adv = dg.length(); rep = dg; break; }
+            ph.add(rep); i += adv;
+        }
+        if (assonanceAsRhyme) {                        // binary blanks consonants → vowels only
+            StringBuilder v = new StringBuilder();
+            for (String p : ph) if (p.length() == 1 && isVowel(p.charAt(0))) v.append(p);
+            return v.toString();
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String p : ph) sb.append(DEVOICE.getOrDefault(p, p)); // digraphs pass through
+        String s = sb.toString();
+        for (String[] c : CLUSTER_NORM) s = s.replace(c[0], c[1]);
+        return s;
     }
     static String rhymeScheme(List<String> lines, boolean assonanceAsRhyme) {
         List<String> keys = new ArrayList<>();
@@ -501,6 +558,13 @@ public final class Kalliope {
         analyze(db, SZIGETI);
         System.out.println("\n=== Iliász (Devecseri ford.) — hexameter ===");
         analyze(db, ILIASZ);
+
+        System.out.println("\n=== rím-felismerés (kalliope.exe normalizáló táblájával) ===");
+        for (String[] pr : new String[][]{{"kard","part"},{"hegy","megy"},{"bot","sok"}}) {
+            String ka = rhymeKey(pr[0], false), kb = rhymeKey(pr[1], false);
+            System.out.printf("  %-6s / %-6s  kulcs %-4s / %-4s  %s%n",
+                pr[0], pr[1], ka, kb, ka.equals(kb) ? "RÍMEL" : "nem rímel");
+        }
 
         System.out.println("\n=== normalizálás (kalliope.exe táblájából) ===");
         for (String t : new String[]{"A tv meg a cd", "x y z", "gazság"})
