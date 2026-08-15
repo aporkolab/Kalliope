@@ -83,6 +83,9 @@
             Megosztható link
           }
         </button>
+        <button class="primary-soft" (click)="openSummary()" [disabled]="!analysis()">
+          Összegzés
+        </button>
         <button class="ghost" (click)="exportJson()" [disabled]="!analysis()">JSON</button>
         @if (overrides().length) {
           <button class="ghost" (click)="clearOverrides()">
@@ -298,4 +301,37 @@
       </tbody>
     </table>
   </main>
+}
+
+@if (showSummary() && analysis(); as a) {
+  <div class="overlay" (click)="closeSummary()">
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="osszegzes-cim"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="closeSummary()"
+      tabindex="-1"
+    >
+      <header>
+        <p class="system">
+          {{ a.verse.system === 'SZABAD' ? 'nincs szabályos rend' : 'verselés' }}
+        </p>
+        <h2 id="osszegzes-cim">{{ a.verse.headline }}</h2>
+      </header>
+      <ul>
+        @for (d of a.verse.details; track d) {
+          <li>{{ d }}</li>
+        }
+      </ul>
+      <footer>
+        <span class="muted"
+          >{{ a.summary.stanzaCount }} szakasz · {{ a.summary.lineCount }} sor ·
+          {{ a.summary.syllableCount }} szótag</span
+        >
+        <button class="primary" (click)="closeSummary()">Bezárás</button>
+      </footer>
+    </section>
+  </div>
 }

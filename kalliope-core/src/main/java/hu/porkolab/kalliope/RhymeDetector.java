@@ -183,6 +183,9 @@ public final class RhymeDetector {
 
     /** A rímképlet magyar neve, vagy {@code null}, ha nem szokványos forma. */
     public static String schemeName(String pattern) {
+        if (!pattern.isEmpty() && pattern.chars().allMatch(c -> c == BLANK)) {
+            return "rímtelen";
+        }
         return switch (pattern) {
             case "aabb", "aabbcc", "aabbccdd" -> "páros rím";
             case "abab", "ababcdcd" -> "keresztrím";

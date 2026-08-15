@@ -123,10 +123,17 @@ export interface Summary {
   simultaneousLines: number;
 }
 
+export interface VerseSummary {
+  system: 'IDOMERTEKES' | 'UTEMHANGSULYOS' | 'SZIMULTAN' | 'VEGYES' | 'SZABAD';
+  headline: string;
+  details: string[];
+}
+
 export interface Analysis {
   stanzas: Stanza[];
   settings: Record<string, boolean>;
   summary: Summary;
+  verse: VerseSummary;
 }
 
 export interface SettingInfo {

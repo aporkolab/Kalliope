@@ -562,3 +562,77 @@ tr.fictive {
 .note p {
   margin: 0.3rem 0;
 }
+
+/* ---------- összegző ablak ---------- */
+.primary-soft {
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 45%);
+}
+
+.modal {
+  width: min(100%, 42rem);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1.5rem clamp(1.2rem, 4vw, 2rem);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 25%);
+}
+
+.modal header {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal .system {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.modal h2 {
+  margin: 0.3rem 0 0;
+  color: var(--accent);
+  font-size: 1.25rem;
+  line-height: 1.35;
+}
+
+.modal ul {
+  margin: 1rem 0;
+  padding-left: 1.1rem;
+}
+
+.modal li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.modal footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.modal footer .muted {
+  margin: 0;
+  font-size: 0.85rem;
+}

@@ -107,6 +107,11 @@ const ANALYSIS: Analysis = {
     accentualForms: [],
     simultaneousLines: 0,
   },
+  verse: {
+    system: 'IDOMERTEKES',
+    headline: 'Időmértékes verselés: hexameterek.',
+    details: ['Egyetlen, 1 soros szakasz.'],
+  },
 };
 
 interface Internals {

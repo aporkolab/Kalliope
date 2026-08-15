@@ -7,10 +7,16 @@ import java.util.List;
  * megjelenítés a hívóé (parancssor, REST, felület) — így a CLI és a webes
  * felület ugyanazt az egy implementációt fogyasztja.
  */
-public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary) {
+public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary, VerseSummary verse) {
 
     public Analysis {
         stanzas = List.copyOf(stanzas);
+    }
+
+    /** Az összegzéssel együtt — ezt hívja az elemző. */
+    static Analysis of(List<Stanza> stanzas, Settings settings, Summary summary) {
+        Analysis without = new Analysis(stanzas, settings, summary, null);
+        return new Analysis(stanzas, settings, summary, VerseSummary.of(without));
     }
 
     /**

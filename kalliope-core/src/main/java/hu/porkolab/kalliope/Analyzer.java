@@ -148,7 +148,7 @@ public final class Analyzer {
                 List.copyOf(formNames),
                 List.copyOf(accentualNames),
                 simultaneous);
-        return new Analysis(stanzas, settings, summary);
+        return Analysis.of(stanzas, settings, summary);
     }
 
     // ------------------------------------------------------------------ //

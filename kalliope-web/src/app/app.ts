@@ -34,6 +34,7 @@ export class App {
   protected readonly showSettings = signal(false);
   protected readonly canonQuery = signal('');
   protected readonly copied = signal(false);
+  protected readonly showSummary = signal(false);
 
   /** Kézi szótaghosszúság-felülbírálások — kattintásra körbejárnak. */
   protected readonly overrides = signal<Override[]>([]);
@@ -128,11 +129,23 @@ export class App {
     this.analyze();
   }
 
+  /** Az összegző ablak megnyitása; elemzés nélkül nincs mit mutatni. */
+  protected openSummary(): void {
+    if (this.analysis()) {
+      this.showSummary.set(true);
+    }
+  }
+
+  protected closeSummary(): void {
+    this.showSummary.set(false);
+  }
+
   protected clear(): void {
     this.poem.set('');
     this.analysis.set(null);
     this.error.set(null);
     this.overrides.set([]);
+    this.showSummary.set(false);
   }
 
   /**

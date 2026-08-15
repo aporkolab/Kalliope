@@ -71,6 +71,11 @@ function analysis(over: Partial<Line> = {}): Analysis {
       accentualForms: ['felező tizenkettes'],
       simultaneousLines: 1,
     },
+    verse: {
+      system: 'IDOMERTEKES',
+      headline: 'Időmértékes verselés: hexameterek.',
+      details: ['Egyetlen, 1 soros szakasz.'],
+    },
   };
 }
 
@@ -253,6 +258,40 @@ describe('App — új verstani funkciók', () => {
     const dividers = fixture.nativeElement.querySelectorAll('.divider');
     expect(dividers.length).toBe(1);
     expect(dividers[0].classList.contains('caesura')).toBe(true);
+  });
+
+  it('az összegző ablak kiírja az ítéletet és a részleteket', () => {
+    run(analysis());
+    expect(fixture.nativeElement.querySelector('.modal')).toBeNull();
+
+    const button = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (b: HTMLButtonElement) => b.textContent?.trim() === 'Összegzés',
+    ) as HTMLButtonElement;
+    button.click();
+    fixture.detectChanges();
+
+    const modal = fixture.nativeElement.querySelector('.modal');
+    expect(modal).not.toBeNull();
+    expect(modal.getAttribute('aria-modal')).toBe('true');
+    expect(modal.textContent).toContain('Időmértékes verselés: hexameterek.');
+    expect(modal.querySelectorAll('li').length).toBe(1);
+
+    (
+      [...modal.querySelectorAll('button')].find(
+        (b: HTMLButtonElement) => b.textContent?.trim() === 'Bezárás',
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.modal')).toBeNull();
+  });
+
+  it('elemzés nélkül nem nyílik meg az összegzés', () => {
+    const internals = fixture.componentInstance as unknown as {
+      openSummary: () => void;
+      showSummary: () => boolean;
+    };
+    internals.openSummary();
+    expect(internals.showSummary()).toBe(false);
   });
 
   it('a rímfajták és az ütemtagolás magyar nevet kapnak', () => {

@@ -19,6 +19,7 @@ Amit tud:
 | **Cezúra** | a mérték jelölt metszete, és a hexameter penthémimerész / hephthémimerész / kata triton trokhaion metszete |
 | **Ha nem illeszkedik** | a legközelebbi mérték és a pontos eltérés: „hexameter lenne, ha az 1. szótag hosszú volna" |
 | **Felülbírálás** | a szótagra kattintva átállítható a hosszúság, és az elemzés újrafut — a verstan értelmezés kérdése |
+| **Összegzés** | egy mondatban, ahogy egy verstani jegyzet fogalmazna: „Időmértékes verselés: disztichonok", „Szimultán verselés: aszklepiadeszi strófa, felező tizenkettes ütemtagolással" |
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope:latest
@@ -43,7 +44,8 @@ futtatható és külön tesztelhető.
 kalliope/
 ├─ kalliope-core/    Notation · Phonology · TextNormalizer · Scansion · Caesura
 │                    MetricCanon · MeterMatcher · NearMiss · RhymeDetector
-│                    AccentualCanon · AccentualMatcher · Analyzer · KalliopeCli
+│                    AccentualCanon · AccentualMatcher · VerseSummary
+│                    Analyzer · KalliopeCli
 ├─ kalliope-api/     AnalyzeController · CanonController · SpaConfig
 │                    ApiExceptionHandler · RateLimitFilter
 ├─ kalliope-web/     Angular (standalone, signals, zoneless)
