@@ -1,0 +1,514 @@
+:host {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --border: #e2ded4;
+  --ink: #23201b;
+  --muted: #6f6a60;
+  --accent: #7a3b2e;
+  --accent-soft: #f0e4df;
+  --long: #7a3b2e;
+  --short: #3f6b52;
+  --anceps: #8a7a3f;
+  --error: #a03028;
+
+  display: block;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --bg: #171614;
+    --surface: #1f1e1b;
+    --border: #35322c;
+    --ink: #ece7dd;
+    --muted: #9b9486;
+    --accent: #d9927f;
+    --accent-soft: #33251f;
+    --long: #e0a08c;
+    --short: #8fc4a6;
+    --anceps: #d6c37f;
+    --error: #e58a80;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ---------- fejléc ---------- */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.01em;
+}
+
+.tagline {
+  margin: 0.1rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tabs button {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  border-color: var(--border);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---------- elrendezés ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 4fr) minmax(360px, 6fr);
+  gap: 1px;
+  min-height: calc(100vh - 5.5rem);
+  background: var(--border);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem clamp(1rem, 3vw, 2rem);
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.pane-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.pane-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+textarea {
+  flex: 1;
+  min-height: 14rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+textarea:focus-visible,
+input:focus-visible,
+button:focus-visible,
+.syllable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pane-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+button {
+  padding: 0.55rem 1.1rem;
+  border-radius: 0.4rem;
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.ghost {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* ---------- beállítások ---------- */
+.settings {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.9rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.switch {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.switch input {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+}
+
+/* ---------- példatár ---------- */
+.examples {
+  margin-top: 1.25rem;
+}
+
+.examples h3 {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  margin-bottom: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--surface);
+  color: inherit;
+  text-align: left;
+}
+
+.example span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+/* ---------- eredmény ---------- */
+.empty {
+  margin: auto 0;
+  color: var(--muted);
+}
+
+.hint {
+  max-width: 46ch;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.summary .found {
+  color: var(--accent);
+}
+
+.summary .notfound {
+  font-style: italic;
+}
+
+.reason {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0.6rem 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.4rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.88rem;
+}
+
+.stanza {
+  margin: 1.1rem 0;
+}
+
+.stanza h3 {
+  margin: 0 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.15rem 0.6rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dotted var(--border);
+}
+
+.rhyme {
+  grid-row: span 2;
+  align-self: center;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.syllables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.12rem;
+}
+
+.syllable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.05rem 0.18rem;
+  border-radius: 0.25rem;
+  cursor: help;
+}
+
+.syllable:hover,
+.syllable:focus-visible {
+  background: var(--accent-soft);
+}
+
+.mark {
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.text {
+  font-size: 1.02rem;
+  line-height: 1.4;
+}
+
+.long .mark,
+.long {
+  color: var(--long);
+}
+
+.short .mark,
+.short {
+  color: var(--short);
+}
+
+.anceps .mark,
+.anceps {
+  color: var(--anceps);
+}
+
+.anceps .text {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+
+.verdict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.meter {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.badge {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.ictus {
+  color: var(--muted);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+
+.line.unmatched .text {
+  opacity: 0.85;
+}
+
+.stanza-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  padding-top: 0.55rem;
+  font-size: 0.87rem;
+}
+
+.stanza-foot .form {
+  color: var(--accent);
+}
+
+.stanza-foot em {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.error {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--error);
+  border-radius: 0.4rem;
+  color: var(--error);
+}
+
+/* ---------- kánon ---------- */
+.canon {
+  padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 3rem;
+}
+
+.canon-head h2 {
+  margin: 0 0 0.3rem;
+}
+
+.muted {
+  margin: 0 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.canon input {
+  width: min(100%, 32rem);
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+table {
+  width: 100%;
+  margin-top: 1.2rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+td code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+}
+
+tr.fictive {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.note {
+  max-width: 34rem;
+  color: var(--muted);
+}
+
+.note details {
+  margin-top: 0.25rem;
+}
+
+.note summary {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.note p {
+  margin: 0.3rem 0;
+}

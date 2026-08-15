@@ -1,0 +1,260 @@
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">Κ</span>
+    <div>
+      <h1>Kalliopé</h1>
+      <p class="tagline">magyar időmértékes verselés és rímképlet elemzője</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button
+      role="tab"
+      [attr.aria-selected]="tab() === 'elemzes'"
+      [class.active]="tab() === 'elemzes'"
+      (click)="tab.set('elemzes')"
+    >
+      Elemzés
+    </button>
+    <button
+      role="tab"
+      [attr.aria-selected]="tab() === 'adatbazis'"
+      [class.active]="tab() === 'adatbazis'"
+      (click)="tab.set('adatbazis')"
+    >
+      Metrikai kánon
+    </button>
+  </nav>
+</header>
+
+@if (tab() === 'elemzes') {
+  <main class="layout">
+    <section class="pane input-pane" aria-label="Vers bevitele">
+      <div class="pane-head">
+        <h2>Vers</h2>
+        <div class="actions">
+          <button class="ghost" (click)="clear()" [disabled]="!poem()">Törlés</button>
+          <button class="ghost" (click)="showSettings.set(!showSettings())">
+            Beállítások
+            @if (showSettings()) {
+              ▲
+            } @else {
+              ▼
+            }
+          </button>
+        </div>
+      </div>
+
+      @if (showSettings()) {
+        <fieldset class="settings">
+          <legend class="visually-hidden">Elemzési beállítások</legend>
+          @for (s of canon()?.settings ?? []; track s.key) {
+            <label class="switch">
+              <input
+                type="checkbox"
+                [checked]="settings()[s.key]"
+                (change)="toggleSetting(s.key)"
+              />
+              <span>{{ s.label }}</span>
+            </label>
+          }
+        </fieldset>
+      }
+
+      <textarea
+        [ngModel]="poem()"
+        (ngModelChange)="poem.set($event)"
+        placeholder="Illeszd be ide a verset. Az üres sor szakaszhatárt jelent."
+        spellcheck="false"
+        aria-label="A vers szövege"
+      ></textarea>
+
+      <div class="pane-foot">
+        <button class="primary" (click)="analyze()" [disabled]="busy() || !poem().trim()">
+          @if (busy()) {
+            Elemzés…
+          } @else {
+            Elemzés
+          }
+        </button>
+        <button class="ghost" (click)="share()" [disabled]="!poem().trim()">
+          @if (copied()) {
+            Link a vágólapon ✓
+          } @else {
+            Megosztható link
+          }
+        </button>
+        <button class="ghost" (click)="exportJson()" [disabled]="!analysis()">JSON</button>
+      </div>
+
+      @if (examples().length) {
+        <div class="examples">
+          <h3>Példatár</h3>
+          @for (e of examples(); track e.id) {
+            <button class="example" (click)="loadExample(e)">
+              <strong>{{ e.title }}</strong>
+              <span>{{ e.author }}</span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="pane result-pane" aria-label="Elemzés" aria-live="polite">
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      @if (!analysis() && !error()) {
+        <div class="empty">
+          <p>Írj be egy verset, vagy válassz a példatárból.</p>
+          <p class="hint">
+            A skandálás jelei: <span class="long">—</span> hosszú,
+            <span class="short">∪</span> rövid, <span class="anceps">×</span> közös (mindkettőnek
+            számít). Vidd az egeret egy szótagra, és megmondja, miért olyan hosszú.
+          </p>
+        </div>
+      }
+
+      @if (analysis(); as a) {
+        <div class="summary">
+          <span>{{ a.summary.stanzaCount }} szakasz</span>
+          <span>{{ a.summary.lineCount }} sor</span>
+          <span>{{ a.summary.syllableCount }} szótag</span>
+          @if (a.summary.meters.length) {
+            <span class="found">{{ a.summary.meters.join(', ') }}</span>
+          } @else {
+            <span class="notfound">nincs klasszikus mérték</span>
+          }
+        </div>
+
+        @if (reasonText(); as text) {
+          <p class="reason" role="status">{{ text }}</p>
+        }
+
+        @for (stanza of a.stanzas; track stanza.index) {
+          <article class="stanza">
+            @if (a.stanzas.length > 1) {
+              <h3>{{ stanza.index + 1 }}. szakasz</h3>
+            }
+
+            @for (line of stanza.lines; track line.index) {
+              <div class="line" [class.unmatched]="!line.meters.length">
+                <span
+                  class="rhyme"
+                  [attr.data-label]="line.rhymeLabel"
+                  [title]="'rímkulcs: ' + line.rhymeKey"
+                >
+                  {{ line.rhymeLabel }}
+                </span>
+                <div class="syllables">
+                  @for (s of line.syllables; track $index) {
+                    <span
+                      class="syllable"
+                      [class]="quantityClass(s.quantity)"
+                      (mouseenter)="hovered.set(s)"
+                      (mouseleave)="hovered.set(null)"
+                      (focus)="hovered.set(s)"
+                      (blur)="hovered.set(null)"
+                      tabindex="0"
+                    >
+                      <span class="mark" aria-hidden="true">{{ quantityMark(s.quantity) }}</span>
+                      <span class="text">{{ s.text }}</span>
+                    </span>
+                  }
+                </div>
+                <div class="verdict">
+                  @if (line.meters.length) {
+                    <span class="meter">{{ meterNames(line) }}</span>
+                  }
+                  @if (line.synizesis) {
+                    <span class="badge" title="A sor csak összevont kettőshangzóval illeszkedik">
+                      összevonással
+                    </span>
+                  }
+                  @if (line.ictusRow) {
+                    <code class="ictus">{{ line.ictusRow }}</code>
+                  }
+                </div>
+              </div>
+            }
+
+            <footer class="stanza-foot">
+              <span class="scheme"
+                >rímképlet: <strong>{{ stanza.rhymePattern }}</strong></span
+              >
+              @for (f of stanza.forms; track f.form.id) {
+                <span class="form">
+                  {{ f.form.name }}
+                  @if (f.repetitions > 1) {
+                    ×{{ f.repetitions }}
+                  }
+                  @if (f.form.rhymeScheme && !f.rhymeSchemeMatches) {
+                    <em title="a forma kötött rímképlete eltér">(a rímképlet eltér)</em>
+                  }
+                </span>
+              }
+            </footer>
+          </article>
+        }
+      }
+    </section>
+  </main>
+}
+
+@if (tab() === 'adatbazis') {
+  <main class="canon">
+    <div class="canon-head">
+      <h2>Metrikai kánon</h2>
+      @if (canon(); as c) {
+        <p class="muted">
+          {{ c.originVersion }} — a kánon lezárva: {{ c.canonClosed }}.
+          {{ c.meters.length }} mérték, {{ c.stanzas.length }} szakaszmérték.
+        </p>
+      }
+      <input
+        type="search"
+        [ngModel]="canonQuery()"
+        (ngModelChange)="canonQuery.set($event)"
+        placeholder="Keresés névre vagy mintára (pl. alkaioszi, -UU-UU-)"
+        aria-label="Keresés a kánonban"
+      />
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Név</th>
+          <th scope="col">Minta</th>
+          <th scope="col">Fajta</th>
+          <th scope="col">Megjegyzés</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of filteredMeters(); track m.id) {
+          <tr [class.fictive]="m.fictive">
+            <td>{{ m.name }}</td>
+            <td>
+              <code>{{ m.pattern }}</code>
+            </td>
+            <td>{{ kindLabel(m.kind) }}</td>
+            <td class="note">
+              @if (m.note) {
+                <span>{{ m.note }}</span>
+              }
+              @if (m.correction; as c) {
+                <details>
+                  <summary>javítva</summary>
+                  <p>
+                    Eredeti minta: <code>{{ c.original }}</code>
+                  </p>
+                  <p>{{ c.reason }}</p>
+                  <a [href]="c.source" target="_blank" rel="noopener noreferrer">forrás</a>
+                </details>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </main>
+}

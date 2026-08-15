@@ -1,0 +1,15 @@
+services:
+  kalliope:
+    build: .
+    image: kalliope:local
+    ports:
+      - "8080:8080"
+    environment:
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/canon"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s

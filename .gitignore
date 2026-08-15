@@ -1,0 +1,16 @@
+target/
+*.class
+node_modules/
+dist/
+coverage/
+.angular/
+
+# IDE
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+
+.DS_Store

@@ -1,70 +1,203 @@
 # Kalliopé
 
-Magyar időmértékes (klasszikus) verselés és rímképlet elemzője — egyetlen, önálló Java forrásfájlban.
+Magyar időmértékes (klasszikus) verselés és rímképlet elemzője — motor, REST API és webes felület.
 
-## Mi ez
-
-A Kalliopé verstani elemző: szöveget **skandál** (rövid/hosszú szótagok), klasszikus **versmértékekre illeszt** (hexameter, disztichon, szapphói, alkaioszi, aszklepiadeszi stb.), és **rímképletet** ismer fel. A teljes metrikai adatbázis — verslábak, kolónok, sor- és szakaszmértékek, konstansok, összetett mértékek, hangsúlytalan szavak, beállítások, tárolt strófák — a forrásba van **ágyazva**; nincs külső adatfájl.
+A Kalliopé **skandál** (rövid / hosszú / közös szótagok), klasszikus **versmértékekre illeszt**
+(hexameter, disztichon, szapphói, alkaioszi, aszklepiadeszi…), és **rímképletet** ismer fel. Minden
+szótagról megmondja, **miért** olyan hosszú — ez teszi tanulásra is használhatóvá.
 
 ```bash
-java Kalliope.java        # JDK 21+; külön fordítás nem kell, forrásból indul
+docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope:latest
+# → http://localhost:8080
 ```
 
-## A projekt alakulása
+## Felépítés
 
-**1. Eredet.** A Kalliopé eredetileg egy ~2006-os Borland Delphi asztali program volt magyar időmértékes verselés és rímképlet elemzésére. A forráskód elveszett; csak a lefordított bináris maradt meg, egy Ghidra reverse-engineering projekt (`.gzf`) formájában.
+Három modul, egyetlen deploy-artefaktum:
 
-**2. Visszafejtés.** A logikát a Ghidra dekompilátumából kellett kibányászni: a `.gzf` konténer felbontása (Java-szerializált burok + beágyazott ZIP + a ProgramDB-image), a VCL-alapú architektúra azonosítása (a vers párhuzamos `TStringList`-ekként tárolva: nyers sor / csupasz alak / rímbetű / szótagolás / hangsúlyjelek), és a tényleges verstani logika kihorgonyzása a program magyar string-konstansairól (`rimkeplet`, `strofa`, `utemhangsuly`…).
+| Modul | Mi ez | Függőségek |
+|---|---|---|
+| `kalliope-core` | a verstani motor és a metrikai kánon | **nulla** — csak a JDK |
+| `kalliope-api` | vékony REST-réteg + a felület kiszolgálása | Spring Boot 4.1 |
+| `kalliope-web` | a webes felület | Angular 22 |
 
-**3. Az adatbázis.** A program külső metrikai adatbázisa külön került elő, és megadta a teljes formátum-nyelvtant (`;` komment, `.` mezőnév, `!` beállítás, `@`/`#define` konstans, `#complex` összetett mérték, `$` hangsúlytalan szó, `#start_strofa` blokk) és a teljes adatot. Mivel a klasszikus versmérték-kánon gyakorlatilag zárt halmaz, ez a Java változatba be van ágyazva.
+Az Angular build a Spring Boot jar `static/` mappájába kerül, tehát **egy image, egy port, nincs
+CORS, nincs külön statikus hosting**. A motor nem ismeri se a Springet, se a JSON-t: külön
+futtatható és külön tesztelhető.
 
-**4. Újraépítés Java-ban.** Egyetlen fájlba: a metrikai jelölés (U/-/?/=) és feloldása; az adatbázis-parser; az osn- (optimalizált sornév) feloldás; a formula-resolver (konstansok, `#define`, `#complex`, szakaszmérték-képletek visszavezetése konkrét mintákra); a soríllesztő; és a rímképlet-detektor.
+```
+kalliope/
+├─ kalliope-core/    Notation · Phonology · TextNormalizer · Scansion
+│                    MetricCanon · MeterMatcher · RhymeDetector · Analyzer · KalliopeCli
+├─ kalliope-api/     AnalyzeController · CanonController · SpaConfig · ApiExceptionHandler
+├─ kalliope-web/     Angular (standalone, signals, zoneless)
+├─ Dockerfile        node build → maven build → rétegelt JRE image, AOT-gyorsítótárral
+└─ .github/workflows/ci.yml
+```
 
-**5. A skandáló megalapozása verstani forrásokból.** A szöveg→U/- skandáló szabályait hiteles magyar verstani munkákból építettük fel (Fazekas Kulturális Enciklopédia – Verstan; Magyartanár / EKF; Pannon Enciklopédia – Kecskés András: A klasszikus időmértékes verselés; Sulinet Tudásbázis; Wikipédia). A beépített szabályok:
+## Futtatás
+
+**Konténerből** (nem kell se JDK, se Node):
+
+```bash
+docker compose up --build      # vagy: docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope
+```
+
+**Fejlesztéshez** két terminál:
+
+```bash
+./mvnw -pl kalliope-api -am spring-boot:run       # API a 8080-on
+cd kalliope-web && npm start                      # felület a 4200-on, /api proxyzva
+```
+
+**Parancssorból**, felület nélkül:
+
+```bash
+./mvnw -pl kalliope-core -am package
+java -jar kalliope-core/target/kalliope-core-*.jar            # a példatár elemzése
+java -jar kalliope-core/target/kalliope-core-*.jar vers.txt   # fájl elemzése
+java -jar kalliope-core/target/kalliope-core-*.jar --canon    # a metrikai kánon
+```
+
+**Ellenőrzés** (ezt futtatja a CI is):
+
+```bash
+./mvnw verify                                   # tesztek + Spotless + lefedettségi küszöb
+cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src/**/*.{ts,html,css}"
+```
+
+## API
+
+| Végpont | Mit ad |
+|---|---|
+| `POST /api/analyze` | `{ text, settings? }` → a teljes elemzés szakaszonként, soronként, szótagonként |
+| `GET /api/canon` | a mértékek, szakaszmértékek, beállítás-leírások és a hosszúság-indoklások szótára |
+| `GET /api/canon/{id}` | egy mérték |
+| `GET /api/examples` | példatár |
+
+Hibák RFC 9457 (`application/problem+json`) szerint. A felület a `/api/canon`-t egyszer kéri le
+induláskor: a magyar feliratok egyetlen forrása a motor, nincs kétszer leírva.
+
+## Hogyan skandál
+
+A szabályok hiteles magyar verstani forrásokból valók (Fazekas Kulturális Enciklopédia — Verstan;
+Csehy Zoltán–Polgár Anikó: *Gyakorlati magyar verstan*; Magyartanár / Kecskés–Szilágyi–Szuromi:
+*Kis magyar verstan*; A magyar helyesírás szabályai 12. kiadás):
 
 - a szótag a következő magánhangzóig tart, **átlépve a szóhatárt**;
-- **természeténél fogva hosszú**: hosszú magánhangzó; **helyzeténél fogva hosszú**: rövid magánhangzó után hosszú vagy legalább két mássalhangzó (a digráf — sz, cs, gy, ly, ny, ty, zs, dz, dzs — **egy** mássalhangzó);
-- **közös (anceps) szótag** — hosszúnak és rövidnek is számít, jele `?`: mindkét határozott névelő (a, az), a rövid magánhangzós nyílt szótagú kötőszók/névmások (köztük az „s" ← „és"), és a **sorvégi** szótag (brevis in longo);
-- **muta cum liquida**: zárhang (p, t, k, b, d, g) + likvida (r, l) kapcsolat nem feltétlenül tesz helyzeti hosszút — közös (pl. „apraja", „atlasz").
+- **természeténél fogva hosszú**: hosszú magánhangzó;
+- **helyzeténél fogva hosszú**: rövid magánhangzó után egy hosszú vagy legalább két rövid
+  mássalhangzó. A kétjegyű betű (`cs, dz, gy, ly, ny, sz, ty, zs`, `dzs`) **egy** mássalhangzó; a
+  kettőzött kétjegyű (`ssz, ggy, nny`…) **egy hosszú**, tehát két pozíció; az `x` **két** hang
+  (`ksz`); a `dz`/`dzs` kettőzés nélkül is hosszú (AkH. 87. §);
+- **közös (anceps, `?`)**: a sorvégi szótag, a határozott névelő, a rövid nyílt szótagú kötőszók és
+  névmások, a *muta cum liquida* (zárhang + likvida — de csak szón **belül**), és minden torlódás,
+  amelynek az olvasata bizonytalan.
 
-**6. Elvi döntés: szigorú hűség.** A skandáló a szabályokat **szigorúan** alkalmazza. A **helyzeti hosszúság valódi hosszúság** — nem „gyengíthető" rövidre azért, hogy egy sor kényszerből mértékre illeszkedjen (pl. „istennő" = `— — —`, három hosszú). Az illesztés is szigorú: hosszú↔hosszú, rövid↔rövid, közös↔bármelyik; **nincs feltételezett költői licencia**. Ha egy sor így nem illeszkedik egy mértékre, az a helyes, hű válasz — nem hiba.
+**A skandáló szigorú.** Költői licenciát alapból nem feltételez: ha egy sor így nem illeszkedik, az
+a hű válasz, nem hiba. Ahol viszont a hagyomány valóban kétféle olvasatot enged, ott nem dönt
+helyettünk:
 
-**7. Kiegészítések.** A beágyazott kánon kiegészült néhány standard, szisztematikus klasszikus mértékkel (jambikus mono-/di-/tetrameter, anapesztikus dimeter, ión a minore/maiore dimeter, daktilikus tetrameter), konzervatív anceps-kódolással, külön `.Kiegészítő antik sorfajták:` szekcióban. A ritka, hagyományfüggő formák (archilochoszi kombinációk, priapeus, elegiambus) szándékosan kimaradtak, mert mintájuk nem egyértelmű.
+- a görög-latin **kettőshangzókra** (`Európa`, `Zeusz`, `Péleidész`) *változatokat* állít elő, és a
+  mérték választ — így lesz az Íliász kezdősora hexameter;
+- két kapcsolható licencia — a *szóvégi mássalhangzó zárhatja a szótagot* (latinos hagyomány) és a
+  *szókezdő hangsúly nyújthat* — külön beállítás, hogy látszódjon, mikor kell hozzá engedmény.
 
-**8. Hitelesítés és portolás az eredeti binárisból.** Utóbb előkerült maga a `kalliope.exe`. Ebből statikusan kihúzhatóvá vált az az adat, ami a Ghidra-exportból hiányzott. Ez egyrészt **igazolta** a rekonstruált szkenner magját: a program tényleges **digráf-listája** (`ty, gy, ny, ly, dzs, dz, sz, zs, cs`, `cc`) és **muta cum liquida** halmaza (zárhangok `p, b, t, d, k, g` + likvidák `l, r`) pontosan egyezik ezzel a változattal, és az „s" tényleg kötőszóként kezelt (nincs a betűnév-táblában). Másrészt két helyen a rekonstrukció helyére a bináris **tényleges** adata/algoritmusa került: a **normalizáló előfeldolgozó** (rövidítés-kiejtés `tv→tévé`, `cd→cédé`, `vc→vécé`, `w→v`; magában álló mássalhangzók betűnévvé bontása `b→bé`, `f→eff`, `x→iksz`…), és a **rímdetektor mássalhangzó-normalizáló táblája** (`FUN_00468788`: zöngétlenítés és összeolvadások). A bináris **futtatásához** (bit-pontos diff a kimenethez) Wine kellene; a jelen hitelesítés az adat és a szabályok egyezésén alapul, nem a futásidejű kimenet összevetésén.
+## Mi változott ehhez a kiadáshoz
 
-**9. Teljes bináris-kimerítés és mélyaudit.** A `.exe` saját címtartományának összes string-literálja (371 db) végigvizsgálva; ami még hiányzott, bekerült: a **verzió** (`VNP's Kalliope 1.71 beta`), a **központozás-lista**, a **név-alias tábla**, az **ütemhangsúly-jelek** (`U`/`Ú`/`-`/`÷`), és a boolean-írás `1`/`0` formája. Ezután kódaudit futott a Java oldalon, amely öt valódi hiányt talált és javított: beolvasott, de tétlen beállítások (`az_abece_betuinek_kulon_szotag`, `egynel_tobb_telitalalat_keresese`, `emberi_nyelvu_mit_tudok`), holt `$`-szólista, hiányzó szakaszmérték-illesztés, valamint egy nem használt import. Minden beállítás mostantól ténylegesen befolyásolja a kimenetet.
+Az előző változat egyetlen Java fájl volt, a metrikai adatbázissal beágyazott **szövegként**, saját
+szintaxissal (`;` komment, `.` mezőnév, `!` beállítás, `@` konstans, `#complex`, `$` szó). A
+mélyaudit 137 megerősített hibát talált (25 további állítást az ellenőrzés megcáfolt); a többségük
+két forrásból jött:
 
-## Felépítés (egy fájlon belül)
+**1. A saját szövegformátum és a hozzá írt parser.** Ez a réteg most nincs: a kánon **típusos Java
+adat**, a hivatkozás objektumhivatkozás. Ezzel egy csapásra megszűnt az elgépelt hivatkozás
+(`nib.alex.1.fiktiv` ↔ `.fictive` — emiatt mind a 6 „nibelungizált alexandrin" némán csonka volt),
+a némán elnyelt feloldási hiba, a kis/nagybetű-érzékeny konstansnév, a névalias-tábla láncolt
+csere miatti önrontása (`adoniszi` → `adonisziizi`), a körkörös hivatkozás okozta `OutOfMemoryError`,
+és a dokumentált, de sosem megvalósított nyelvtani formák.
 
-| Rész | Felelős |
-|---|---|
-| Jelölés | `expand` — a `?`/`=` pozíciók kibontása konkrét U/- realizációkra |
-| Adatmodell | `NamedMeter`, `ComplexMeter`, `Constant`, `StanzaMeter`, `StoredStanza`, `PoemModel` |
-| Parser | a beágyazott `DATABASE` feldolgozása szekciónként |
-| Feloldás | `osnOf`, `resolveFormula` (konstansok/`#define`/képletek → minták) |
-| Skandáló | `scanLine` — a fenti verstani szabályokkal, U/-/? kimenettel |
-| Illesztő | `matchLine` — szigorú, közös-kezeléssel |
-| Rímdetektor | `rhymeScheme` — sorvégi kulcs, mohó betűkiosztás |
-| Beállítások | a beágyazott adatbázis valódi default-jai, mind bekötve a viselkedésbe |
-| Szakaszmérték | `matchStanza` — `:` képlet → soronkénti minták → szigorú illesztés |
-| Névfeloldás | `canonKey` — a bináris alias-táblájával, ékezet-tűrően |
+**2. Valódi verstani hibák a skandálóban és a rímdetektorban.** A javítottak közül:
 
-## Hitelesség (állapot)
+- a kétjegyű betűket az első betűjükre csonkolta, ezért a `gy`/`ty`/`dz` zárhangnak, az `ly`
+  likvidának látszott → hamis *muta cum liquida*: `hegyre`, `szablyáját` közös lett hosszú helyett;
+- a *muta cum liquida* szóhatáron is elsült (`vak róka`), ahol nem szabad;
+- az `x` egy hangnak számított, a `dz`/`dzs` rövidnek;
+- az illesztő a minta összes realizációját kifejtette — ez a szabad pozíciók számában exponenciális
+  —, és 8192 fölött **csonkolt**, majd a csonkolt előtagokat hasonlította: egy negyven szótagos sor
+  „hexameter" lett. Helyette pozíciónkénti dinamikus programozás;
+- az elemző eldobta az üres sorokat, ezért többstrófás versen **soha egyetlen szakaszmértéket sem**
+  talált, és a rímbetűk végigfutottak az egész versen;
+- a disztichon csak pontosan kétsoros versre illett — egy hatsoros elégia nem volt három disztichon;
+- a rímkulcs az utolsó magánhangzótól indult, ezért `haza`, `soha`, `béka`, `anya` mind rímelt;
+  a zöngétlenítés a szó **végén** is futott, és láncba fűződött, így `kard`, `part`, `halt` egy
+  kulcsra esett;
+- a rímbetűk `z` után `{`, `|`, `}` karaktereket írtak; a rímtelen sor nem kapta meg a szabályos
+  `x` jelet (vaksor), így a félrím `xaxa` helyett `abcb` lett;
+- a `.fictive` segédmértékek valódi találatként jelentek meg;
+- az ütemhangsúly-sor nem a ténylegesen illeszkedő realizációt írta ki, hanem az első azonos
+  hosszúságút — ellentmondott a mellette álló skandálásnak;
+- `toLowerCase()` locale nélkül (török `I`), négyzetes normalizálás (egy hosszú sor 21 másodperc),
+  nem törhető szóközök, `null` bemenet.
 
-- **Metrikai adatbázis:** teljes, szó szerinti, tesztelt.
-- **Szkenner magja** (természetes + helyzeti hossz, digráfok, muta cum liquida): a binárisból **igazolt** — az adat egyezik.
-- **Normalizáló tábla:** a bináris valódi adata.
-- **Rímdetektor:** a binárisból **portolt** — a mássalhangzó-normalizáló tábla (zöngétlenítés `b→p, d→t, g→k`, likvida `r→l`, nazális `m→n`, `nt→nn, lt→tt, nk→ń, ól→ol, űl→ül`) a `FUN_00468788` valódi adata; az asszonanc-mód a magánhangzóvázat veti össze.
-- **Összetett (#complex) mérték:** illesztve (komponensek feloldása + összefűzés).
-- **Szakaszmérték-illesztés:** kész — a `:` képlet feloldása soronkénti mintákra, majd szigorú illesztés (igazolva: hexameter+pentameter → `disztichon`).
-- **Névaliasok:** a bináris név-táblája portolva (`alkaiosi`/`alkaioszi`, `szapphoi`/`szapphói`, `adonisi`/`adoniszi`, `kolon`/`kolón`, `kretikus`/`krétikus`, `lab`/`láb`) — ékezet- és írásmód-tűrő feloldás.
-- **Ütemhangsúly-jelölés:** a bináris jelei (`U`, `Ú`, `-`, `÷`) az iktus-pozíciókkal, a `latszik_az_utemhangsuly_a_gorogon` beállítás alatt.
-- **Hangsúlytalan szavak (`$`):** használatban (a `emberi_nyelvu_mit_tudok` kapcsoló alatt jelenti őket).
-- **Központozás-lista:** a bináris saját listája szerint tisztít skandálás előtt.
-- **Futásidejű bit-pontos egyezés:** nem mérve (nincs Wine); a hitelesség az adat/szabály egyezésén nyugszik.
+**3. A README állításai.** A korábbi szöveg azt írta, „minden beállítás ténylegesen befolyásolja a
+kimenetet" — négy közülük sehol nem volt beolvasva. A három tisztán ablakkezelési beállítás
+(`a_jobb_oldali_szoveg_formazott_legyen`, `a_fuggoleges_toszogalos_mutyur_helye`,
+`a_beallitasokat_tartalmazo_felulet_elrejtve`) az eredeti Delphi-felülethez tartozott; itt nincs
+értelmük, és nem is teszünk úgy, mintha lenne.
+
+### Javítások a 2006-os kánonban
+
+Csak ott nyúltunk az adathoz, ahol a minta bizonyíthatóan **más formát ír le, mint a neve**. Minden
+javítás megőrzi az eredeti mintát és a forrást — a felület `Metrikai kánon` nézetében kinyithatók:
+
+| Mérték | Eredeti | Javítva | Miért |
+|---|---|---|---|
+| `choliambus` | `?-U-?-U-U-U?` | `?-U-?-U-U--?` | hiányzott az utolsó előtti hosszú, ami *definiálja* a sánta jambust — a minta közönséges jambikus trimeter volt |
+| `alkaioszi 3` | `?-U-U-U-?` | `?-U-?-U-?` | az 5. pozíció közös; fix rövidként a teljes alkaioszi strófa illeszthetetlen volt |
+| `aszklepiadeszi D13` | `---UU-?` (7) | `---UU-U?` (8) | a 4. aszklepiadeszi strófa rövid sora glükóni, nem pherekrateus |
+| `4mtr trochaicus` | `-U-U-U-U-U-U-U-` | `-U-?-U-?-U-?-U-` | a trochaikus metrum második eleme közös |
+| `anapesztikus dimeter`, `daktilikus tetrameter` | tiszta lábak | `=-\|=-\|…`, `-=\|-=\|…` | a nevük spondeusz-helyettesítést ígért, a mintájuk tiltotta |
+| `glykoni2a/2b` | `-?-UU-U`, `U--UU-U` | törölve | hét pozíciós, rövidre végződő „glükóni" nem létezik, viszont minden valódi glükóni első hét szótagjára ráillett |
+
+Új: `versus spondiacus` (spondeuszi ötödik lábú hexameter).
+
+**Amihez nem nyúltunk.** Az ellenőrzés több „javítási" javaslatot megcáfolt: a `szapphói sor` 4.
+pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovitziánus`, a
+`téleszilleion` és az anakreóni sorok az eredeti szerző saját, védhető kódolásai maradtak.
 
 ## Ismert korlátok
 
-- A skandáló **szigorú**: a teljesítmény-szintű költői licenciát (pl. egy nem-közös nyílt rövid szótag nyújtása az iktuson) nem feltételezi. Ezért egyes, valóban hexameteres sorok, amelyek ilyen licenciára támaszkodnak, szigorúan nem illeszkednek. Ez tudatos, hű viselkedés, nem hiányosság.
-- A rímdetektor a sorvégeket veszi (közelítés); rímtelen szövegen előfordulhat vél-klaszterezés.
+- A rímdetektor a sorvégeket veszi. A magyar **ragrím** ezért összecseng: egy rímtelen hexameteres
+  szövegben két `-nak` végű sor rímelőnek látszik. Ez nem hiba, hanem a jelenség — de érdemes tudni.
+- A kétjegyű betűk felismerése írásképi: a szóösszetételi határon álló `z+s`, `d+z`, `c+s`
+  (`község`, `vadzab`) egy hangnak látszik. A binárisból örökölt kiejtési tábla ezt csak az
+  `igazság` típusra kezeli.
+- A szótagszintű indoklás az elsődleges olvasatra vonatkozik; ha a sor csak összevont
+  kettőshangzóval illeszkedik, azt a felület külön jelzi („összevonással").
+
+## A projekt története
+
+**1. Eredet.** A Kalliopé eredetileg egy ~2006-os Borland Delphi asztali program volt. A forráskód
+elveszett; csak a lefordított bináris maradt meg, egy Ghidra reverse-engineering projekt formájában.
+
+**2. Visszafejtés.** A logikát a dekompilátumból kellett kibányászni: a `.gzf` konténer felbontása,
+a VCL-alapú architektúra azonosítása (a vers párhuzamos `TStringList`-ekként tárolva), és a
+verstani logika kihorgonyzása a program magyar string-konstansairól (`rimkeplet`, `strofa`,
+`utemhangsuly`…).
+
+**3. Az adatbázis.** A program külső metrikai adatbázisa külön került elő, és megadta a teljes
+formátum-nyelvtant és az adatot. Mivel a klasszikus versmérték-kánon gyakorlatilag zárt halmaz,
+nincs mögötte adatbázis: a kánon a forrásban él, típusos adatként.
+
+**4. Hitelesítés a binárisból.** A `kalliope.exe` saját címtartományának összes string-literálja
+végigvizsgálva. Ez igazolta a rekonstruált szkenner magját (a **digráf-lista** és a **muta cum
+liquida** halmaz pontosan egyezik), és innen való a **normalizáló előfeldolgozó** (`tv→tévé`,
+`w→v`, betűnevek), a **központozás-lista**, a **név-alias tábla**, az **ütemhangsúly-jelek**
+(`U`/`Ú`/`-`/`÷`) és a **verzió** (`VNP's Kalliope 1.71 beta`). Futásidejű bit-pontos összevetés
+nem történt (ahhoz Wine kellene); a hitelesség az adat és a szabályok egyezésén nyugszik.
+
+**5. Ez a kiadás.** Mélyaudit, a talált hibák javítása, modularizálás, REST API, webes felület,
+konténerezés. A rímdetektor a binárisból portolt tábla helyett Arany János rokonsági rendszerére és
+a mai verstani szakirodalomra épül — a portolt tábla ugyanis a szó végén is egyesített, ami épp az
+ellenkezője Arany kódaszabályának.
