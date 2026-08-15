@@ -11,7 +11,7 @@ RUN npm run build
 
 # ---------- 2. Maven build ----------
 # A pom-ok külön rétegben: kódmódosításkor nem tölti újra a világot.
-FROM maven:3.9.16-eclipse-temurin-25-alpine AS build
+FROM maven:3-eclipse-temurin-26-alpine AS build
 WORKDIR /src
 COPY pom.xml ./
 COPY kalliope-core/pom.xml kalliope-core/
