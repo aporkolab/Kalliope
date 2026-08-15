@@ -325,7 +325,45 @@ public final class Scansion {
                 int end = lastInWord ? wordEnd : splitPoint(g[1], groups.get(k + 1)[0], wordEnd);
                 out.add(text.substring(Math.max(start, wordStart), Math.min(end, wordEnd)));
             }
+            attachVowellessWords(groups, out);
             return out;
+        }
+
+        /**
+         * A magánhangzó nélküli szó — mindenekelőtt az „s” kötőszó — egyetlen
+         * szótagot sem alkot, mássalhangzója az előző szótag zárójához tartozik.
+         * A megjelenítésben ezért oda tapasztjuk: enélkül a sor szövege csorbulna
+         * („Fegyvert, s vitézt” → „Fegyvert vitézt”).
+         */
+        private void attachVowellessWords(List<int[]> groups, List<String> out) {
+            if (out.isEmpty()) {
+                return;
+            }
+            for (int w = 0; w < words.size(); w++) {
+                if (hasNucleus(w)) {
+                    continue;
+                }
+                int target = -1;
+                for (int k = 0; k < groups.size(); k++) {
+                    if (wordOf[groups.get(k)[0]] < w) {
+                        target = k;
+                    }
+                }
+                if (target >= 0) {
+                    out.set(target, out.get(target) + words.get(w));
+                } else {
+                    out.set(0, words.get(w) + out.get(0));
+                }
+            }
+        }
+
+        private boolean hasNucleus(int word) {
+            for (int nucleus : nuclei) {
+                if (wordOf[nucleus] == word) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /** Hol vágjuk el a két mag közti mássalhangzó-torlódást (szón belül). */

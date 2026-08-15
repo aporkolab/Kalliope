@@ -41,8 +41,11 @@ export class App {
 
   protected readonly filteredMeters = computed<Meter[]>(() => {
     const all = this.canon()?.meters ?? [];
-    const q = this.canonQuery().trim().toLowerCase();
-    if (!q) {
+    // A mintát NEM kisbetűsítjük: a jelölésben az 'U' a rövid szótag jele,
+    // lekisbetűzve a mintakeresés sosem találna.
+    const raw = this.canonQuery().trim();
+    const q = raw.toLowerCase();
+    if (!raw) {
       return all;
     }
     const fold = (t: string) =>
@@ -55,7 +58,7 @@ export class App {
         .replace(/[úüű]/g, 'u');
     const needle = fold(q);
     return all.filter(
-      (m) => fold(m.name).includes(needle) || m.id.includes(needle) || m.pattern.includes(q),
+      (m) => fold(m.name).includes(needle) || m.id.includes(needle) || m.pattern.includes(raw),
     );
   });
 
