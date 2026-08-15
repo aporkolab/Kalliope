@@ -46,6 +46,9 @@ const ANALYSIS: Analysis = {
     {
       index: 0,
       rhymePattern: 'xx',
+      rhymePatternName: 'rímtelen',
+      accentual: { form: null, strength: 'NINCS', cleanLines: 0 },
+      dualRhythm: false,
       forms: [
         {
           form: { id: 'disztichon', name: 'disztichon', rhymeScheme: null, closed: false },
@@ -58,6 +61,7 @@ const ANALYSIS: Analysis = {
           index: 0,
           text: 'kert alatt',
           scansion: '-U?',
+          realized: '-UU',
           syllables: [
             { text: 'kert', quantity: '-', reason: 'POSITION_LONG', wordIndex: 0 },
             { text: 'a', quantity: 'U', reason: 'SHORT', wordIndex: 1 },
@@ -71,8 +75,12 @@ const ANALYSIS: Analysis = {
               ictusSyllables: [0],
             },
           ],
+          accentual: [],
+          nearMiss: null,
           rhymeLabel: 'x',
           rhymeKey: 'att',
+          rhymeKind: 'VAKSOR',
+          caesurae: [],
           unstressedWords: [],
           ictusRow: null,
         },
@@ -86,6 +94,8 @@ const ANALYSIS: Analysis = {
     syllableCount: 3,
     meters: ['hexameter'],
     stanzaForms: ['disztichon'],
+    accentualForms: [],
+    simultaneousLines: 0,
   },
 };
 
@@ -132,8 +142,19 @@ describe('App megjelenítés', () => {
     expect(syllables[0].textContent).toContain('kert');
     expect(syllables[0].classList.contains('long')).toBe(true);
     expect(syllables[1].classList.contains('short')).toBe(true);
-    expect(syllables[2].classList.contains('anceps')).toBe(true);
     expect(syllables[0].textContent).toContain('—');
+  });
+
+  it('a közös szótagot a mérték dönti el — a megvalósult hosszúság látszik', () => {
+    // A harmadik szótag nyersen közös ('?'), de az illeszkedő mérték
+    // megvalósulása ('-UU') rövidnek követeli. A felület a döntést mutatja,
+    // a közös eredetet pedig pontozott aláhúzás jelzi.
+    analyze();
+    const third = fixture.nativeElement.querySelectorAll('.syllable')[2];
+    expect(third.classList.contains('short')).toBe(true);
+    expect(third.classList.contains('anceps')).toBe(false);
+    expect(third.classList.contains('resolved')).toBe(true);
+    expect(third.textContent).toContain('∪');
   });
 
   it('kiírja a mértéket, a rímképletet és a szakaszmértéket', () => {

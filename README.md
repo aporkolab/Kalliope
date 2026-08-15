@@ -3,8 +3,22 @@
 Magyar időmértékes (klasszikus) verselés és rímképlet elemzője — motor, REST API és webes felület.
 
 A Kalliopé **skandál** (rövid / hosszú / közös szótagok), klasszikus **versmértékekre illeszt**
-(hexameter, disztichon, szapphói, alkaioszi, aszklepiadeszi…), és **rímképletet** ismer fel. Minden
-szótagról megmondja, **miért** olyan hosszú — ez teszi tanulásra is használhatóvá.
+(hexameter, disztichon, szapphói, alkaioszi, aszklepiadeszi…), felismeri az **ütemhangsúlyos
+(magyaros)** sorfajtákat is, és **rímképletet** ad, a rím fajtájának megnevezésével. Minden
+szótagról megmondja, **miért** olyan hosszú — és ha egy sor nem illeszkedik, megmondja, **min
+múlik**.
+
+Amit tud:
+
+| | |
+|---|---|
+| **Időmértékes** | 53 sorfajta, 38 kolón, 11 versláb, 18 szakaszmérték; szigorú illesztés, kapcsolható licenciákkal |
+| **Ütemhangsúlyos** | 20 magyaros sorfajta ütemtagolással; a metszet minősége (tiszta vagy laza) külön látszik |
+| **Kettős ritmus** | ha a szakasz mindkét rendnek megfelel, jelezzük — de nem állítjuk, hogy „szimultán vers" |
+| **Rím** | képlet vaksorral (x), a képlet neve (keresztrím, bokorrím…), és soronként a rím fajtája (tiszta rím, ragrím, asszonánc, önrím) |
+| **Cezúra** | a mérték jelölt metszete, és a hexameter penthémimerész / hephthémimerész / kata triton trokhaion metszete |
+| **Ha nem illeszkedik** | a legközelebbi mérték és a pontos eltérés: „hexameter lenne, ha az 1. szótag hosszú volna" |
+| **Felülbírálás** | a szótagra kattintva átállítható a hosszúság, és az elemzés újrafut — a verstan értelmezés kérdése |
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/aporkolab/kalliope:latest
@@ -17,7 +31,7 @@ Három modul, egyetlen deploy-artefaktum:
 
 | Modul | Mi ez | Függőségek |
 |---|---|---|
-| `kalliope-core` | a verstani motor és a metrikai kánon | **nulla** — csak a JDK |
+| `kalliope-core` | a verstani motor, a metrikai kánon és a példatár | **nulla** — csak a JDK |
 | `kalliope-api` | vékony REST-réteg + a felület kiszolgálása | Spring Boot 4.1 |
 | `kalliope-web` | a webes felület | Angular 22 |
 
@@ -27,9 +41,11 @@ futtatható és külön tesztelhető.
 
 ```
 kalliope/
-├─ kalliope-core/    Notation · Phonology · TextNormalizer · Scansion
-│                    MetricCanon · MeterMatcher · RhymeDetector · Analyzer · KalliopeCli
-├─ kalliope-api/     AnalyzeController · CanonController · SpaConfig · ApiExceptionHandler
+├─ kalliope-core/    Notation · Phonology · TextNormalizer · Scansion · Caesura
+│                    MetricCanon · MeterMatcher · NearMiss · RhymeDetector
+│                    AccentualCanon · AccentualMatcher · Analyzer · KalliopeCli
+├─ kalliope-api/     AnalyzeController · CanonController · SpaConfig
+│                    ApiExceptionHandler · RateLimitFilter
 ├─ kalliope-web/     Angular (standalone, signals, zoneless)
 ├─ Dockerfile        node build → maven build → rétegelt JRE image, AOT-gyorsítótárral
 └─ .github/workflows/ci.yml
@@ -166,6 +182,30 @@ javítás megőrzi az eredeti mintát és a forrást — a felület `Metrikai k�
 pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovitziánus`, a
 `téleszilleion` és az anakreóni sorok az eredeti szerző saját, védhető kódolásai maradtak.
 
+## Korpusz-riport
+
+A példatár tizenegy valódi vers, lehetőleg teljes egészében, hiteles forrásból. Ez egyben a motor
+regressziós hálója: a `CorpusTest` elbukik, ha az arány romlik.
+
+| Vers | Sor | Illeszkedik |
+|---|---:|---:|
+| Zrínyi: Szigeti veszedelem (részlet) | 4 | 0% — helyesen: hangsúlyos vers |
+| Arany: Toldi, Első ének | 21 | 0% — helyesen: hangsúlyos vers |
+| Homérosz–Devecseri: Íliász I. 1–40. | 40 | 92% |
+| Homérosz–Devecseri: Odüsszeia I. 1–40. | 40 | 90% |
+| Vörösmarty: Zalán futása, előhang | 34 | 97% |
+| Radnóti: Hetedik ecloga (teljes) | 36 | 94% |
+| Kazinczy: A nagy titok | 2 | 100% |
+| Berzsenyi: A magyarokhoz I. (részlet) | 4 | 100% |
+| Berzsenyi: A közelítő tél (teljes) | 24 | 100% |
+| Berzsenyi: Horác (teljes) | 16 | 93% |
+| Petőfi: Szeptember végén (teljes) | 24 | 95% |
+| **Összesen** | **245** | **84%** |
+
+A két nulla százalék nem hiba, hanem a helyes válasz: Zrínyi és Arany verse ütemhangsúlyos, nem
+időmértékes — a motor ezeket felező tizenkettesként ismeri fel a másik ágon. A hiányzó néhány
+százalék a költői licencia: azoknál a soroknál a „miért nem illeszkedik?" megmondja, min múlik.
+
 ## Ismert korlátok
 
 - A rímdetektor a sorvégeket veszi. A magyar **ragrím** ezért összecseng: egy rímtelen hexameteres
@@ -175,6 +215,11 @@ pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovi
   `igazság` típusra kezeli.
 - A szótagszintű indoklás az elsődleges olvasatra vonatkozik; ha a sor csak összevont
   kettőshangzóval illeszkedik, azt a felület külön jelzi („összevonással").
+- Az ütemhangsúlyos illesztés szótagszámon és szóhatáron alapul, nem valódi hangsúlyelemzésen. Egy
+  hosszabb rímtelen hexametersorozat sorvégei között is akadnak véletlen egybecsengések — a
+  detektor ezeket ragrímként meg is nevezi, de nem tudja, hogy a költő nem így gondolta.
+- A `kalliope.exe` futásidejű, bit-pontos összevetése továbbra sem történt meg (ahhoz Wine kellene);
+  a hitelesség az adat és a szabályok egyezésén nyugszik.
 
 ## A projekt története
 

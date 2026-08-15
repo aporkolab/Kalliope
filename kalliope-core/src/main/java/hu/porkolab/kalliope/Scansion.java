@@ -41,7 +41,8 @@ public final class Scansion {
         WORD_INITIAL_STRESS("költői licencia: a szókezdő hangsúly megnyújthatja — közös"),
         MUTA_CUM_LIQUIDA("muta cum liquida: zárhang + likvida nem feltétlenül tesz helyzeti hosszút"),
         AMBIGUOUS_CLUSTER("a torlódás olvasata bizonytalan — közös"),
-        SYNIZESIS("összevont kettőshangzó, hosszú");
+        SYNIZESIS("összevont kettőshangzó, hosszú"),
+        MANUAL("kézi felülbírálás — az olvasó döntése");
 
         private final String hungarian;
 
@@ -83,6 +84,40 @@ public final class Scansion {
     private static final int MAX_SYNIZESIS_POINTS = 4;
 
     private Scansion() {}
+
+    /** Egy kézi felülbírálás: hányadik sor hányadik szótagja, és mire. */
+    public record Override(int line, int syllable, char quantity) {
+        public Override {
+            if (quantity != Notation.SHORT && quantity != Notation.LONG && quantity != Notation.ANCEPS) {
+                throw new IllegalArgumentException("A hosszúság csak U, - vagy ? lehet: " + quantity);
+            }
+        }
+    }
+
+    /**
+     * A megadott szótagok hosszúságát felülírja.
+     *
+     * <p>A verstan értelmezés kérdése: az olvasó dönthet úgy, hogy egy szótagot
+     * másképp olvas, és a motornak ezt tiszteletben kell tartania. Enélkül a
+     * program orákulum volna, nem eszköz.
+     */
+    public static Reading withOverrides(Reading reading, java.util.Map<Integer, Character> overrides) {
+        if (overrides == null || overrides.isEmpty()) {
+            return reading;
+        }
+        List<Syllable> syllables = new ArrayList<>(reading.syllables());
+        StringBuilder pattern = new StringBuilder(reading.pattern());
+        for (var e : overrides.entrySet()) {
+            int at = e.getKey();
+            if (at < 0 || at >= syllables.size()) {
+                continue;
+            }
+            Syllable old = syllables.get(at);
+            syllables.set(at, new Syllable(old.text(), e.getValue(), Reason.MANUAL, old.wordIndex()));
+            pattern.setCharAt(at, e.getValue());
+        }
+        return new Reading(pattern.toString(), List.copyOf(syllables), reading.synizesis());
+    }
 
     /** A sor elsődleges olvasata. */
     public static Reading scan(String line, Settings settings) {

@@ -28,10 +28,24 @@ public final class Analyzer {
     }
 
     public static Analysis analyze(String poem, Settings settings) {
+        return analyze(poem, settings, List.of());
+    }
+
+    /**
+     * @param overrides kézi szótaghosszúság-felülbírálások; a sorindex a vers
+     *     egészére nézve értendő, ahogy az elemzés visszaadja
+     */
+    public static Analysis analyze(String poem, Settings settings, List<Scansion.Override> overrides) {
+        java.util.Map<Integer, java.util.Map<Integer, Character>> byLine = new java.util.HashMap<>();
+        for (Scansion.Override o : overrides == null ? List.<Scansion.Override>of() : overrides) {
+            byLine.computeIfAbsent(o.line(), k -> new java.util.HashMap<>()).put(o.syllable(), o.quantity());
+        }
         List<List<String>> blocks = split(poem == null ? "" : poem);
         List<Analysis.Stanza> stanzas = new ArrayList<>(blocks.size());
         Set<String> meterNames = new LinkedHashSet<>();
         Set<String> formNames = new LinkedHashSet<>();
+        Set<String> accentualNames = new LinkedHashSet<>();
+        int simultaneous = 0;
         int lineCounter = 0;
         int syllableCounter = 0;
 
@@ -40,6 +54,18 @@ public final class Analyzer {
             List<List<Scansion.Reading>> readings = new ArrayList<>(texts.size());
             for (String text : texts) {
                 readings.add(Scansion.readings(text, settings));
+            }
+            // a kézi felülbírálás a sor MINDEN olvasatára vonatkozik
+            for (int i = 0; i < readings.size(); i++) {
+                java.util.Map<Integer, Character> over = byLine.get(lineCounter + i);
+                if (over == null) {
+                    continue;
+                }
+                List<Scansion.Reading> applied = new ArrayList<>(readings.get(i).size());
+                for (Scansion.Reading r : readings.get(i)) {
+                    applied.add(Scansion.withOverrides(r, over));
+                }
+                readings.set(i, applied);
             }
             RhymeDetector.Scheme scheme =
                     RhymeDetector.scheme(texts, settings.assonanceAsRhyme(), settings.letterSyllables());
@@ -60,15 +86,30 @@ public final class Analyzer {
                         settings.showIctus() && !matches.isEmpty() ? MeterMatcher.ictusRow(matches.get(0)) : null;
                 List<String> unstressed =
                         settings.explainUnstressed() ? unstressedWords(texts.get(i), settings) : List.of();
+                // minden olvasatot megnézünk: a „Europa" összevont olvasata teszi
+                // Zrínyi negyedik sorát tizenkét szótagossá
+                List<AccentualMatcher.Match> accentual = bestAccentual(readings.get(i));
+                String realized = matches.isEmpty() ? null : matches.get(0).realization();
+                // ha nincs találat, mondjuk meg, mi hiányzott hozzá — minden olvasatot végignézve
+                NearMiss.Result nearMiss = matches.isEmpty() ? closestOfReadings(readings.get(i)) : null;
+                // hol van ténylegesen sormetszet a sorban
+                List<Caesura.Found> caesurae = matches.isEmpty()
+                        ? List.of()
+                        : Caesura.detect(matches.get(0).meter(), chosen.reading.pattern(), chosen.reading.syllables());
                 lines.add(new Analysis.Line(
                         lineCounter++,
                         texts.get(i),
                         chosen.reading.pattern(),
+                        realized,
                         chosen.reading.syllables(),
                         chosen.reading.synizesis(),
                         matches,
+                        accentual,
+                        nearMiss,
                         scheme.labels().get(i),
                         scheme.keys().get(i),
+                        scheme.kinds().get(i),
+                        caesurae,
                         unstressed,
                         ictus));
             }
@@ -85,11 +126,28 @@ public final class Analyzer {
             for (MeterMatcher.StanzaMatch f : forms) {
                 formNames.add(f.form().name());
             }
-            stanzas.add(new Analysis.Stanza(s, lines, scheme.pattern(), forms));
+            List<List<AccentualMatcher.Match>> perLine =
+                    lines.stream().map(Analysis.Line::accentual).toList();
+            AccentualMatcher.Dominant dominant = AccentualMatcher.dominant(perLine);
+            if (dominant.form() != null) {
+                accentualNames.add(dominant.form().name());
+            }
+            Analysis.Stanza stanza =
+                    new Analysis.Stanza(s, lines, scheme.pattern(), scheme.patternName(), forms, dominant);
+            if (stanza.dualRhythm()) {
+                simultaneous += lines.size();
+            }
+            stanzas.add(stanza);
         }
 
         Analysis.Summary summary = new Analysis.Summary(
-                stanzas.size(), lineCounter, syllableCounter, List.copyOf(meterNames), List.copyOf(formNames));
+                stanzas.size(),
+                lineCounter,
+                syllableCounter,
+                List.copyOf(meterNames),
+                List.copyOf(formNames),
+                List.copyOf(accentualNames),
+                simultaneous);
         return new Analysis(stanzas, settings, summary);
     }
 
@@ -118,6 +176,36 @@ public final class Analyzer {
         // sorfajta nincs — hátha megnevezhető kolónként vagy verslábként
         List<MeterMatcher.Match> small = MeterMatcher.matchLine(fallback.reading.pattern(), true);
         return new Chosen(fallback.reading, small);
+    }
+
+    /** A legkevesebb eltérést adó közeli mérték, minden olvasatot végignézve. */
+    private static NearMiss.Result closestOfReadings(List<Scansion.Reading> readings) {
+        NearMiss.Result best = null;
+        for (Scansion.Reading r : readings) {
+            NearMiss.Result candidate = NearMiss.closest(r.pattern());
+            if (candidate != null
+                    && (best == null
+                            || candidate.differences().size()
+                                    < best.differences().size())) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    /** A sor legjobb ütemhangsúlyos illesztései — minden olvasatot végignézve. */
+    private static List<AccentualMatcher.Match> bestAccentual(List<Scansion.Reading> readings) {
+        List<AccentualMatcher.Match> best = List.of();
+        for (Scansion.Reading r : readings) {
+            List<AccentualMatcher.Match> m = AccentualMatcher.match(r.syllables());
+            if (m.isEmpty()) {
+                continue;
+            }
+            if (best.isEmpty() || (!best.get(0).pure() && m.get(0).pure())) {
+                best = m;
+            }
+        }
+        return best;
     }
 
     private static List<String> unstressedWords(String line, Settings settings) {

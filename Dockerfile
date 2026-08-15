@@ -34,19 +34,27 @@ RUN java -Djarmode=tools -jar application.jar extract --layers --destination ext
 
 # ---------- 4. Futtatás ----------
 FROM eclipse-temurin:25.0.3_9-jre-alpine
+
+# A felhasználó ELŐBB jön létre, és minden COPY rögtön neki másol. A záró
+# `chown -R` ugyanis az egész könyvtárról új réteget csinálna — nyolcvan
+# megabájt fölösleges másolat.
+RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app
 WORKDIR /application
 
-COPY --from=extract /builder/extracted/dependencies/ ./
-COPY --from=extract /builder/extracted/spring-boot-loader/ ./
-COPY --from=extract /builder/extracted/snapshot-dependencies/ ./
-COPY --from=extract /builder/extracted/application/ ./
+COPY --from=extract --chown=10001:10001 /builder/extracted/dependencies/ ./
+COPY --from=extract --chown=10001:10001 /builder/extracted/spring-boot-loader/ ./
+COPY --from=extract --chown=10001:10001 /builder/extracted/snapshot-dependencies/ ./
+COPY --from=extract --chown=10001:10001 /builder/extracted/application/ ./
 
-# AOT-gyorsítótár tanítófutása UGYANEZZEL a JVM-mel — enélkül a gyorsítótár
-# némán érvénytelen. Indulás ~2,5 s helyett ~1 s alatt.
-RUN java -XX:AOTCacheOutput=app.aot -Dspring.context.exit=onRefresh -jar application.jar || true
-
-RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app && chown -R app:app /application
 USER 10001:10001
+
+# AOT-gyorsítótár tanítófutása UGYANEZZEL a JVM-mel és felhasználóval — enélkül
+# a gyorsítótár némán érvénytelen. Indulás ~2,5 s helyett ~0,6 s alatt.
+# Nagyjából ötven megabájtot tesz az image-hez; ARG-gal kikapcsolható.
+ARG AOT_CACHE=true
+RUN if [ "$AOT_CACHE" = "true" ]; then \
+        java -XX:AOTCacheOutput=app.aot -Dspring.context.exit=onRefresh -jar application.jar || true; \
+    fi
 
 ENV SPRING_THREADS_VIRTUAL_ENABLED=true
 EXPOSE 8080

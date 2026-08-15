@@ -42,7 +42,7 @@ public class CanonController {
             List<String> unstressedWords) {}
 
     @GetMapping(value = "/canon", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Canon canon(@RequestParam(required = false) String q) {
+    public Canon canon(@RequestParam(name = "q", required = false) String q) {
         List<Meter> meters = MetricCanon.search(q);
         List<StanzaFormInfo> stanzas = new ArrayList<>(MetricCanon.STANZAS.size());
         for (StanzaForm f : MetricCanon.STANZAS) {
@@ -67,7 +67,7 @@ public class CanonController {
     }
 
     @GetMapping(value = "/canon/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Meter meter(@PathVariable String id) {
+    public Meter meter(@PathVariable("id") String id) {
         return MetricCanon.meter(id);
     }
 

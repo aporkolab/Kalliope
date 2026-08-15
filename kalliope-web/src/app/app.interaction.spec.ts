@@ -68,12 +68,16 @@ const ANALYSIS: Analysis = {
     {
       index: 0,
       rhymePattern: 'x',
+      rhymePatternName: null,
+      accentual: { form: null, strength: 'NINCS', cleanLines: 0 },
+      dualRhythm: false,
       forms: [],
       lines: [
         {
           index: 0,
           text: 'kert alatt',
           scansion: '-U?',
+          realized: '-UU',
           syllables: [
             { text: 'kert', quantity: '-', reason: 'POSITION_LONG', wordIndex: 0 },
             { text: 'a', quantity: 'U', reason: 'SHORT', wordIndex: 1 },
@@ -81,8 +85,12 @@ const ANALYSIS: Analysis = {
           ],
           synizesis: true,
           meters: [],
+          accentual: [],
+          nearMiss: null,
           rhymeLabel: 'x',
           rhymeKey: 'att',
+          rhymeKind: 'VAKSOR',
+          caesurae: [],
           unstressedWords: [],
           ictusRow: '÷UU',
         },
@@ -90,7 +98,15 @@ const ANALYSIS: Analysis = {
     },
   ],
   settings: {},
-  summary: { stanzaCount: 1, lineCount: 1, syllableCount: 3, meters: [], stanzaForms: [] },
+  summary: {
+    stanzaCount: 1,
+    lineCount: 1,
+    syllableCount: 3,
+    meters: [],
+    stanzaForms: [],
+    accentualForms: [],
+    simultaneousLines: 0,
+  },
 };
 
 interface Internals {

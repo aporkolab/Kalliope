@@ -77,7 +77,7 @@ class KalliopeCliTest {
         Files.writeString(file, Examples.MAGYAROKHOZ.text() + "\n\n" + Examples.HORAC.text(), StandardCharsets.UTF_8);
         String out = run(file.toString());
         assertThat(out).contains("-- 1. szakasz", "-- 2. szakasz");
-        assertThat(out).contains("összesen: 2 szakasz, 8 sor");
+        assertThat(out).contains("összesen: 5 szakasz, 20 sor");
     }
 
     @Test

@@ -31,6 +31,46 @@ export interface MeterMatch {
   ictusSyllables: number[];
 }
 
+export interface AccentualFormRef {
+  id: string;
+  name: string;
+  measures: number[];
+  caesuraAfter: number;
+  note: string | null;
+}
+
+export interface AccentualMatch {
+  form: AccentualFormRef;
+  wordBoundaryMeasures: number;
+  caesuraOnWordBoundary: boolean;
+  pure: boolean;
+  quality: string;
+}
+
+export interface Dominant {
+  form: AccentualFormRef | null;
+  strength: 'TISZTA' | 'LAZA' | 'NINCS';
+  cleanLines: number;
+}
+
+export interface Difference {
+  syllable: number;
+  actual: string;
+  expected: string;
+  explanation: string;
+}
+
+export interface NearMiss {
+  meter: Meter;
+  differences: Difference[];
+  summary: string;
+}
+
+export interface CaesuraFound {
+  afterSyllable: number;
+  name: string;
+}
+
 export interface StanzaFormRef {
   id: string;
   name: string;
@@ -48,11 +88,16 @@ export interface Line {
   index: number;
   text: string;
   scansion: string;
+  realized: string | null;
   syllables: Syllable[];
   synizesis: boolean;
   meters: MeterMatch[];
+  accentual: AccentualMatch[];
+  nearMiss: NearMiss | null;
   rhymeLabel: string;
   rhymeKey: string;
+  rhymeKind: string;
+  caesurae: CaesuraFound[];
   unstressedWords: string[];
   ictusRow: string | null;
 }
@@ -61,7 +106,10 @@ export interface Stanza {
   index: number;
   lines: Line[];
   rhymePattern: string;
+  rhymePatternName: string | null;
   forms: StanzaMatch[];
+  accentual: Dominant;
+  dualRhythm: boolean;
 }
 
 export interface Summary {
@@ -70,6 +118,8 @@ export interface Summary {
   syllableCount: number;
   meters: string[];
   stanzaForms: string[];
+  accentualForms: string[];
+  simultaneousLines: number;
 }
 
 export interface Analysis {
@@ -105,6 +155,12 @@ export interface Canon {
   settings: SettingInfo[];
   reasons: ReasonInfo[];
   unstressedWords: string[];
+}
+
+export interface Override {
+  line: number;
+  syllable: number;
+  quantity: Quantity;
 }
 
 export interface Example {

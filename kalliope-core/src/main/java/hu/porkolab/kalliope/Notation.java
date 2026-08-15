@@ -33,26 +33,58 @@ public final class Notation {
         return c == SHORT || c == LONG || c == ANCEPS || c == RESOLVE;
     }
 
-    /** Egy mintaelem: a jel, és hogy verslábat kezd-e (a UI a lábakat így tudja tagolni). */
-    public record Symbol(char symbol, boolean footStart) {}
+    /**
+     * Egy mintaelem: a jel, hogy verslábat kezd-e, és hogy cezúra után áll-e.
+     * A {@code |} lábhatár, a {@code ||} sormetszet (cezúra).
+     */
+    public record Symbol(char symbol, boolean footStart, boolean afterCaesura) {}
 
-    /** A nyers mintát elemekre bontja, a '|' és '||' jeleket lábhatárrá alakítva. */
+    /** A nyers mintát elemekre bontja, a '|' és '||' jeleket megkülönböztetve. */
     public static List<Symbol> parse(String pattern) {
         List<Symbol> out = new ArrayList<>(pattern.length());
         boolean footStart = true;
+        boolean caesura = false;
+        int bars = 0;
         for (int i = 0; i < pattern.length(); i++) {
             char c = pattern.charAt(i);
             if (c == FOOT) {
                 footStart = true;
+                bars++;
+                if (bars >= 2) {
+                    caesura = true;
+                }
                 continue;
             }
             if (!isSymbol(c)) {
                 continue;
             }
-            out.add(new Symbol(c, footStart));
+            out.add(new Symbol(c, footStart, caesura));
             footStart = false;
+            caesura = false;
+            bars = 0;
         }
         return out;
+    }
+
+    /**
+     * Mely szótagoknál kezdődik cezúra utáni rész a szkennelt sorban.
+     * {@code null}, ha a minta nem illeszkedik.
+     */
+    public static List<Integer> caesuraSyllables(String scanned, String pattern) {
+        int[] consumed = align(scanned, pattern);
+        if (consumed == null) {
+            return null;
+        }
+        List<Symbol> syms = parse(pattern);
+        List<Integer> out = new ArrayList<>();
+        int j = 0;
+        for (int i = 0; i < syms.size(); i++) {
+            if (syms.get(i).afterCaesura()) {
+                out.add(j);
+            }
+            j += consumed[i];
+        }
+        return List.copyOf(out);
     }
 
     /** Csak a metrikai jelek, lábhatárok nélkül. */

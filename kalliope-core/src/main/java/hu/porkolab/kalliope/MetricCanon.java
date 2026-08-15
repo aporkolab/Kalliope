@@ -556,6 +556,11 @@ public final class MetricCanon {
         return new StanzaForm(slug(name), name, lines, rhyme, false);
     }
 
+    /** Azonosító képzése névből — az ütemhangsúlyos kánon is ezt használja. */
+    static String slugOf(String name) {
+        return slug(name);
+    }
+
     private static String slug(String name) {
         String folded = fold(name);
         StringBuilder sb = new StringBuilder(folded.length());

@@ -84,6 +84,11 @@
           }
         </button>
         <button class="ghost" (click)="exportJson()" [disabled]="!analysis()">JSON</button>
+        @if (overrides().length) {
+          <button class="ghost" (click)="clearOverrides()">
+            Felülbírálás törlése ({{ overrides().length }})
+          </button>
+        }
       </div>
 
       @if (examples().length) {
@@ -127,9 +132,9 @@
           }
         </div>
 
-        @if (reasonText(); as text) {
-          <p class="reason" role="status">{{ text }}</p>
-        }
+        <p class="reason" role="status" [class.empty]="!reasonText()">
+          {{ reasonText() || 'Vidd az egeret egy szótagra a magyarázatért.' }}
+        </p>
 
         @for (stanza of a.stanzas; track stanza.index) {
           <article class="stanza">
@@ -148,23 +153,40 @@
                 </span>
                 <div class="syllables">
                   @for (s of line.syllables; track $index) {
-                    <span
+                    <button
+                      type="button"
                       class="syllable"
-                      [class]="quantityClass(s.quantity)"
+                      [class]="quantityClass(shownQuantity(line, $index))"
+                      [class.resolved]="wasAnceps(line, $index)"
+                      [class.overridden]="isOverridden(line, $index)"
+                      [title]="'Kattints a hosszúság felülbírálásához'"
+                      (click)="cycleQuantity(line, $index)"
                       (mouseenter)="hovered.set(s)"
                       (mouseleave)="hovered.set(null)"
                       (focus)="hovered.set(s)"
                       (blur)="hovered.set(null)"
-                      tabindex="0"
                     >
-                      <span class="mark" aria-hidden="true">{{ quantityMark(s.quantity) }}</span>
+                      <span class="mark" aria-hidden="true">{{
+                        quantityMark(shownQuantity(line, $index))
+                      }}</span>
                       <span class="text">{{ s.text }}</span>
-                    </span>
+                    </button>
                   }
                 </div>
                 <div class="verdict">
                   @if (line.meters.length) {
                     <span class="meter">{{ meterNames(line) }}</span>
+                  }
+                  @if (!line.meters.length && line.nearMiss) {
+                    <span class="nearmiss">{{ line.nearMiss.summary }}</span>
+                  }
+                  @for (c of line.caesurae; track c.name) {
+                    <span class="badge" [title]="c.afterSyllable + 1 + '. szótag előtt'">{{
+                      c.name
+                    }}</span>
+                  }
+                  @if (line.rhymeKind !== 'VAKSOR') {
+                    <span class="badge rhyme-kind">{{ rhymeKindLabel(line.rhymeKind) }}</span>
                   }
                   @if (line.synizesis) {
                     <span class="badge" title="A sor csak összevont kettőshangzóval illeszkedik">
@@ -180,8 +202,22 @@
 
             <footer class="stanza-foot">
               <span class="scheme"
-                >rímképlet: <strong>{{ stanza.rhymePattern }}</strong></span
-              >
+                >rímképlet: <strong>{{ stanza.rhymePattern }}</strong>
+                @if (stanza.rhymePatternName) {
+                  <em> ({{ stanza.rhymePatternName }})</em>
+                }
+              </span>
+              @if (stanza.accentual.form; as acc) {
+                <span class="form accentual"
+                  >{{ acc.name }} ({{ division(acc) }}) —
+                  {{ strengthLabel(stanza.accentual.strength) }}</span
+                >
+              }
+              @if (stanza.dualRhythm) {
+                <span class="badge dual" title="Időmértékes és ütemhangsúlyos rend is illeszkedik"
+                  >kettős ritmus</span
+                >
+              }
               @for (f of stanza.forms; track f.form.id) {
                 <span class="form">
                   {{ f.form.name }}

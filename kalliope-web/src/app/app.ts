@@ -1,7 +1,17 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { KalliopeService } from './kalliope.service';
-import { Analysis, Canon, Example, Line, Meter, Syllable } from './kalliope.models';
+import {
+  AccentualFormRef,
+  Analysis,
+  Canon,
+  Example,
+  Line,
+  Meter,
+  Override,
+  Quantity,
+  Syllable,
+} from './kalliope.models';
 
 type Tab = 'elemzes' | 'adatbazis';
 
@@ -26,13 +36,16 @@ export class App {
   protected readonly canonQuery = signal('');
   protected readonly copied = signal(false);
 
+  /** Kézi szótaghosszúság-felülbírálások — kattintásra körbejárnak. */
+  protected readonly overrides = signal<Override[]>([]);
+
   /** A hoverelt szótag magyarázata — a felület fő tanító eszköze. */
   protected readonly hovered = signal<Syllable | null>(null);
 
   protected readonly reasonText = computed(() => {
     const s = this.hovered();
     if (!s) {
-      return null;
+      return '';
     }
     const reasons = this.canon()?.reasons ?? [];
     const found = reasons.find((r) => r.name === s.reason);
@@ -90,7 +103,7 @@ export class App {
       return;
     }
     this.busy.set(true);
-    this.api.analyze(text, this.settings()).subscribe({
+    this.api.analyze(text, this.settings(), this.overrides()).subscribe({
       next: (a) => {
         this.analysis.set(a);
         this.busy.set(false);
@@ -120,6 +133,31 @@ export class App {
     this.poem.set('');
     this.analysis.set(null);
     this.error.set(null);
+    this.overrides.set([]);
+  }
+
+  /**
+   * Kattintásra körbejárja a hosszúságot: hosszú → rövid → közös → automatikus.
+   * A verstan értelmezés kérdése; az olvasónak joga van más olvasathoz.
+   */
+  protected cycleQuantity(line: Line, index: number): void {
+    const current = this.overrides().find((o) => o.line === line.index && o.syllable === index);
+    const order: (Quantity | null)[] = ['-', 'U', '?', null];
+    const next = order[(order.indexOf(current?.quantity ?? null) + 1) % order.length];
+    const rest = this.overrides().filter((o) => !(o.line === line.index && o.syllable === index));
+    this.overrides.set(
+      next ? [...rest, { line: line.index, syllable: index, quantity: next }] : rest,
+    );
+    this.analyze();
+  }
+
+  protected isOverridden(line: Line, index: number): boolean {
+    return this.overrides().some((o) => o.line === line.index && o.syllable === index);
+  }
+
+  protected clearOverrides(): void {
+    this.overrides.set([]);
+    this.analyze();
   }
 
   /** Osztható link: a vers a címsor törtrészében, szerver nélkül. */
@@ -158,6 +196,24 @@ export class App {
     }
   }
 
+  /**
+   * A kiírandó hosszúság: ha egy mérték illeszkedik, a MEGVALÓSULT hosszúság,
+   * mert a közös szótag kérdése ilyenkor eldőlt. Ha nincs találat, a nyers
+   * skandálás marad, közös jellel.
+   */
+  protected shownQuantity(line: Line, index: number): string {
+    const realized = line.realized;
+    if (realized && index < realized.length) {
+      return realized.charAt(index);
+    }
+    return line.syllables[index].quantity;
+  }
+
+  /** Közös volt-e a szótag, mielőtt a mérték eldöntötte. */
+  protected wasAnceps(line: Line, index: number): boolean {
+    return line.syllables[index].quantity === '?';
+  }
+
   protected quantityClass(q: string): string {
     return q === '-' ? 'long' : q === 'U' ? 'short' : 'anceps';
   }
@@ -168,6 +224,39 @@ export class App {
 
   protected meterNames(line: Line): string {
     return line.meters.map((m) => m.meter.name).join(' ~ ');
+  }
+
+  protected rhymeKindLabel(kind: string): string {
+    switch (kind) {
+      case 'ONRIM':
+        return 'önrím';
+      case 'TISZTA':
+        return 'tiszta rím';
+      case 'RAGRIM':
+        return 'ragrím';
+      case 'ROKONHANGZOS':
+        return 'rokonhangzós rím';
+      case 'ASSZONANC':
+        return 'asszonánc';
+      default:
+        return 'vaksor';
+    }
+  }
+
+  /**
+   * Az ütemtagolás olvasható alakja, pl. „6 || 6" vagy „4 | 4 | 3".
+   * A motor rekordja csak az ütemhosszakat adja; a jelölést itt rakjuk össze.
+   */
+  protected division(form: AccentualFormRef): string {
+    return form.measures
+      .map((m: number, i: number) =>
+        i === 0 ? `${m}` : `${i === form.caesuraAfter ? ' || ' : ' | '}${m}`,
+      )
+      .join('');
+  }
+
+  protected strengthLabel(strength: string): string {
+    return strength === 'TISZTA' ? 'tiszta ütemtagolás' : 'laza metszet';
   }
 
   protected kindLabel(kind: string): string {

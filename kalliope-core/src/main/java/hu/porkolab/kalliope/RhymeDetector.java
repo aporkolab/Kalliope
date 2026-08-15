@@ -142,12 +142,57 @@ public final class RhymeDetector {
         return out;
     }
 
-    /** Egy szakasz rímelemzése: soronkénti kulcs és betű. */
-    public record Scheme(List<String> keys, List<String> labels) {
+    /** A rím minősége — a tiszta rímtől az asszonáncig. */
+    public enum Kind {
+        ONRIM("önrím — ugyanaz a szó"),
+        TISZTA("tiszta rím — a magánhangzótól minden hang egyezik"),
+        RAGRIM("ragrím — a toldalék ismétlődik"),
+        ROKONHANGZOS("rokonhangzós rím — a mássalhangzók rokonok"),
+        ASSZONANC("asszonánc — a magánhangzóváz egyezik"),
+        VAKSOR("vaksor — nincs rímpárja");
+
+        private final String hungarian;
+
+        Kind(String hungarian) {
+            this.hungarian = hungarian;
+        }
+
+        public String explanation() {
+            return hungarian;
+        }
+    }
+
+    /** Gyakori magyar toldalékok — a ragrím felismeréséhez (Arany: „rag ismétlésből rím nem ered”). */
+    private static final List<String> SUFFIXES = List.of(
+            "nak", "nek", "ban", "ben", "bol", "bőt", "ból", "ből", "val", "vel", "ra", "re", "tol", "tól", "től",
+            "hoz", "hez", "höz", "ok", "ök", "ak", "ek", "ja", "je", "om", "em", "am", "ni", "va", "ve", "an", "en",
+            "on", "ön", "at", "et", "ot", "öt", "ut", "üt", "ig", "ul", "ül", "kor", "ként", "int");
+
+    /** Egy szakasz rímelemzése: soronkénti kulcs, betű és minőség. */
+    public record Scheme(List<String> keys, List<String> labels, List<Kind> kinds) {
         /** A képlet olvasható alakja, pl. {@code xaxa}. */
         public String pattern() {
             return String.join("", labels);
         }
+
+        /** A képlet neve, ha ismert forma. */
+        public String patternName() {
+            return schemeName(pattern());
+        }
+    }
+
+    /** A rímképlet magyar neve, vagy {@code null}, ha nem szokványos forma. */
+    public static String schemeName(String pattern) {
+        return switch (pattern) {
+            case "aabb", "aabbcc", "aabbccdd" -> "páros rím";
+            case "abab", "ababcdcd" -> "keresztrím";
+            case "abba", "abbacddc" -> "ölelkező rím";
+            case "aaaa", "aaa", "aaaaa" -> "bokorrím";
+            case "xaxa", "axax", "xaxaxbxb" -> "félrím";
+            case "aab", "aabccb" -> "ráütő rím";
+            case "xxxx", "xxx", "xx", "x" -> "rímtelen";
+            default -> null;
+        };
     }
 
     /**
@@ -189,10 +234,12 @@ public final class RhymeDetector {
         }
         Map<Integer, String> assigned = new LinkedHashMap<>();
         List<String> labels = new ArrayList<>(n);
+        List<Kind> kinds = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             int root = find(parent, i);
             if (strict.get(i).isEmpty() || sizes.getOrDefault(root, 0) < 2) {
                 labels.add(String.valueOf(BLANK));
+                kinds.add(Kind.VAKSOR);
                 continue;
             }
             String existing = assigned.get(root);
@@ -201,8 +248,40 @@ public final class RhymeDetector {
                 assigned.put(root, existing);
             }
             labels.add(existing);
+            kinds.add(kindOf(lines, strict, loose, parent, i));
         }
-        return new Scheme(List.copyOf(strict), List.copyOf(labels));
+        return new Scheme(List.copyOf(strict), List.copyOf(labels), List.copyOf(kinds));
+    }
+
+    /** A sor rímének minősége a rímtársaihoz képest. */
+    private static Kind kindOf(List<String> lines, List<String> strict, List<String> loose, int[] parent, int i) {
+        int root = find(parent, i);
+        String myWord = lastWord(lines.get(i));
+        Kind best = Kind.ASSZONANC;
+        for (int j = 0; j < lines.size(); j++) {
+            if (j == i || find(parent, j) != root) {
+                continue;
+            }
+            if (!myWord.isEmpty() && myWord.equals(lastWord(lines.get(j)))) {
+                return Kind.ONRIM;
+            }
+            if (strict.get(i).equals(strict.get(j))) {
+                Kind candidate = SUFFIXES.contains(strict.get(i)) ? Kind.RAGRIM : Kind.TISZTA;
+                if (candidate.ordinal() < best.ordinal()) {
+                    best = candidate;
+                }
+            } else if (!loose.get(i).isEmpty() && loose.get(i).equals(loose.get(j))) {
+                if (Kind.ASSZONANC.ordinal() < best.ordinal()) {
+                    best = Kind.ASSZONANC;
+                }
+            }
+        }
+        return best;
+    }
+
+    private static String lastWord(String line) {
+        List<String> words = TextNormalizer.words(line, false);
+        return words.isEmpty() ? "" : words.get(words.size() - 1);
     }
 
     private static int find(int[] parent, int i) {

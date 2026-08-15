@@ -8,8 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Aranyminta-tesztek: valódi, dokumentált metrumú magyar versrészletek. Ha ezek
- * elromlanak, a motor romlott el — nem a teszt.
+ * A motor viselkedésének egységtesztjei. A valódi versekre vonatkozó elvárások
+ * a {@link CorpusTest}ben vannak; itt az elemzés mechanikáját mérjük:
+ * szakaszokra bontás, ismétlődő formák, beállítások, szélsőséges bemenet.
  */
 class AnalyzerTest {
 
@@ -17,70 +18,6 @@ class AnalyzerTest {
         return stanza.lines().get(line).meters().stream()
                 .map(m -> m.meter().name())
                 .toList();
-    }
-
-    @Test
-    @DisplayName("Zrínyi: felező tizenkettes — nincs klasszikus mérték, a rím aaaa")
-    void zriniIsNotClassical() {
-        Analysis a = Analyzer.analyze(Examples.SZIGETI.text());
-        Analysis.Stanza stanza = a.stanzas().get(0);
-        assertThat(stanza.rhymePattern()).isEqualTo("aaaa");
-        for (Analysis.Line line : stanza.lines()) {
-            assertThat(line.meters())
-                    .as("Zrínyi sora nem klasszikus mérték: %s", line.text())
-                    .isEmpty();
-        }
-    }
-
-    @Test
-    @DisplayName("Radnóti: Hetedik ecloga — mind a négy sor hexameter")
-    void radnotiIsHexameter() {
-        Analysis a = Analyzer.analyze(Examples.HETEDIK_ECLOGA.text());
-        Analysis.Stanza stanza = a.stanzas().get(0);
-        for (int i = 0; i < stanza.lines().size(); i++) {
-            assertThat(meterNames(stanza, i)).as("%s. sor", i + 1).contains("hexameter");
-        }
-        assertThat(stanza.rhymePattern()).isEqualTo("xxxx");
-    }
-
-    @Test
-    @DisplayName("Kazinczy: A nagy titok — hexameter + pentameter = disztichon")
-    void kazinczyIsDistich() {
-        Analysis a = Analyzer.analyze(Examples.NAGY_TITOK.text());
-        Analysis.Stanza stanza = a.stanzas().get(0);
-        assertThat(meterNames(stanza, 0)).contains("hexameter");
-        assertThat(meterNames(stanza, 1)).contains("pentameter");
-        assertThat(stanza.forms()).extracting(f -> f.form().name()).contains("disztichon");
-    }
-
-    @Test
-    @DisplayName("Berzsenyi: A magyarokhoz — alkaioszi strófa")
-    void berzsenyiIsAlcaic() {
-        Analysis a = Analyzer.analyze(Examples.MAGYAROKHOZ.text());
-        Analysis.Stanza stanza = a.stanzas().get(0);
-        assertThat(stanza.forms()).extracting(f -> f.form().name()).contains("alkaioszi strófa");
-    }
-
-    @Test
-    @DisplayName("Petőfi: Szeptember végén — keresztrím")
-    void petofiRhymesAbab() {
-        Analysis a = Analyzer.analyze(Examples.SZEPTEMBER_VEGEN.text());
-        assertThat(a.stanzas().get(0).rhymePattern()).isEqualTo("abab");
-    }
-
-    @Test
-    @DisplayName("az Íliász kezdősora a szókezdő nyújtás licenciájával lesz hexameter")
-    void iliadOpeningNeedsTheLicence() {
-        Analysis strict = Analyzer.analyze(Examples.ILIASZ.text());
-        assertThat(meterNames(strict.stanzas().get(0), 0)).doesNotContain("hexameter");
-
-        Settings licence = MetricCanon.DEFAULT_SETTINGS.with(Map.of(Settings.WORD_INITIAL_STRESS, true));
-        Analysis loose = Analyzer.analyze(Examples.ILIASZ.text(), licence);
-        for (int i = 0; i < loose.stanzas().get(0).lines().size(); i++) {
-            assertThat(meterNames(loose.stanzas().get(0), i))
-                    .as("%s. sor", i + 1)
-                    .contains("hexameter");
-        }
     }
 
     @Test

@@ -293,12 +293,20 @@ button:disabled {
   position: sticky;
   top: 0;
   z-index: 1;
+  /* Fix magasság: a sáv MINDIG ott van, csak halványul. Enélkül a megjelenése
+     eltolja a sorokat, az egér lecsúszik a szótagról, és a súgó villog. */
+  min-height: 1.2rem;
   margin: 0.6rem 0;
   padding: 0.5rem 0.8rem;
   border-radius: 0.4rem;
   background: var(--accent-soft);
   color: var(--accent);
   font-size: 0.88rem;
+}
+
+.reason.empty {
+  background: transparent;
+  color: var(--muted);
 }
 
 .stanza {
@@ -342,8 +350,16 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   padding: 0.05rem 0.18rem;
+  border: 1px solid transparent;
   border-radius: 0.25rem;
-  cursor: help;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.syllable.overridden {
+  border-color: var(--accent);
 }
 
 .syllable:hover,
@@ -376,7 +392,9 @@ button:disabled {
   color: var(--anceps);
 }
 
-.anceps .text {
+.anceps .text,
+.resolved .text {
+  /* Pontozott aláhúzás: a szótag közös volt, a mértéket a versmérték döntötte el. */
   text-decoration: underline dotted;
   text-underline-offset: 0.2em;
 }
@@ -400,6 +418,24 @@ button:disabled {
   border-radius: 999px;
   color: var(--muted);
   font-size: 0.74rem;
+}
+
+.nearmiss {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.rhyme-kind {
+  color: var(--accent);
+}
+
+.accentual {
+  color: var(--short) !important;
+}
+
+.badge.dual {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .ictus {
