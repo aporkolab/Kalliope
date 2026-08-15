@@ -198,6 +198,22 @@ class KalliopeIntegrationTest {
     }
 
     @Test
+    @DisplayName("az index.html sosem gyorsítótárazódik, a hash-nevű fájlok viszont igen")
+    void cachingPolicyIsCorrect() throws Exception {
+        // Ha az index.html gyorsítótárazódna, a friss telepítés után is a régi
+        // bundle töltődne be — pontosan ez fordult elő élesben.
+        HttpResponse<String> index = get("/");
+        assertThat(index.headers().firstValue("Cache-Control").orElse(""))
+                .as("index.html gyorsítótárazása")
+                .contains("no-store");
+
+        HttpResponse<String> asset = get("/main-TESZT01.js");
+        assertThat(asset.headers().firstValue("Cache-Control").orElse(""))
+                .as("hash-nevű fájl gyorsítótárazása")
+                .contains("max-age=31536000");
+    }
+
+    @Test
     @DisplayName("ismeretlen API-útvonal 404-et ad, NEM a felület HTML-jét")
     void unknownApiPathDoesNotFallBackToHtml() throws Exception {
         HttpResponse<String> response = get("/api/nincs-ilyen-vegpont");
