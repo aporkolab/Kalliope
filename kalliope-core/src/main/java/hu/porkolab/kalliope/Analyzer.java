@@ -41,6 +41,13 @@ public final class Analyzer {
             byLine.computeIfAbsent(o.line(), k -> new java.util.HashMap<>()).put(o.syllable(), o.quantity());
         }
         List<List<String>> blocks = split(poem == null ? "" : poem);
+
+        // ELŐFUTAM: minden sor olvasata és mértéktalálatai, mielőtt bármit
+        // kiírnánk. Kell, mert egy sor több mértékre is illeszkedhet KÜLÖNBÖZŐ
+        // feloldással, és ilyenkor a VERS mértéke dönti el, melyik az olvasat.
+        List<List<Chosen>> chosenByStanza = new ArrayList<>(blocks.size());
+        List<List<List<Scansion.Reading>>> readingsByStanza = new ArrayList<>(blocks.size());
+
         List<Analysis.Stanza> stanzas = new ArrayList<>(blocks.size());
         Set<String> meterNames = new LinkedHashSet<>();
         Set<String> formNames = new LinkedHashSet<>();
@@ -49,15 +56,15 @@ public final class Analyzer {
         int lineCounter = 0;
         int syllableCounter = 0;
 
-        for (int s = 0; s < blocks.size(); s++) {
-            List<String> texts = blocks.get(s);
+        int scanned = 0;
+        for (List<String> texts : blocks) {
             List<List<Scansion.Reading>> readings = new ArrayList<>(texts.size());
             for (String text : texts) {
                 readings.add(Scansion.readings(text, settings));
             }
             // a kézi felülbírálás a sor MINDEN olvasatára vonatkozik
             for (int i = 0; i < readings.size(); i++) {
-                java.util.Map<Integer, Character> over = byLine.get(lineCounter + i);
+                java.util.Map<Integer, Character> over = byLine.get(scanned + i);
                 if (over == null) {
                     continue;
                 }
@@ -67,13 +74,29 @@ public final class Analyzer {
                 }
                 readings.set(i, applied);
             }
+            List<Chosen> chosen = new ArrayList<>(texts.size());
+            for (List<Scansion.Reading> perLine : readings) {
+                chosen.add(choose(perLine));
+            }
+            readingsByStanza.add(readings);
+            chosenByStanza.add(chosen);
+            scanned += texts.size();
+        }
+
+        // A vers mértéke, az EGYÉRTELMŰ sorok tanúsága szerint. Ez dönti el az
+        // olvasatot ott, ahol egy sor többféleképp is skandálható.
+        String dominantMeter = dominantMeter(chosenByStanza);
+
+        for (int s = 0; s < blocks.size(); s++) {
+            List<String> texts = blocks.get(s);
+            List<List<Scansion.Reading>> readings = readingsByStanza.get(s);
             RhymeDetector.Scheme scheme =
                     RhymeDetector.scheme(texts, settings.assonanceAsRhyme(), settings.letterSyllables());
 
             List<Analysis.Line> lines = new ArrayList<>(texts.size());
             List<String> chosenScansions = new ArrayList<>(texts.size());
             for (int i = 0; i < texts.size(); i++) {
-                Chosen chosen = choose(readings.get(i));
+                Chosen chosen = preferDominant(chosenByStanza.get(s).get(i), dominantMeter);
                 chosenScansions.add(chosen.reading.pattern());
                 syllableCounter += chosen.reading.syllableCount();
                 List<MeterMatcher.Match> matches = settings.multipleMatches() || chosen.matches.isEmpty()
@@ -154,6 +177,84 @@ public final class Analyzer {
     // ------------------------------------------------------------------ //
 
     private record Chosen(Scansion.Reading reading, List<MeterMatcher.Match> matches) {}
+
+    /**
+     * A vers domináns mértéke — az egyértelmű sorok tanúsága szerint.
+     *
+     * <p>Csak azokat a sorokat számoljuk, amelyeknek EGYETLEN feloldásuk van:
+     * azok mondanak valamit biztosan. A kétértelmű sor önmagáról nem tanú, hisz
+     * épp azt akarjuk eldönteni róla, melyik olvasata áll.
+     */
+    private static String dominantMeter(List<List<Chosen>> chosenByStanza) {
+        java.util.Map<String, Integer> votes = new java.util.LinkedHashMap<>();
+        for (List<Chosen> stanza : chosenByStanza) {
+            for (Chosen c : stanza) {
+                if (c.matches.isEmpty() || distinctRealizations(c.matches) > 1) {
+                    continue;
+                }
+                for (MeterMatcher.Match m : c.matches) {
+                    votes.merge(m.meter().name(), 1, (a, b) -> a + b);
+                }
+            }
+        }
+        String best = null;
+        int bestCount = 0;
+        for (java.util.Map.Entry<String, Integer> e : votes.entrySet()) {
+            if (e.getValue() > bestCount) {
+                best = e.getKey();
+                bestCount = e.getValue();
+            }
+        }
+        return best;
+    }
+
+    private static int distinctRealizations(List<MeterMatcher.Match> matches) {
+        Set<String> seen = new LinkedHashSet<>();
+        for (MeterMatcher.Match m : matches) {
+            seen.add(m.realization());
+        }
+        return seen.size();
+    }
+
+    /**
+     * Ha a sor többféleképp is skandálható, a vers mértékének megfelelő olvasat
+     * kerül előre — a kiírt hosszúságok, a lábhatárok és a metszet is ebből
+     * jönnek.
+     *
+     * <p>Ez verstan, nem kényelem: az egyes sort a vers mértéke felől olvassuk.
+     * Az „Elmegy a kugli egy este berúgni, mer’” egyszerre illeszkedik
+     * aszklepiadeszi A123-ra és daktilikus tetraméterre; a szomszédos sorok
+     * viszont CSAK daktilikus tetraméterre, tehát a vers daktilikus, és a sort
+     * is úgy kell skandálni. Váradi Nagy Pál jelentette, hogy az aszklepiadeszi
+     * feloldás állt ott.
+     */
+    private static Chosen preferDominant(Chosen chosen, String dominantMeter) {
+        if (dominantMeter == null || chosen.matches.size() < 2 || distinctRealizations(chosen.matches) < 2) {
+            return chosen;
+        }
+        String wanted = null;
+        for (MeterMatcher.Match m : chosen.matches) {
+            if (m.meter().name().equals(dominantMeter)) {
+                wanted = m.realization();
+                break;
+            }
+        }
+        if (wanted == null) {
+            return chosen;
+        }
+        List<MeterMatcher.Match> reordered = new ArrayList<>(chosen.matches.size());
+        for (MeterMatcher.Match m : chosen.matches) {
+            if (m.realization().equals(wanted)) {
+                reordered.add(m);
+            }
+        }
+        for (MeterMatcher.Match m : chosen.matches) {
+            if (!m.realization().equals(wanted)) {
+                reordered.add(m);
+            }
+        }
+        return new Chosen(chosen.reading, List.copyOf(reordered));
+    }
 
     /**
      * A sor olvasata: az elsődleges (minden magánhangzó külön szótag), kivéve ha

@@ -110,6 +110,78 @@ class CorpusTest {
     }
 
     @Test
+    @DisplayName("invariáns: a kiírt hosszúságsor a MEGNEVEZETT mérték feloldása")
+    void displayedQuantitiesMatchTheNamedMeter() {
+        // Ezt az invariánst egyetlen korpusz-százalék sem fogja el: az illesztés
+        // eddig is jó volt, csak a kiírt hosszúságok tartoztak MÁS mértékhez,
+        // mint amit a sor mellé írtunk. Váradi Nagy Pál jelentette.
+        for (Examples e : Examples.ALL) {
+            for (Analysis.Stanza stanza : Analyzer.analyze(e.text()).stanzas()) {
+                for (Analysis.Line line : stanza.lines()) {
+                    if (line.meters().isEmpty()) {
+                        assertThat(line.realized())
+                                .as("%s — „%s”: találat nélkül nincs megvalósult hosszúság", e.title(), line.text())
+                                .isNull();
+                        continue;
+                    }
+                    MeterMatcher.Match first = line.meters().get(0);
+                    assertThat(line.realized())
+                            .as(
+                                    "%s — „%s”: a kiírt hosszúságsor a %s feloldása",
+                                    e.title(), line.text(), first.meter().name())
+                            .isEqualTo(first.realization());
+                    assertThat(line.realized())
+                            .as("%s — „%s”: a hosszúságsor hossza a szótagszám", e.title(), line.text())
+                            .hasSize(line.syllables().size());
+                    // A megvalósult hosszúság csak ott térhet el a nyers
+                    // skandálástól, ahol az eldöntetlen volt.
+                    for (int i = 0; i < line.realized().length(); i++) {
+                        char raw = line.scansion().charAt(i);
+                        char shown = line.realized().charAt(i);
+                        if (raw != Notation.ANCEPS) {
+                            assertThat(shown)
+                                    .as(
+                                            "%s — „%s” %d. szótag: a mérték nem írhat át eldöntött hosszúságot",
+                                            e.title(), line.text(), i + 1)
+                                    .isEqualTo(raw);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("a vers mértéke dönti el a kétértelmű sort")
+    void thePoemsMeterResolvesTheAmbiguousLine() {
+        // Váradi Nagy Pál tesztesete. Az első sor egyszerre illeszkedik
+        // aszklepiadeszi A123-ra és daktilikus tetraméterre, KÜLÖNBÖZŐ
+        // feloldással; a 3. és 4. sor viszont CSAK daktilikus tetraméterre.
+        // A vers tehát daktilikus, és az első sort is úgy kell skandálni.
+        String poem = String.join(
+                "\n",
+                "Elmegy a kugli egy este berúgni, mer'",
+                "Ő az a kugli, ki nincs fából.",
+                "Otthon az asszonya sír, mer' az ostoba",
+                "Kuglira nem hat a kérő szó.");
+        Analysis a = Analyzer.analyze(poem);
+        assertThat(a.verse().headline()).contains("daktilikus tetrameter");
+        List<Analysis.Line> lines = a.stanzas().get(0).lines();
+
+        assertThat(lines.get(0).meters().get(0).meter().name()).isEqualTo("daktilikus tetrameter");
+        assertThat(lines.get(0).realized()).isEqualTo("-UU-UU-UU-UU");
+        // a másik olvasat nem tűnik el, csak nem az elsődleges
+        assertThat(lines.get(0).meters()).hasSize(2);
+        assertThat(lines.get(0).meters().get(1).meter().name()).isEqualTo("aszklepiadeszi A123");
+
+        for (Analysis.Line line : lines) {
+            assertThat(line.meters().get(0).meter().name())
+                    .as("„%s”", line.text())
+                    .isEqualTo("daktilikus tetrameter");
+        }
+    }
+
+    @Test
     @DisplayName("a hangsúlyos-magyaros versre helyesen NINCS klasszikus mérték")
     void accentualVerseHasNoClassicalMeter() {
         for (Examples poem : List.of(Examples.SZIGETI, Examples.TOLDI)) {
