@@ -7,6 +7,10 @@ Minden szótagról megmondja, **miért** olyan hosszú; ha egy sor nem illeszked
 > A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján. Ez a modernizált változat az ő munkájára épül; **közösen tesszük közzé**, társszerzőként, MIT licenc alatt. → [Eredet és
 > szerzőség](#eredet-és-fejlesztés)
 
+**Kipróbálni telepítés nélkül:** <https://aporkolab.github.io/Kalliope/> — teljes elemzés a böngészőben, backend nélkül.
+
+Saját gépen konténerből:
+
 ```bash
 docker run -p 8080:8080 ghcr.io/aporkolab/kalliope:latest   # → http://localhost:8080
 
@@ -74,8 +78,29 @@ Három modul, egyetlen futtatható artefaktum:
 | `kalliope-core` | A verstani motor, a metrikai kánon és a példatár. | **Csak a JDK** |
 | `kalliope-api` | REST-réteg + a felület kiszolgálása. | Spring Boot 4.1 |
 | `kalliope-web` | A webes felület. | Angular 22 |
+| `kalliope-js` | A motor JavaScriptre fordítva (TeaVM), a statikus változathoz. | TeaVM 0.12 |
 
 Az Angular build a Spring Boot `static/` mappájába kerül, így **nincs CORS probléma, és nem kell külön statikus hosting**.
+
+### Két futtatókörnyezet, egy motor
+
+| | GitHub Pages | Docker-image |
+| --- | --- | --- |
+| a motor | JavaScriptre fordítva a lapban (239 kB) | JVM-en, a REST API mögött |
+| hálózat | nem kell, minden helyben fut | `/api` hívások |
+| felület | **ugyanaz a bundle** | ugyanaz a bundle |
+
+A felület nem tud a különbségről: a `KalliopeService` futásidőben megnézi, ott van-e a lapon a lefordított motor, és ha igen, azt hívja. A motor forrása egyetlen helyen van (`kalliope-core`), a JSON-t is ugyanaz az osztály írja mindkét oldalon — és három teszt köti le, hogy ne csúszhassanak el:
+
+| Teszt | Mit köt össze |
+| --- | --- |
+| `JsonTest` (mag) | a kézi JSON-kiírás == a Jackson rekord-leképezése |
+| `JsonEquivalenceTest` (API) | a kézi JSON-kiírás == a valódi HTTP-válasz |
+| `js-diff.mjs` (js) | a **böngészőbe fordított** motor kimenete == a JVM-motor kimenete, a teljes korpuszon, **bájtra** |
+
+Az utolsó a legfontosabb: a TeaVM más futtatókörnyezetre képezi le a Java szemantikát, és ha bármi elcsúszik, a webes változat csendben adna más skandálást. A Pages-deploy elbukik, ha nem egyezik.
+
+A motor ezért 17-es bytecode-ra fordul (a TeaVM ASM-je nem olvas 25-öst), és nincs benne se regex, se `Integer::sum` — a `String.split` a `Character.UnicodeScript`-en át olyan JDK-belsőket ér el, amiket a TeaVM nem emulál. A kézi vágás egyenértékűségét a `StringsTest` a JDK kimenetéhez méri.
 
 ## Futtatás és Fejlesztés
 
@@ -110,7 +135,18 @@ cd kalliope-web && npm ci && npm start                # Web (4200-as port, /api 
 
 ```bash
 ./mvnw -pl kalliope-core -am package
-java -jar kalliope-core/target/kalliope-core-*.jar vers.txt    # Fájl elemzése
+java -jar kalliope-core/target/kalliope-core-*.jar vers.txt           # Fájl elemzése
+java -jar kalliope-core/target/kalliope-core-*.jar --json vers.txt    # Gépi kimenet
+java -jar kalliope-core/target/kalliope-core-*.jar --canon            # A metrikai kánon
+
+```
+
+**A statikus változat építése** (ehhez JDK 21 kell a TeaVM-nek — a szokásos `verify` nem igényli):
+
+```bash
+./mvnw -Pjs -pl kalliope-js -am package     # a motor JavaScriptre
+node kalliope-js/tools/js-diff.mjs          # összevetés a JVM-motorral
+cd kalliope-web && npx ng build --base-href=/Kalliope/ && node tools/build-pages.mjs
 
 ```
 
@@ -135,7 +171,7 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 
 ```
 
-Jelenleg **112 Java teszt** (92 motor + 20 API) és **33 frontend teszt** fut; a sorlefedettség 96% / 84% / 88%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be. Az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz.
+Jelenleg **123 Java teszt** (100 motor + 23 API) és **39 frontend teszt** fut; a sorlefedettség 95% / 85% / 89%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
 
 ## API Referencia
 
