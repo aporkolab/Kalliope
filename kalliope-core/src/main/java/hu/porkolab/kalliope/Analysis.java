@@ -34,7 +34,8 @@ public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary,
             String rhymePattern,
             String rhymePatternName,
             List<MeterMatcher.StanzaMatch> forms,
-            AccentualMatcher.Dominant accentual) {
+            AccentualMatcher.Dominant accentual,
+            boolean dualRhythm) {
 
         public Stanza {
             lines = List.copyOf(lines);
@@ -42,18 +43,33 @@ public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary,
         }
 
         /**
-         * Kettős ritmus: a szakasz egyszerre mutat időmértékes és ütemhangsúlyos
-         * rendet. Szándékosan NEM állítjuk, hogy „szimultán vers" — az ahhoz kell,
-         * hogy mindkét rendnek maradéktalanul megfeleljen, és ezt a szótagszám
-         * egybeesése önmagában nem bizonyítja. A két tényt egymás mellé tesszük,
-         * az ítélet az olvasóé.
+         * Szakasz a kettős ritmus kiszámításával.
+         *
+         * <p>A {@code dualRhythm} azért rekordkomponens és nem származtatott
+         * metódus, mert a metódust a szerializáló nem látja: amíg az volt, a
+         * mező sosem került ki a JSON-be, és a felület „kettős ritmus" jelzése
+         * sosem jelent meg. Ugyanez a hiba érte korábban a
+         * {@code division}-t és a {@code quality}-t.
+         *
+         * <p>Kettős ritmus: a szakasz egyszerre mutat időmértékes és
+         * ütemhangsúlyos rendet. Szándékosan NEM állítjuk, hogy „szimultán
+         * vers" — az ahhoz kell, hogy mindkét rendnek maradéktalanul
+         * megfeleljen, és ezt a szótagszám egybeesése önmagában nem bizonyítja.
+         * A két tényt egymás mellé tesszük, az ítélet az olvasóé.
          */
-        public boolean dualRhythm() {
-            if (accentual == null || accentual.strength() != AccentualMatcher.Strength.TISZTA || lines.isEmpty()) {
-                return false;
+        public static Stanza of(
+                int index,
+                List<Line> lines,
+                String rhymePattern,
+                String rhymePatternName,
+                List<MeterMatcher.StanzaMatch> forms,
+                AccentualMatcher.Dominant accentual) {
+            boolean dual = false;
+            if (accentual != null && accentual.strength() == AccentualMatcher.Strength.TISZTA && !lines.isEmpty()) {
+                long matched = lines.stream().filter(Line::matched).count();
+                dual = matched * 4 >= lines.size() * 3L;
             }
-            long matched = lines.stream().filter(Line::matched).count();
-            return matched * 4 >= lines.size() * 3L;
+            return new Stanza(index, lines, rhymePattern, rhymePatternName, forms, accentual, dual);
         }
     }
 

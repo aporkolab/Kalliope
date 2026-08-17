@@ -1,0 +1,68 @@
+name: Pages
+
+# A böngészőbe fordított motor + a felület, backend nélkül.
+# A kalliope-core-t a TeaVM JavaScriptre fordítja; a lap így hálózat nélkül
+# elemez. A Docker-image ettől független marad — egy motorforrás, két kimenet.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Egyszerre egy deploy; a futó nem szakad meg, hogy félbevágott lap ne menjen ki.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # A TeaVM a Maven saját JVM-jében fut, és az ASM-je nem olvassa a Java
+      # 25-ös osztályfájlokat — ezért JDK 21. A motor 17-es bytecode-ra fordul,
+      # tehát ez nem visz el nyelvi elemet.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: kalliope-web/package-lock.json
+
+      - name: Motor fordítása JavaScriptre
+        run: ./mvnw -B -ntp -Pjs -pl kalliope-js -am package -DskipTests -Djacoco.skip=true
+
+      # Ez a kapu: ha a lefordított motor bármiben másképp skandál, mint a JVM,
+      # a deploy elbukik. Enélkül a webes változat csendben térhetne el.
+      - name: Összevetés a JVM-motorral
+        run: node kalliope-js/tools/js-diff.mjs
+
+      - name: Felület építése
+        working-directory: kalliope-web
+        run: |
+          npm ci
+          npx ng build --base-href=/${{ github.event.repository.name }}/
+          node tools/build-pages.mjs
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: kalliope-web/dist/kalliope-web/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

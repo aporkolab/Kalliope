@@ -45,7 +45,7 @@ public record Meter(
 
     /** Verslábakra tagolt minta a megjelenítéshez. */
     public List<String> feet() {
-        return List.of(pattern.split("\\|+"));
+        return List.copyOf(Strings.splitRuns(pattern, '|'));
     }
 
     public boolean corrected() {

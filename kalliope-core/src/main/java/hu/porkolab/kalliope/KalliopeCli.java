@@ -37,6 +37,13 @@ public final class KalliopeCli {
             printCanon(out);
             return;
         }
+        // Gépi kimenet: ugyanaz a JSON, amit a REST API és a böngészőbe
+        // fordított motor is ad. A kalliope-js differenciális tesztje ezt
+        // használja hivatkozási alapként.
+        if (args.length > 0 && "--json".equals(args[0])) {
+            printJson(args.length > 1 ? args[1] : null, in, out);
+            return;
+        }
         if (args.length == 0) {
             out.println("Kalliopé — magyar időmértékes verselés és rímképlet elemzője");
             out.println("Eredet: " + MetricCanon.ORIGIN_VERSION + " (kánon lezárva: " + MetricCanon.CANON_CLOSED + ")");
@@ -52,6 +59,31 @@ public final class KalliopeCli {
                 ? new String(in.readAllBytes(), StandardCharsets.UTF_8)
                 : Files.readString(Path.of(args[0]), StandardCharsets.UTF_8);
         print(Analyzer.analyze(poem), out);
+    }
+
+    /**
+     * JSON-kimenet. Argumentum nélkül a teljes példatár, azonosító szerint
+     * kulcsolva; fájlnévvel vagy {@code -}-tal az adott vers elemzése.
+     */
+    private static void printJson(String source, InputStream in, PrintStream out) throws IOException {
+        if (source == null) {
+            StringBuilder b = new StringBuilder(1 << 16);
+            b.append('{');
+            boolean first = true;
+            for (Examples e : Examples.ALL) {
+                if (!first) {
+                    b.append(',');
+                }
+                first = false;
+                b.append('"').append(e.id()).append("\":").append(Json.of(Analyzer.analyze(e.text())));
+            }
+            out.println(b.append('}'));
+            return;
+        }
+        String poem = "-".equals(source)
+                ? new String(in.readAllBytes(), StandardCharsets.UTF_8)
+                : Files.readString(Path.of(source), StandardCharsets.UTF_8);
+        out.println(Json.of(Analyzer.analyze(poem)));
     }
 
     static void print(Analysis analysis, PrintStream out) {

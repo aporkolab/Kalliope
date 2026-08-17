@@ -63,20 +63,20 @@ public record VerseSummary(System system, String headline, List<String> details)
                 lines++;
                 if (line.matched()) {
                     matched++;
-                    meterCounts.merge(line.meters().get(0).meter().name(), 1, Integer::sum);
+                    meterCounts.merge(line.meters().get(0).meter().name(), 1, (a, b) -> a + b);
                 }
                 if (line.synizesis()) {
                     synizesis++;
                 }
                 if (line.rhymeKind() != RhymeDetector.Kind.VAKSOR) {
-                    rhymeKinds.merge(line.rhymeKind().explanation(), 1, Integer::sum);
+                    rhymeKinds.merge(line.rhymeKind().explanation(), 1, (a, b) -> a + b);
                 }
             }
             for (MeterMatcher.StanzaMatch f : stanza.forms()) {
-                formCounts.merge(f.form().name(), 1, Integer::sum);
+                formCounts.merge(f.form().name(), 1, (a, b) -> a + b);
             }
             if (stanza.accentual().form() != null) {
-                accentualCounts.merge(stanza.accentual().form().name(), 1, Integer::sum);
+                accentualCounts.merge(stanza.accentual().form().name(), 1, (a, b) -> a + b);
             }
             if (stanza.dualRhythm()) {
                 dual++;
@@ -216,7 +216,7 @@ public record VerseSummary(System system, String headline, List<String> details)
         // szakasz lehet rímtelen, miközben a többi rímel.
         Map<String, Integer> patterns = new LinkedHashMap<>();
         for (Analysis.Stanza stanza : stanzas) {
-            patterns.merge(stanza.rhymePattern(), 1, Integer::sum);
+            patterns.merge(stanza.rhymePattern(), 1, (a, b) -> a + b);
         }
         String pattern = top(patterns);
         String name = RhymeDetector.schemeName(pattern);

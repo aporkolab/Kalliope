@@ -14,3 +14,6 @@ coverage/
 .vscode/
 
 .DS_Store
+
+# a TeaVM kimenete
+kalliope-js/target/

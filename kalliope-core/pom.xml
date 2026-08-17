@@ -12,12 +12,32 @@
   <name>Kalliopé :: core</name>
   <description>A verstani motor. Nulla futásidejű függőség — csak a JDK.</description>
 
+  <properties>
+    <!--
+      A motor 17-es bytecode-ra fordul, nem 25-re. Nyelvi elemet nem veszít
+      (rekordok, switch-kifejezések, toList mind 17-ben megvan), viszont így
+      olvassa a TeaVM, ami a böngészőbe fordítja — és általában is jobb, ha
+      egy könyvtár nem kényszerít futásidejű verziót a hívójára.
+    -->
+    <maven.compiler.release>17</maven.compiler.release>
+  </properties>
+
   <!--
     NO compile-scope dependencies. Ever. The prosody database is embedded in
     the source, the engine only uses java.base. Test scope is the only place
     third-party code is allowed.
   -->
   <dependencies>
+    <!--
+      Csak TESZT hatókörben: a Json kiírását a Jackson rekord-leképezéséhez
+      mérjük. A motor futásidőben nem ismeri, és nem is ismerheti — a
+      böngészőbe fordított változatban nincs reflexió.
+    -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

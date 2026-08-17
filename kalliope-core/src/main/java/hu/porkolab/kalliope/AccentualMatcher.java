@@ -122,9 +122,9 @@ public final class AccentualMatcher {
                 if (!seen.add(m.form())) {
                     continue;
                 }
-                hits.merge(m.form(), 1, Integer::sum);
+                hits.merge(m.form(), 1, (a, b) -> a + b);
                 if (m.caesuraOnWordBoundary() || m.pure()) {
-                    clean.merge(m.form(), 1, Integer::sum);
+                    clean.merge(m.form(), 1, (a, b) -> a + b);
                 }
             }
         }

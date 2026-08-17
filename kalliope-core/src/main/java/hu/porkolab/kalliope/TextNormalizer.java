@@ -75,7 +75,7 @@ public final class TextNormalizer {
             }
         }
         List<String> out = new ArrayList<>();
-        for (String raw : cleaned.toString().split(" +")) {
+        for (String raw : Strings.splitRuns(cleaned.toString(), ' ')) {
             String w = Phonology.lower(raw).replace('w', 'v');
             w = keepLetters(w);
             if (w.isEmpty()) {

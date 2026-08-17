@@ -133,7 +133,7 @@ public final class Analyzer {
                 accentualNames.add(dominant.form().name());
             }
             Analysis.Stanza stanza =
-                    new Analysis.Stanza(s, lines, scheme.pattern(), scheme.patternName(), forms, dominant);
+                    Analysis.Stanza.of(s, lines, scheme.pattern(), scheme.patternName(), forms, dominant);
             if (stanza.dualRhythm()) {
                 simultaneous += lines.size();
             }
@@ -223,7 +223,7 @@ public final class Analyzer {
         List<List<String>> blocks = new ArrayList<>();
         List<String> current = new ArrayList<>();
         int lineCount = 0;
-        for (String raw : poem.split("\\R", -1)) {
+        for (String raw : Strings.lines(poem)) {
             String line = raw.strip();
             if (line.isEmpty()) {
                 if (!current.isEmpty()) {

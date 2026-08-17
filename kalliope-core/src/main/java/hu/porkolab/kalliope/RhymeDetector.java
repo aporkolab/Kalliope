@@ -233,7 +233,7 @@ public final class RhymeDetector {
         }
         Map<Integer, Integer> sizes = new LinkedHashMap<>();
         for (int i = 0; i < n; i++) {
-            sizes.merge(find(parent, i), 1, Integer::sum);
+            sizes.merge(find(parent, i), 1, (a, b) -> a + b);
         }
         Map<Integer, String> assigned = new LinkedHashMap<>();
         List<String> labels = new ArrayList<>(n);

@@ -135,4 +135,19 @@
       </plugin>
     </plugins>
   </build>
+
+  <!--
+    A böngészőbe fordított motor külön profilban van, mert a TeaVM a Maven saját
+    JVM-jében fut, és az ASM-je nem olvassa a Java 25-ös osztályfájlokat: ezt a
+    modult JDK 21 alatt kell építeni (./mvnw -Pjs -pl kalliope-js -am package).
+    Így a szokásos `./mvnw verify` nem igényel második JDK-t.
+  -->
+  <profiles>
+    <profile>
+      <id>js</id>
+      <modules>
+        <module>kalliope-js</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
