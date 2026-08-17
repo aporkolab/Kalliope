@@ -54,7 +54,7 @@ Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope
 | `—` | hosszú szótag |
 | `∪` | rövid szótag |
 | `×` | közös (anceps) — a mérték dönti el |
-| `|` | lábhatár |
+| `\|` | lábhatár |
 | `‖` | sormetszet, cezúra |
 | pontozott aláhúzás | a szótag eredetileg közös volt, a mérték döntötte el |
 
@@ -139,11 +139,11 @@ A skandáló alapértelmezetten **szigorú**: költői licenciát nem feltétele
 ### Beállítások
 
 A motor számos elemzési beállítást támogat (pl. `a_rovid_kotoszok_kozombosek`, `a_szokezdo_hangsuly_nyujthat`).
-*Megjegyzés:* Az eredeti Lazarus-kliens kizárólag felületkezelésre vonatkozó beállításai a motorban továbbra is jelen vannak a kompatibilitás miatt, de a webes UI értelemszerűen nem használja őket.
+*Megjegyzés:* Az eredeti Lazarus-kliens három, tisztán ablakkezelési kapcsolója (`a_jobb_oldali_szoveg_formazott_legyen`, `a_fuggoleges_toszogalos_mutyur_helye`, `a_beallitasokat_tartalmazo_felulet_elrejtve`) **nincs** a motorban: itt nem volna értelmük, és nem is teszek úgy, mintha lenne. A tíz megmaradt beállításból hat az eredeti adatbázisé, négy az én kiegészítésem.
 
 ## Korpusz-riport és Tesztelés
 
-A rendszer stabilitását és pontosságát egy 245 sorból álló, klasszikus verseket tartalmazó korpusz (Zrínyi, Arany, Homérosz, Radnóti, Berzsenyi, Petőfi) garantálja. Az automatizált `CorpusTest` elbukik, ha az algoritmus felismerési aránya (jelenleg 86% feletti a teljes korpuszon, beleértve az engedékenyebb költői licenciákat is) romlana egy kódmódosítás során.
+A rendszer stabilitását és pontosságát egy 245 sorból álló, klasszikus verseket tartalmazó korpusz (Zrínyi, Arany, Homérosz, Radnóti, Berzsenyi, Petőfi) garantálja. Az automatizált `CorpusTest` elbukik, ha az algoritmus felismerési aránya (alapbeállításokkal 86% a teljes korpuszon, versenként külön küszöbbel) romlana egy kódmódosítás során.
 
 ## Ismert korlátok
 

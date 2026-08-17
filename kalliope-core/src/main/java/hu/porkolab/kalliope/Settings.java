@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Az elemzés kapcsolói. Az első hat az eredeti adatbázis {@code !} sorainak
- * felel meg; az utolsó kettő ennek a változatnak a dokumentált kiegészítése.
+ * felel meg; az utolsó négy ennek a változatnak a dokumentált kiegészítése.
  *
  * <p>A tisztán megjelenítésbeli beállítások ({@code a_jobb_oldali_szoveg_formazott_legyen},
  * {@code a_fuggoleges_toszogalos_mutyur_helye}, {@code a_beallitasokat_tartalmazo_felulet_elrejtve})
