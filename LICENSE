@@ -1,0 +1,41 @@
+MIT License
+
+Copyright (c) 2004-2026 Váradi Nagy Pál (vnp85)
+Copyright (c) 2026 Porkoláb Ádám
+
+A Kalliopé eredeti programját és metrikai adatbázisát Váradi Nagy Pál írta
+2004-2006 táján; ez a változat az ő engedélyével, társszerzőként jelenik meg.
+Az eredeti adat — a metrikai kánon, a kiejtési normalizáló tábla, a rímdetektor
+mássalhangzó-táblája, a névaliasok, a központozás-lista és az ütemhangsúly-jelek
+— az ő munkája.
+
+The original Kalliopé program and its metrical database were written by Pál
+Váradi Nagy around 2004-2006; this version is published with his permission, as
+a joint work.
+
+---
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+A példatár szövegeire ez a licenc NEM vonatkozik. Nagy részük közkincs; két
+kivétel Devecseri Gábor (1917-1971) Homérosz-fordítása, amely szemléltetésként,
+oktatási célú szabad felhasználás keretében szerepel (Szjt. 33-35. §).
+Részletek a README „Szövegek és jogi helyzet" szakaszában.

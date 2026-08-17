@@ -7,6 +7,10 @@ Minden szótagról megmondja, **miért** olyan hosszú; ha egy sor nem illeszked
 múlik**; a végén pedig egy mondatban összegzi, milyen vers ez: *„Időmértékes verselés:
 disztichonok."*
 
+> A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján. Ez a változat az ő munkájára épül,
+> az ő engedélyével, **társszerzőként**, MIT licenc alatt. → [Eredet és
+> szerzőség](#eredet-és-szerzőség)
+
 ```bash
 git clone https://github.com/aporkolab/Kalliope.git && cd Kalliope
 docker compose up --build          # → http://localhost:8080
@@ -16,13 +20,39 @@ docker compose up --build          # → http://localhost:8080
 > GitHub a csomagokat alapból **privátra** állítja. Amíg a repó Packages beállításánál nem teszed
 > publikussá, a `docker run ghcr.io/...` idegennek nem fog működni — a fenti build viszont mindig.
 
+## Eredet és szerzőség
+
+A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján, egyetemistaként, **Lazarus /
+FreePascal** alatt. Ugyanennek a programnak él egy webes változata is, a szerző saját oldalán:
+<https://csillagtura.ro/projektek/kalliope/>.
+
+Ez a repó az ő munkájára épül, az ő engedélyével, **MIT licenc alatt, társszerzőként**.
+
+**Mi alapján dolgoztam, és hogyan.** A forráskód nem volt nyilvános, ezért a lefordított
+`kalliope.exe` binárisából indultam: Ghidrával visszafejtve, majd az adatszekciót kibontva. A
+motort Java nyelven újraírtam, de **az adat az eredeti**. Váradi Nagy Pál munkája:
+
+- a **metrikai kánon** — verslábak, kolónok, sorfajták, összetett sorok, szakaszmértékek;
+- a **kiejtési normalizáló tábla** (`tv→tévé`, `w→v`, betűnevek);
+- a **név-alias tábla** és a **központozás-lista**;
+- a rímfelismerés **mássalhangzó-normalizáló táblája** (ezt végül nem használom — lásd lentebb);
+- az **ütemhangsúly-jelek** (`U`/`Ú`/`-`/`÷`) és a verziószöveg (`VNP's Kalliope 1.71 beta`);
+- a **digráf-lista** és a *muta cum liquida* halmaz, amelyekkel a rekonstruált szkennert hitelesítettem.
+
+A kánon `VNP sorfajták` és `VNP-strófák` szekciója — *Gyilkosok, Éhesek, Pincsike1, mélyégi álom,
+utolsó mosás, létépartja* — a szerző **saját versformái**, a saját verseiből.
+
+Az eredeti felületet nem portoltam (utoljára Windows XP alatt futott); helyette Angular felület
+készült. Amit ez a változat hozzátett: a szakaszmérték-illesztés, az ütemhangsúlyos ág, néhány
+kiegészítő antik sorfajta, a REST API és a webes felület.
+
 ## Amit tud
 
 | | |
 |---|---|
-| **Időmértékes** | 53 sorfajta, 38 kolón, 11 versláb, 8 összetett sor, 18 szakaszmérték; szigorú illesztés, kapcsolható licenciákkal |
+| **Időmértékes** | 56 sorfajta, 38 kolón, 11 versláb, 8 összetett sor, 20 szakaszmérték; szigorú illesztés, kapcsolható licenciákkal |
 | **Ütemhangsúlyos** | 20 magyaros sorfajta ütemtagolással; a metszet minősége (tiszta vagy laza) külön látszik |
-| **Kettős ritmus** | ha a szakasz mindkét rendnek megfelel, jelezzük — de nem állítjuk, hogy „szimultán vers": az ahhoz kell, hogy *maradéktalanul* megfeleljen mindkettőnek |
+| **Kettős ritmus** | ha a szakasz mindkét rendnek megfelel, jelzi — de nem állítja, hogy „szimultán vers": az ahhoz kell, hogy *maradéktalanul* megfeleljen mindkettőnek |
 | **Rím** | képlet vaksorral (`x`), a képlet neve (keresztrím, bokorrím, félrím…), és soronként a rím fajtája (tiszta rím, ragrím, asszonánc, önrím) |
 | **Cezúra** | a mérték jelölt metszete, és a hexameter penthémimerész / kata triton trokhaion / hephthémimerész metszete |
 | **Ha nem illeszkedik** | a legközelebbi mérték és a pontos eltérés: *„hexameter lenne, ha — 1. szótag: rövid helyett hosszú kellene"* |
@@ -102,7 +132,7 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 
 | | Teszt | Lefedettség (sor) |
 |---|---:|---:|
-| `kalliope-core` | 91 | 95% |
+| `kalliope-core` | 92 | 95% |
 | `kalliope-api` | 20 | 84% |
 | `kalliope-web` | 33 | 88% |
 
@@ -193,7 +223,7 @@ dokumentált kiegészítése:
 
 A három tisztán ablakkezelési beállítás (`a_jobb_oldali_szoveg_formazott_legyen`,
 `a_fuggoleges_toszogalos_mutyur_helye`, `a_beallitasokat_tartalmazo_felulet_elrejtve`) az eredeti
-Delphi-felülethez tartozott; itt nincs értelmük, és nem is teszünk úgy, mintha lenne.
+Lazarus-felülethez tartozott; itt nincs értelmük, és nem is teszek úgy, mintha lenne.
 
 ## Korpusz-riport
 
@@ -205,22 +235,88 @@ regressziós hálója: a `CorpusTest` elbukik, ha az arány romlik.
 | Zrínyi: Szigeti veszedelem (részlet) | 4 | 0% | ütemhangsúlyos: felező tizenkettes |
 | Arany: Toldi, Első ének | 21 | 0% | ütemhangsúlyos: felező tizenkettes |
 | Homérosz–Devecseri: Íliász I. 1–40. | 40 | 92% | időmértékes: hexameterek |
-| Homérosz–Devecseri: Odüsszeia I. 1–40. | 40 | 90% | időmértékes: hexameterek |
+| Homérosz–Devecseri: Odüsszeia I. 1–40. | 40 | 98% | időmértékes: hexameterek |
 | Vörösmarty: Zalán futása, előhang | 34 | 97% | időmértékes: hexameterek |
 | Radnóti: Hetedik ecloga (teljes) | 36 | 94% | időmértékes: hexameterek |
 | Kazinczy: A nagy titok | 2 | 100% | időmértékes: disztichonok |
 | Berzsenyi: A magyarokhoz I. (részlet) | 4 | 100% | időmértékes: alkaioszi strófa |
 | Berzsenyi: A közelítő tél (teljes) | 24 | 100% | szimultán: aszklepiadeszi + felező tizenkettes |
-| Berzsenyi: Horác (teljes) | 16 | 93% | szimultán: aszklepiadeszi + felező tizenkettes |
-| Petőfi: Szeptember végén (teljes) | 24 | 95% | időmértékes |
-| **Összesen** | **245** | **84%** | |
+| Berzsenyi: Horác (teljes) | 16 | 94% | szimultán: aszklepiadeszi + felező tizenkettes |
+| Petőfi: Szeptember végén (teljes) | 24 | 96% | időmértékes |
+| **Összesen** | **245** | **86%** | |
 
 A két nulla százalék nem hiba, hanem a helyes válasz: Zrínyi és Arany verse ütemhangsúlyos, nem
 időmértékes — a motor ezeket a másik ágon ismeri fel, és Zrínyinél külön kimondja, hogy a metszet
 gyakran szóba esik. A hiányzó néhány százalék a költői licencia: azoknál a soroknál a „miért nem
 illeszkedik?" megmondja, min múlik.
 
+## Összevetés a webes változattal
+
+A szerző webes Kalliopéja ([csillagtura.ro](https://csillagtura.ro/projektek/kalliope/)) teljes
+egészében kliensoldali JavaScript, tehát **kinyerhető és futtatható**: a fenti 245 soros korpuszt
+mindkét motorral végigfuttattam, és szótagonként összevetettem. Ez váltja ki a `kalliope.exe`
+futásidejű összevetését, amihez Wine kellett volna.
+
+| | |
+|---|---:|
+| azonos szótagszámú sor | **236 / 245** (96,3%) |
+| ezeken belül: a nyers olvasatom megfér a webes változatéval | **100%** (3266/3266 szótag) |
+| betű szerint azonos kimenet | 48,3% |
+
+A „betű szerint azonos" alacsony szám nem eltérés, hanem **különböző felbontás**: a webes változat
+minden szótagot hosszúra vagy rövidre dönt, itt viszont van **közös (`?`)** szótag. Ahol ő dönt,
+itt kérdés marad, és a mérték dönt. Fajtánként:
+
+| Eltérés | Db | Mi ez |
+|---|---:|---|
+| sorvégi szótag: nála rövid, itt közös → a mérték hosszúvá teszi | 91 | **brevis in longo** — itt van, nála nincs |
+| névelő és rövid kötőszó: nála rövid, itt közös | 63 | az én kiegészítésem (kapcsolható) |
+| *muta cum liquida*: nála hosszú, itt közös | 30 | itt van, nála nincs |
+| görög aspiráta (`kh`, `th`): nála hosszú, itt rövid | 12 | **valódi hiba volt — mindkét oldalon**, lásd lentebb |
+
+**A 9 eltérő szótagszámú sor mind a webes változat hibája**, és mind a három ok egy-egy
+sorrendi vagy egyszerűsítési döntésből ered:
+
+- 4 sor: a `y` betűt feltétel nélkül törli, ezért a görög eredetű szavakban **elnyeli a
+  magánhangzót** — `labyrinth` → *labrinth*, `Zephyr` → *Zephr*. Berzsenyi négy sora így egy
+  szótaggal rövidebb lesz;
+- 3 sor: nincs kettőshangzó-kezelés, tehát `Poszeidáón`, `Aigiszthoszra`, `aithiopokhoz` eggyel
+  több szótag;
+- 2 sor: a szóvégi `eusz` → `evsz` összevonás **csak szóköz és sorvég előtt fut, írásjel előtt nem**,
+  ezért `Akhilleusz.` és `Szmintheusz:` nem vonódik össze.
+
+### Amit ebből átvettem
+
+**A görög aspiráta kétértelműsége.** A `kh`, `th`, `ph`, `rh`, `ch` írásképe két olvasatot fed:
+**egy** hang a görög névben (*A-khil-leusz* = χ, *I-tha-ka* = θ), de **kettő** a magyar
+morfémahatáron (*csak+hogy*, *halandó+k+hoz*, *kap+hat*, *át+hat*). Eddig mindketten egy-egy
+irányban döntöttünk, és mindketten hibáztunk: a webes változat az Íliász `akháj`-os sorait rontja
+el, én az Odüsszeia `-okhoz` ragos sorait. Most **közös** a szótag, és a mérték választ. Ez az
+egyetlen javítás:
+
+- az Odüsszeia illeszkedési aránya **90% → 98%**, a korpuszé **84% → 86%**;
+- a nyers olvasatom a maradék 236 soron **minden egyes szótagon** megfér a webes változatéval;
+- a `kaphat`, `áthat`, `csakhogy` típusú **magyar** szavak első szótaga eddig tévesen rövid volt.
+
+**Három hiányzó sorfajta és két szakaszmérték.** A webes kánon 104 formájából 97-et már lefedtem;
+átvettem a `Mozdonyszonett a`/`b` és az „anakreóni-féle sor" (`valami_anakreon`) mintát, valamint
+két további Horatius-féle aszklepiadeszi strófát (F és G). A maradék négy eltérés a
+[dokumentált javításom](#eltérések-az-eredeti-kánontól): `asklepiadesi_D13`, `glykoni2a`,
+`glykoni2b` — ezeknél megtartom a saját döntést, forrással.
+
+**Amit nem vettem át.** A rímkulcsa mindig az utolsó **két** magánhangzót veszi; itt a terjedelem
+Arany szabályát követi (zárt sorvég → egy szótag, nyílt → kettő). A mássalhangzó-normalizálása
+`r`-t, `l`-t és `j`-t egyetlen hangba olvasztja, ami a tiszta rímhez túl megengedő. Az asszonáncnál
+ő elhagyja a magánhangzó-hosszúságot, itt megmarad — Aranynál ez külön, gyengébb fokozat, és
+összemosva a `dögmadaraknak` is rímelne az `akhájnak`-ra.
+
+**Amit a szerzőnek jelezni érdemes.** Az `anyegin8` mintája `U-U-U-UU`; négy jambus sora nem
+végződhet két rövidre, a hímrímes anyegin-sor `U-U-U-U-`. Az utolsó jel valószínűleg elgépelés.
+
 ## Mi változott ehhez a kiadáshoz
+
+Ez a szakasz az **én Java portomról** szól, nem az eredeti programról: a felsorolt hibák a
+visszafejtett motor első Java változatában keletkeztek.
 
 Az előző változat egyetlen Java fájl volt, a metrikai adatbázissal beágyazott **szövegként**, saját
 szintaxissal (`;` komment, `.` mezőnév, `!` beállítás, `@` konstans, `#complex`, `$` szó). A
@@ -264,10 +360,12 @@ A valódi verskorpusz utólag még két hibát fogott, amit szintetikus teszt ne
 magánhangzó nélküli „s" kötőszó kiesett a megjelenítésből (a felület „Fegyvert, vitézt…"-et írt
 volna), a kánon-kereső pedig lekisbetűsítve kereste a mintát is, így `-UU-?`-re sosem talált.
 
-### Javítások a 2006-os kánonban
+### Eltérések az eredeti kánontól
 
-Csak ott nyúltunk az adathoz, ahol a minta bizonyíthatóan **más formát ír le, mint a neve**. Minden
-javítás megőrzi az eredeti mintát és a forrást — a felület `Kánon` nézetében kinyithatók:
+Öt mintán módosítottam az eredeti adathoz képest. Csak ott nyúltam hozzá, ahol a minta
+bizonyíthatóan **más formát ír le, mint a neve** — húszéves adatnál ez normális, és a döntés
+vitatható. Ezért minden eltérés megőrzi az eredeti mintát és a hivatkozott forrást; a felület
+`Kánon` nézetében kinyithatók, tehát bárki felülbírálhatja:
 
 | Mérték | Eredeti | Javítva | Miért |
 |---|---|---|---|
@@ -280,7 +378,7 @@ javítás megőrzi az eredeti mintát és a forrást — a felület `Kánon` né
 
 Új: `versus spondiacus` (spondeuszi ötödik lábú hexameter).
 
-**Amihez nem nyúltunk.** Az ellenőrzés több „javítási" javaslatot megcáfolt: a `szapphói sor` 4.
+**Amihez nem nyúltam.** Az ellenőrzés több „javítási" javaslatot megcáfolt: a `szapphói sor` 4.
 pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovitziánus`, a
 `téleszilleion` és az anakreóni sorok az eredeti szerző saját, védhető kódolásai maradtak.
 
@@ -295,13 +393,15 @@ pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovi
 - Az ütemhangsúlyos illesztés szótagszámon és szóhatáron alapul, nem valódi hangsúlyelemzésen.
 - A szótagszintű indoklás az elsődleges olvasatra vonatkozik; ha a sor csak összevont
   kettőshangzóval illeszkedik, azt a felület külön jelzi („összevonással").
-- A `kalliope.exe` futásidejű, bit-pontos összevetése nem történt meg (ahhoz Wine kellene); a
-  hitelesség az adat és a szabályok egyezésén nyugszik.
+- A `kalliope.exe` futásidejű, bit-pontos összevetése nem történt meg (ahhoz Wine kellene). Helyette
+  a szerző [webes változatával](https://csillagtura.ro/projektek/kalliope/) vetettem össze a
+  korpuszt — lásd az [Összevetés a webes változattal](#összevetés-a-webes-változattal) szakaszt.
 
 ## A projekt története
 
-**1. Eredet.** A Kalliopé eredetileg egy ~2006-os Borland Delphi asztali program volt. A forráskód
-elveszett; csak a lefordított bináris maradt meg, egy Ghidra reverse-engineering projekt formájában.
+**1. Eredet.** A Kalliopé eredetileg egy ~2004–2006-os, **Lazarus / FreePascal** alatt írt asztali
+program: Váradi Nagy Pál egyetemi munkája. A forráskód sosem került nyilvánosságra, így nekem csak
+a lefordított bináris állt rendelkezésre, egy Ghidra reverse-engineering projekt formájában.
 
 **2. Visszafejtés.** A logikát a dekompilátumból kellett kibányászni: a `.gzf` konténer felbontása,
 a VCL-alapú architektúra azonosítása (a vers párhuzamos `TStringList`-ekként tárolva), és a
@@ -331,5 +431,6 @@ Devecseri Gábor (1917–1971) Homérosz-fordítása: az Íliász és az Odüssz
 szemléltetésként, oktatási célú szabad felhasználás keretében szerepel (Szjt. 33–35. §), a forrás és
 a fordító megjelölésével. Ha a projektet más célra használod, ezt a két szöveget cseréld le.
 
-A kódnak jelenleg **nincs licencfájlja**; amíg nincs, a GitHub alapértelmezése szerint minden jog
-fenntartva. Ha nyílt forrásúvá tennéd, tegyél a repóba egy `LICENSE` fájlt.
+A kód **MIT licenc** alatt áll, Váradi Nagy Pál és Porkoláb Ádám közös szerzőségével — lásd a
+[`LICENSE`](LICENSE) fájlt. A licenc a kódra és a metrikai adatra vonatkozik, a példatár
+szövegeire **nem**.
