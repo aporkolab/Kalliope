@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:1.20
 
 # ---------- 1. Angular felület ----------
-FROM node:24-alpine AS web
+# A build szakaszok a BUILD gépen futnak, nem a célarchitektúrán: a kimenetük
+# (statikus bundle, jar) architektúra-független, tehát a több platformra
+# fordítás nem QEMU-emulációban zajlik. Csak a 4. szakasz per-platform.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS web
 WORKDIR /web
 COPY kalliope-web/package.json kalliope-web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -11,7 +14,7 @@ RUN npm run build
 
 # ---------- 2. Maven build ----------
 # A pom-ok külön rétegben: kódmódosításkor nem tölti újra a világot.
-FROM maven:3.9.16-eclipse-temurin-25-alpine AS build
+FROM --platform=$BUILDPLATFORM maven:3.9.16-eclipse-temurin-25-alpine AS build
 WORKDIR /src
 COPY pom.xml ./
 COPY kalliope-core/pom.xml kalliope-core/
@@ -27,7 +30,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 # ---------- 3. Rétegekre bontás ----------
 # Spring Boot 4.1: a -Djarmode=layertools MEGSZŰNT, a helyes hívás a tools jarmode.
-FROM eclipse-temurin:25.0.3_9-jre-alpine AS extract
+FROM --platform=$BUILDPLATFORM eclipse-temurin:25.0.3_9-jre-alpine AS extract
 WORKDIR /builder
 COPY --from=build /src/application.jar ./application.jar
 RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
@@ -45,7 +48,11 @@ LABEL org.opencontainers.image.source="https://github.com/aporkolab/Kalliope" \
 # A felhasználó ELŐBB jön létre, és minden COPY rögtön neki másol. A záró
 # `chown -R` ugyanis az egész könyvtárról új réteget csinálna — nyolcvan
 # megabájt fölösleges másolat.
-RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app
+# A munkakönyvtárat MI hozzuk létre és adjuk az app usernek. A WORKDIR
+# magától root tulajdonúra csinálná, és akkor az AOT-tanítófutás nem tudná
+# kiírni a gyorsítótárat — pont ez ment némán évekig.
+RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app \
+    && mkdir -p /application && chown 10001:10001 /application
 WORKDIR /application
 
 COPY --from=extract --chown=10001:10001 /builder/extracted/dependencies/ ./
@@ -60,7 +67,8 @@ USER 10001:10001
 # Nagyjából ötven megabájtot tesz az image-hez; ARG-gal kikapcsolható.
 ARG AOT_CACHE=true
 RUN if [ "$AOT_CACHE" = "true" ]; then \
-        java -XX:AOTCacheOutput=app.aot -Dspring.context.exit=onRefresh -jar application.jar || true; \
+        java -XX:AOTCacheOutput=app.aot -Dspring.context.exit=onRefresh -jar application.jar \
+        && test -s app.aot; \
     fi
 
 ENV SPRING_THREADS_VIRTUAL_ENABLED=true
