@@ -907,6 +907,15 @@ tr.fictive {
   display: none;
 }
 
+/* ---------- lüktetés (mérték nélkül) ---------- */
+.pulse {
+  padding: 0.1rem 0.5rem;
+  border: 1px dashed var(--short-line, var(--line));
+  border-radius: 999px;
+  color: var(--short-ink, var(--muted));
+  font-size: 0.82rem;
+}
+
 /* ---------- több olvasat egy sorra ---------- */
 .alt-readings {
   display: inline-flex;

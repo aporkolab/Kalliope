@@ -175,6 +175,9 @@ public final class Json {
         key(b, "nearMiss");
         nearMiss(b, l.nearMiss());
         comma(b);
+        key(b, "pulse");
+        pulse(b, l.pulse());
+        comma(b);
         pair(b, "rhymeLabel", l.rhymeLabel());
         comma(b);
         pair(b, "rhymeKey", l.rhymeKey());
@@ -297,6 +300,31 @@ public final class Json {
         });
         comma(b);
         pair(b, "summary", r.summary());
+        b.append('}');
+    }
+
+    private static void pulse(StringBuilder b, Pulse.Result p) {
+        if (p == null) {
+            b.append("null");
+            return;
+        }
+        b.append('{');
+        pair(b, "foot", p.foot());
+        comma(b);
+        pair(b, "footName", p.footName());
+        comma(b);
+        pair(b, "feet", p.feet());
+        comma(b);
+        pair(b, "syllables", p.syllables());
+        comma(b);
+        pair(b, "breaksAt", p.breaksAt());
+        comma(b);
+        pair(b, "resolved", p.resolved());
+        comma(b);
+        pair(b, "summary", p.summary());
+        comma(b);
+        key(b, "whole");
+        b.append(p.whole());
         b.append('}');
     }
 

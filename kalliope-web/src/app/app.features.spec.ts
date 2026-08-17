@@ -30,6 +30,7 @@ function analysis(over: Partial<Line> = {}): Analysis {
     meters: [],
     accentual: [],
     nearMiss: null,
+    pulse: null,
     rhymeLabel: 'x',
     rhymeKey: 'att',
     rhymeKind: 'VAKSOR',

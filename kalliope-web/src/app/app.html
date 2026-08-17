@@ -258,6 +258,14 @@
                     @if (!line.meters.length && line.nearMiss) {
                       <span class="nearmiss">{{ line.nearMiss.summary }}</span>
                     }
+                    <!--
+                      Lüktetés: nem sorfajta, ezért nem is úgy jelenítjük meg.
+                      Megmondja, miből hány áll a sor élén és hol szakad meg —
+                      és ez a forrása a kiírt hosszúságoknak.
+                    -->
+                    @if (!line.meters.length && line.pulse; as p) {
+                      <span class="pulse" [title]="p.resolved">{{ p.summary }}</span>
+                    }
                     @for (c of line.caesurae; track c.name) {
                       <span class="badge" [title]="c.afterSyllable + 1 + '. szótag előtt'">{{
                         c.name

@@ -80,6 +80,7 @@ const ANALYSIS: Analysis = {
           ],
           accentual: [],
           nearMiss: null,
+          pulse: null,
           rhymeLabel: 'x',
           rhymeKey: 'att',
           rhymeKind: 'VAKSOR',
@@ -296,6 +297,51 @@ describe('App megjelenítés', () => {
     analyze();
     expect(fixture.nativeElement.querySelector('.alt')).toBeNull();
     expect(fixture.nativeElement.querySelector('.alt-readings')).toBeNull();
+  });
+
+  it('mérték nélkül a lüktetés adja a kiírt hosszúságokat, és megmondja hol szakad meg', () => {
+    // Váradi Nagy Pál egy soros tesztesete: huszonegy szótag, hat daktilussal
+    // indul. Nincs ilyen hosszú kánoni sorfajta, de a lüktetés tény — és a
+    // feloldásnak megnevezett forrása van, nem néma alapértelmezés.
+    analyze();
+    const line = ANALYSIS.stanzas[0].lines[0];
+    internals().analysis.set({
+      ...ANALYSIS,
+      stanzas: [
+        {
+          ...ANALYSIS.stanzas[0],
+          lines: [
+            {
+              ...line,
+              realized: null,
+              meters: [],
+              scansion: '-?U',
+              pulse: {
+                foot: '-UU',
+                footName: 'daktilus',
+                feet: 1,
+                syllables: 3,
+                breaksAt: -1,
+                resolved: '-UU',
+                summary: '6 daktilus a sor élén — a 19. szótagnál megszakad',
+                whole: true,
+              },
+            },
+          ],
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const marks = [...fixture.nativeElement.querySelectorAll('.syllable .mark')]
+      .map((e: Element) => e.textContent?.trim())
+      .join('');
+    expect(marks).toBe('—∪∪');
+    expect(fixture.nativeElement.querySelector('.pulse').textContent).toContain('6 daktilus');
+    expect(fixture.nativeElement.querySelector('.pulse').textContent).toContain('megszakad');
+    // sorfajtát NEM állít — a SORNÁL nincs mértéknév (a szakaszmérték a
+    // lábléchez tartozik, azt nem szabad ide keverni)
+    expect(fixture.nativeElement.querySelector('.verdict-line .meter')).toBeNull();
   });
 
   afterEach(() => http.verify());

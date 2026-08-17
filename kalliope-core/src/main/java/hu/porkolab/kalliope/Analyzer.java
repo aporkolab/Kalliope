@@ -115,6 +115,8 @@ public final class Analyzer {
                 String realized = matches.isEmpty() ? null : matches.get(0).realization();
                 // ha nincs találat, mondjuk meg, mi hiányzott hozzá — minden olvasatot végignézve
                 NearMiss.Result nearMiss = matches.isEmpty() ? closestOfReadings(readings.get(i)) : null;
+                // ha semmi nem illeszkedik, a lüktetés még kihallható lehet
+                Pulse.Result pulse = matches.isEmpty() ? Pulse.detect(chosen.reading.pattern()) : null;
                 // hol van ténylegesen sormetszet a sorban
                 List<Caesura.Found> caesurae = matches.isEmpty()
                         ? List.of()
@@ -129,6 +131,7 @@ public final class Analyzer {
                         matches,
                         accentual,
                         nearMiss,
+                        pulse,
                         scheme.labels().get(i),
                         scheme.keys().get(i),
                         scheme.kinds().get(i),

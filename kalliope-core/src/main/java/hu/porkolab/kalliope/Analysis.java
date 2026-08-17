@@ -77,6 +77,10 @@ public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary,
      * Egy sor teljes elemzése.
      *
      * @param scansion a nyers skandálás, eldöntetlen ({@code ?}) szótagokkal
+     * @param pulse a sor élének lüktetése, ha egyetlen mérték sem illeszkedik és
+     *     a lüktetés kimutatható; egyébként {@code null}. Nem mérték: sorfajtát
+     *     nem állít, csak azt mondja meg, miből hány áll a sor élén, és hol
+     *     szakad meg.
      * @param realized a megvalósult hosszúságsor az első illeszkedő mérték
      *     szerint, vagy {@code null}, ha nincs találat. A közös szótag ugyanis
      *     csak addig kérdés, amíg a mérték el nem dönti: a „Még nyílnak a
@@ -93,6 +97,7 @@ public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary,
             List<MeterMatcher.Match> meters,
             List<AccentualMatcher.Match> accentual,
             NearMiss.Result nearMiss,
+            Pulse.Result pulse,
             String rhymeLabel,
             String rhymeKey,
             RhymeDetector.Kind rhymeKind,

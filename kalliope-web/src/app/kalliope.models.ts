@@ -85,6 +85,24 @@ export interface StanzaMatch {
   rhymeSchemeMatches: boolean;
 }
 
+/**
+ * A sor élének lüktetése, ha egyetlen mérték sem illeszkedik. NEM mérték:
+ * sorfajtát nem állít, csak azt mondja meg, miből hány áll a sor élén, és hol
+ * szakad meg.
+ */
+export interface Pulse {
+  foot: string;
+  footName: string;
+  feet: number;
+  syllables: number;
+  /** Az első szótag indexe a futam UTÁN, vagy -1, ha végig tart. */
+  breaksAt: number;
+  /** A teljes hosszúságsor: a futamon feloldva, utána a nyers skandálás. */
+  resolved: string;
+  summary: string;
+  whole: boolean;
+}
+
 export interface Line {
   index: number;
   text: string;
@@ -95,6 +113,7 @@ export interface Line {
   meters: MeterMatch[];
   accentual: AccentualMatch[];
   nearMiss: NearMiss | null;
+  pulse: Pulse | null;
   rhymeLabel: string;
   rhymeKey: string;
   rhymeKind: string;

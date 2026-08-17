@@ -358,7 +358,10 @@ export class App {
    * skandálás marad, × jellel.
    */
   protected shownQuantity(line: Line, index: number): string {
-    const realized = this.reading(line)?.realization ?? line.realized;
+    // Sorrend: a megjelenített mérték feloldása, ha van; egyébként a lüktetés
+    // feloldása, ha kimutatható. Mindkettőnek MEGNEVEZETT forrása van, ami a
+    // lap mellé ki is van írva — néma alapértelmezést nem mutatunk.
+    const realized = this.reading(line)?.realization ?? line.realized ?? line.pulse?.resolved;
     if (realized && index < realized.length) {
       return realized.charAt(index);
     }
@@ -379,6 +382,13 @@ export class App {
     const reading = this.reading(line);
     if (reading) {
       return reading.matches[0].ictusSyllables.includes(index);
+    }
+    // Mérték nélkül a lüktetés lábai látszanak — de csak a futamon, ott, ahol
+    // tényleg tart. A megszakadás után nincs mit tagolni.
+    const pulse = line.pulse;
+    if (pulse) {
+      const width = pulse.foot.length;
+      return index < pulse.syllables && index % width === 0;
     }
     const measures = line.accentual[0]?.form.measures;
     if (!measures) {

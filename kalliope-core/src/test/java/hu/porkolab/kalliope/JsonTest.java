@@ -81,6 +81,28 @@ class JsonTest {
     }
 
     @Test
+    @DisplayName("a lüktetés is mezőre azonos — a korpusz ezt a mezőt nem éri el")
+    void pulseMatchesReflection() {
+        // A korpusz egyetlen során sem szólal meg a lüktetés, tehát a
+        // szerializálója lefedetlen volna. Ugyanez a rés engedte át korábban a
+        // dualRhythm-öt.
+        Analysis a = Analyzer.analyze("Elmegy a kugli egy este berúgni me' ő az a kugli ki nincs fából");
+        Analysis.Line line = a.stanzas().get(0).lines().get(0);
+        assertThat(line.pulse()).as("ezen a soron van lüktetés").isNotNull();
+        assertThat(mapper.readTree(Json.of(a))).isEqualTo(mapper.valueToTree(a));
+
+        JsonNode pulse = mapper.readTree(Json.of(a))
+                .get("stanzas")
+                .get(0)
+                .get("lines")
+                .get(0)
+                .get("pulse");
+        assertThat(pulse.get("footName").asString()).isEqualTo("daktilus");
+        assertThat(pulse.get("feet").asInt()).isEqualTo(6);
+        assertThat(pulse.has("whole")).as("a felület ezt olvassa").isTrue();
+    }
+
+    @Test
     @DisplayName("a kettős ritmus benne van a JSON-ban — rekordkomponens, nem származtatott metódus")
     void dualRhythmIsSerialized() {
         // Amíg származtatott metódus volt, a szerializáló nem látta, és a
