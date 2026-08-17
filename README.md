@@ -7,8 +7,8 @@ Minden szótagról megmondja, **miért** olyan hosszú; ha egy sor nem illeszked
 múlik**; a végén pedig egy mondatban összegzi, milyen vers ez: *„Időmértékes verselés:
 disztichonok."*
 
-> A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján. Ez a változat az ő munkájára épül,
-> az ő engedélyével, **társszerzőként**, MIT licenc alatt. → [Eredet és
+> A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján. Ez a változat az ő munkájára épül;
+> **közösen tesszük közzé**, társszerzőként, MIT licenc alatt. → [Eredet és
 > szerzőség](#eredet-és-szerzőség)
 
 ```bash
@@ -26,10 +26,11 @@ A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján, egyetemist
 FreePascal** alatt. Ugyanennek a programnak él egy webes változata is, a szerző saját oldalán:
 <https://csillagtura.ro/projektek/kalliope/>.
 
-Ez a repó az ő munkájára épül, az ő engedélyével, **MIT licenc alatt, társszerzőként**.
+Ez a repó az ő munkájára épül, az ő engedélyével. **Közösen tesszük közzé**, MIT licenc alatt,
+társszerzőként.
 
 **Mi alapján dolgoztam, és hogyan.** A forráskód nem volt nyilvános, ezért a lefordított
-`kalliope.exe` binárisából indultam: Ghidrával visszafejtve, majd az adatszekciót kibontva. A
+`kalliope.exe` binárisából indultam: Ghidrával visszafejtettem, majd kibontottam az adatszekciót. A
 motort Java nyelven újraírtam, de **az adat az eredeti**. Váradi Nagy Pál munkája:
 
 - a **metrikai kánon** — verslábak, kolónok, sorfajták, összetett sorok, szakaszmértékek;
@@ -37,14 +38,18 @@ motort Java nyelven újraírtam, de **az adat az eredeti**. Váradi Nagy Pál mu
 - a **név-alias tábla** és a **központozás-lista**;
 - a rímfelismerés **mássalhangzó-normalizáló táblája** (ezt végül nem használom — lásd lentebb);
 - az **ütemhangsúly-jelek** (`U`/`Ú`/`-`/`÷`) és a verziószöveg (`VNP's Kalliope 1.71 beta`);
-- a **digráf-lista** és a *muta cum liquida* halmaz, amelyekkel a rekonstruált szkennert hitelesítettem.
+- a **digráf-lista** és a *muta cum liquida* halmaz, amelyekkel a rekonstruált szkennert
+  hitelesítettem.
 
 A kánon `VNP sorfajták` és `VNP-strófák` szekciója — *Gyilkosok, Éhesek, Pincsike1, mélyégi álom,
 utolsó mosás, létépartja* — a szerző **saját versformái**, a saját verseiből.
 
 Az eredeti felületet nem portoltam (utoljára Windows XP alatt futott); helyette Angular felület
-készült. Amit ez a változat hozzátett: a szakaszmérték-illesztés, az ütemhangsúlyos ág, néhány
-kiegészítő antik sorfajta, a REST API és a webes felület.
+készült. Amit én tettem hozzá: a szakaszmérték-illesztés, az ütemhangsúlyos ág, néhány kiegészítő
+antik sorfajta, a REST API és a webes felület.
+
+Így a kánon ma **kettőnk közös munkája**: az adat az övé, a javítások és a kiegészítések az enyémek,
+és mindkettő nyomon követhető — minden eltérésnél ott az eredeti minta és a forrás.
 
 ## Amit tud
 
@@ -61,11 +66,29 @@ kiegészítő antik sorfajta, a REST API és a webes felület.
 | **Összegzés** | egy mondat + részletek: szerkezet, szakaszmérték, sorfajták, ütemtagolás, rím, licenciák, metszet |
 | **Ritmustérkép** | egy negyvensoros eposzrészlet ritmusa egy pillantással befogható; a sorra kattintva odaugrik |
 | **Nyomtatás / PDF** | a böngésző nyomtatási párbeszédén át; a lapra az ítélet, a részletek és a skandált sorok kerülnek, a szerkesztő és a kezelőfelület nem |
+| **Megosztható link** | a „Link" gomb a verset a címsor törtrészébe kódolja (`#v=…`) és vágólapra teszi — szerver és adatbázis nélkül |
+| **JSON export** | a teljes elemzés letölthető (`kalliope-elemzes.json`), ugyanaz a szerkezet, amit az API ad |
+| **Téma** | világos / sötét / rendszerkövető, a választás megmarad |
 
-A felület színrendszere a [Radix Colors](https://www.radix-ui.com/colors) skáláira épül (slate alap,
-iris akcentus), mert azok hitelesített kontrasztarányokkal és párosított sötét változattal jönnek.
-A szótaghosszúság három jelentése három elkülönülő hue-t kap — hosszú: iris, rövid: jade, közös:
-amber —, de a jelentés nem csak a színen múlik: ott a jel is (— ∪ ×). Világos, sötét és
+### A jelölés
+
+| Jel | Mit jelent |
+|:--:|---|
+| `—` | hosszú szótag |
+| `∪` | rövid szótag |
+| `×` | közös (anceps) — a mérték nem dönti el |
+| `\|` | **lábhatár** (vékony elválasztó a felületen) |
+| `‖` | **sormetszet, cezúra** (vastag kettős vonal a felületen) |
+| pontozott aláhúzás | a szótag eredetileg közös volt, a mérték döntötte el |
+
+A mintákban ugyanez a `-` (hosszú), `U` (rövid), `?` (közös) jelekkel szerepel, a lábhatár egy, a
+cezúra két függőleges vonal; a `=` pedig olyan helyet jelöl, ahol spondeusz és daktilus is állhat
+(`-` vagy `UU`) — így lesz a hexameter mintája `-=|-=|-=|-=|-UU|-?`.
+
+A felület színrendszerét a [Radix Colors](https://www.radix-ui.com/colors) skáláira építettem (slate
+alap, iris akcentus), mert azok hitelesített kontrasztarányokkal és párosított sötét változattal
+jönnek. A szótaghosszúság három jelentése három elkülönülő hue-t kap — hosszú: iris, rövid: jade,
+közös: amber —, de a jelentés nem csak a színen múlik: ott a jel is (— ∪ ×). Világos, sötét és
 rendszerkövető téma; mobilon a sorok kártyákra tördelődnek, a gombok legalább 44 képpont magasak.
 
 ## Felépítés
@@ -136,8 +159,46 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 | `kalliope-api` | 20 | 84% |
 | `kalliope-web` | 33 | 88% |
 
-A 80%-os küszöb mindhárom modulban ki van kényszerítve (JaCoCo `check`, illetve
+A 80%-os küszöböt mindhárom modulban kikényszerítettem (JaCoCo `check`, illetve
 `vitest-base.config.ts`), tehát a build elbukik, ha valaki lerontja.
+
+### Konfiguráció
+
+Minden beállításnak van működő alapértéke; a lenti kulcsok környezeti változóként is megadhatók
+(`SERVER_PORT=9090`, `KALLIOPE_RATE_LIMIT_REQUESTS_PER_MINUTE=0`).
+
+| Kulcs | Alap | Mit tesz |
+|---|:--:|---|
+| `server.port` | `8080` | a HTTP-port |
+| `kalliope.rate-limit.requests-per-minute` | `60` | a `/api/analyze` percenkénti kérésszám-korlátja; `0` kikapcsolja |
+| `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75.0` | a compose ezt állítja be; konténerben ennyi memóriát használhat a JVM |
+
+A konténer `346 MB`, és ~0,8 másodperc alatt indul (rétegelt JRE image, AOT-gyorsítótárral). A
+compose-ban van healthcheck is: a `/api/canon`-t hívja.
+
+### CI
+
+A [`ci.yml`](.github/workflows/ci.yml) minden pusholásra és minden PR-re három párhuzamos jobot
+futtat:
+
+| Job | Mit csinál |
+|---|---|
+| **Java** | `./mvnw -B -ntp verify` — teszt + Spotless + JaCoCo-küszöb egyetlen parancsban |
+| **Angular** | `prettier --check`, majd `ng test --no-watch` a lefedettségi küszöbbel |
+| **Docker image** | megépíti; `main`-re pusholva fel is tölti a `ghcr.io/aporkolab/kalliope:latest` címre |
+
+A CI-nek nincs külön kapulistája: amit helyben futtatsz, azt futtatja ő is.
+
+### Ha hozzá akarsz nyúlni
+
+- A kód formázását a **Spotless** (palantir-java-format) és a **Prettier** tartja karban; a
+  `./mvnw spotless:apply`, illetve az `npx prettier --write` mindent helyretesz. A `verify` elbukik
+  formázatlan kódon.
+- Az olvasást az `Analyzer.analyze()` felől érdemes kezdeni: az fűzi össze a normalizálót, a
+  skandálót, a mértékillesztőt, a rímdetektort és az összegzőt.
+- Ha a verstani viselkedésen változtatsz, előbb a [korpuszt](#korpusz-riport) nézd: a `CorpusTest`
+  valódi verseken méri az arányt, és elbukik, ha romlik. Új verstani szabályhoz **forrás kell**, és
+  lehetőleg egy korpuszsor, amin látszik a különbség.
 
 ## API
 
@@ -180,7 +241,7 @@ lapok között.
 
 ## Hogyan skandál
 
-A szabályok hiteles magyar verstani forrásokból valók (Fazekas Kulturális Enciklopédia — Verstan;
+A szabályokat hiteles magyar verstani forrásokból vettem (Fazekas Kulturális Enciklopédia — Verstan;
 Csehy Zoltán–Polgár Anikó: *Gyakorlati magyar verstan*; Magyartanár / Kecskés–Szilágyi–Szuromi:
 *Kis magyar verstan*; A magyar helyesírás szabályai 12. kiadás):
 
@@ -191,13 +252,13 @@ Csehy Zoltán–Polgár Anikó: *Gyakorlati magyar verstan*; Magyartanár / Kecs
   kettőzött kétjegyű (`ssz, ggy, nny`…) **egy hosszú**, tehát két pozíció; az `x` **két** hang
   (`ksz`); a `dz`/`dzs` kettőzés nélkül is hosszú (AkH. 87. §);
 - **közös (anceps, `?`)**: a sorvégi szótag, a határozott névelő, a rövid nyílt szótagú kötőszók és
-  névmások, a *muta cum liquida* (zárhang + likvida — de csak szón **belül**), és minden torlódás,
-  amelynek az olvasata bizonytalan.
+  névmások, a *muta cum liquida* (zárhang + likvida — de csak szón **belül**), a görög aspiráta
+  (`kh`, `th`, `ph`), és minden torlódás, amelynek az olvasata bizonytalan.
 
 **A skandáló szigorú.** Költői licenciát alapból nem feltételez: ha egy sor így nem illeszkedik, az
 a hű válasz, nem hiba. Ahol viszont a hagyomány valóban kétféle olvasatot enged, ott nem dönt
-helyettünk: a görög-latin **kettőshangzókra** (`Európa`, `Zeusz`, `Péleidész`) *változatokat* állít
-elő, és a mérték választ — így lesz az Íliász kezdősora hexameter.
+előre: a görög-latin **kettőshangzókra** (`Európa`, `Zeusz`, `Péleidész`) *változatokat* állít elő,
+és a mérték választ — így lesz az Íliász kezdősora hexameter.
 
 A **megjelenítés a döntést mutatja**, nem a nyers `?`-eket: a „Még nyílnak a völgyben" sorban a
 „nak" önmagában kétféle olvasatú, de amint az anapesztus illeszkedik, eldőlt, hogy rövid. A közös
@@ -205,8 +266,7 @@ eredetet pontozott aláhúzás jelzi.
 
 ### Beállítások
 
-Az első hat az eredeti 2006-os adatbázis kapcsolója, az utolsó négy ennek a változatnak a
-dokumentált kiegészítése:
+Az első hat az eredeti adatbázis kapcsolója, az utolsó négy az én dokumentált kiegészítésem:
 
 | Kulcs | Alap | Mit tesz |
 |---|:--:|---|
@@ -227,8 +287,8 @@ Lazarus-felülethez tartozott; itt nincs értelmük, és nem is teszek úgy, min
 
 ## Korpusz-riport
 
-A példatár tizenegy valódi vers, lehetőleg teljes egészében, hiteles forrásból. Ez egyben a motor
-regressziós hálója: a `CorpusTest` elbukik, ha az arány romlik.
+A példatárba tizenegy valódi verset tettem, lehetőleg teljes egészében, hiteles forrásból. Ez
+egyben a motor regressziós hálója: a `CorpusTest` elbukik, ha az arány romlik.
 
 | Vers | Sor | Illeszkedik | Az összegzés ítélete |
 |---|---:|---:|---|
@@ -253,29 +313,29 @@ illeszkedik?" megmondja, min múlik.
 ## Összevetés a webes változattal
 
 A szerző webes Kalliopéja ([csillagtura.ro](https://csillagtura.ro/projektek/kalliope/)) teljes
-egészében kliensoldali JavaScript, tehát **kinyerhető és futtatható**: a fenti 245 soros korpuszt
-mindkét motorral végigfuttattam, és szótagonként összevetettem. Ez váltja ki a `kalliope.exe`
-futásidejű összevetését, amihez Wine kellett volna.
+egészében kliensoldali JavaScript, tehát **kinyerhető és futtatható**. Kiszedtem a lapból, Node
+alatt futtattam, és a fenti 245 soros korpuszt mindkét motorral végigskandáltattam, majd
+szótagonként összevetettem. Ez váltja ki a `kalliope.exe` futásidejű összevetését, amihez Wine
+kellett volna.
 
 | | |
 |---|---:|
 | azonos szótagszámú sor | **236 / 245** (96,3%) |
-| ezeken belül: a nyers olvasatom megfér a webes változatéval | **100%** (3266/3266 szótag) |
+| ezeken belül: az én nyers olvasatom megfér az övével | **100%** (3266/3266 szótag) |
 | betű szerint azonos kimenet | 48,3% |
 
-A „betű szerint azonos" alacsony szám nem eltérés, hanem **különböző felbontás**: a webes változat
-minden szótagot hosszúra vagy rövidre dönt, itt viszont van **közös (`?`)** szótag. Ahol ő dönt,
-itt kérdés marad, és a mérték dönt. Fajtánként:
+A „betű szerint azonos" alacsony szám nem eltérés, hanem **különböző felbontás**: az ő változata
+minden szótagot hosszúra vagy rövidre dönt, az enyémben van **közös (`?`)** szótag is. Ahol ő dönt,
+nálam kérdés marad, és a mérték dönt. Fajtánként:
 
 | Eltérés | Db | Mi ez |
 |---|---:|---|
-| sorvégi szótag: nála rövid, itt közös → a mérték hosszúvá teszi | 91 | **brevis in longo** — itt van, nála nincs |
-| névelő és rövid kötőszó: nála rövid, itt közös | 63 | az én kiegészítésem (kapcsolható) |
-| *muta cum liquida*: nála hosszú, itt közös | 30 | itt van, nála nincs |
-| görög aspiráta (`kh`, `th`): nála hosszú, itt rövid | 12 | **valódi hiba volt — mindkét oldalon**, lásd lentebb |
+| sorvégi szótag: nála rövid, nálam közös → a mérték hosszúvá teszi | 91 | **brevis in longo** — nálam van, nála nincs |
+| névelő és rövid kötőszó: nála rövid, nálam közös | 63 | az én kiegészítésem (kapcsolható) |
+| *muta cum liquida*: nála hosszú, nálam közös | 30 | nálam van, nála nincs |
+| görög aspiráta (`kh`, `th`): nála hosszú, nálam rövid | 12 | **valódi hiba volt — mindkét oldalon**, lásd lentebb |
 
-**A 9 eltérő szótagszámú sor mind a webes változat hibája**, és mind a három ok egy-egy
-sorrendi vagy egyszerűsítési döntésből ered:
+**A 9 eltérő szótagszámú sor mind a webes változat hibája**, három okból:
 
 - 4 sor: a `y` betűt feltétel nélkül törli, ezért a görög eredetű szavakban **elnyeli a
   magánhangzót** — `labyrinth` → *labrinth*, `Zephyr` → *Zephr*. Berzsenyi négy sora így egy
@@ -289,13 +349,13 @@ sorrendi vagy egyszerűsítési döntésből ered:
 
 **A görög aspiráta kétértelműsége.** A `kh`, `th`, `ph`, `rh`, `ch` írásképe két olvasatot fed:
 **egy** hang a görög névben (*A-khil-leusz* = χ, *I-tha-ka* = θ), de **kettő** a magyar
-morfémahatáron (*csak+hogy*, *halandó+k+hoz*, *kap+hat*, *át+hat*). Eddig mindketten egy-egy
-irányban döntöttünk, és mindketten hibáztunk: a webes változat az Íliász `akháj`-os sorait rontja
-el, én az Odüsszeia `-okhoz` ragos sorait. Most **közös** a szótag, és a mérték választ. Ez az
-egyetlen javítás:
+morfémahatáron (*csak+hogy*, *halandó+k+hoz*, *kap+hat*, *át+hat*). Eddig **mindketten** egy-egy
+irányban döntöttünk, és mindketten hibáztunk: az ő változata az Íliász `akháj`-os sorait rontja el,
+én az Odüsszeia `-okhoz` ragos sorait rontottam. Most **közös** a szótag, és a mérték választ. Ez
+az egyetlen javítás:
 
 - az Odüsszeia illeszkedési aránya **90% → 98%**, a korpuszé **84% → 86%**;
-- a nyers olvasatom a maradék 236 soron **minden egyes szótagon** megfér a webes változatéval;
+- az én nyers olvasatom a maradék 236 soron **minden egyes szótagon** megfér az övével;
 - a `kaphat`, `áthat`, `csakhogy` típusú **magyar** szavak első szótaga eddig tévesen rövid volt.
 
 **Három hiányzó sorfajta és két szakaszmérték.** A webes kánon 104 formájából 97-et már lefedtem;
@@ -304,26 +364,26 @@ két további Horatius-féle aszklepiadeszi strófát (F és G). A maradék nég
 [dokumentált javításom](#eltérések-az-eredeti-kánontól): `asklepiadesi_D13`, `glykoni2a`,
 `glykoni2b` — ezeknél megtartom a saját döntést, forrással.
 
-**Amit nem vettem át.** A rímkulcsa mindig az utolsó **két** magánhangzót veszi; itt a terjedelem
-Arany szabályát követi (zárt sorvég → egy szótag, nyílt → kettő). A mássalhangzó-normalizálása
-`r`-t, `l`-t és `j`-t egyetlen hangba olvasztja, ami a tiszta rímhez túl megengedő. Az asszonáncnál
-ő elhagyja a magánhangzó-hosszúságot, itt megmarad — Aranynál ez külön, gyengébb fokozat, és
-összemosva a `dögmadaraknak` is rímelne az `akhájnak`-ra.
+**Amit nem vettem át.** Az ő rímkulcsa mindig az utolsó **két** magánhangzót veszi; nálam a
+terjedelem Arany szabályát követi (zárt sorvég → egy szótag, nyílt → kettő). A
+mássalhangzó-normalizálása `r`-t, `l`-t és `j`-t egyetlen hangba olvasztja, ami a tiszta rímhez túl
+megengedő. Az asszonáncnál ő elhagyja a magánhangzó-hosszúságot, nálam megmarad — Aranynál ez
+külön, gyengébb fokozat, és összemosva a `dögmadaraknak` is rímelne az `akhájnak`-ra.
 
 **Amit a szerzőnek jelezni érdemes.** Az `anyegin8` mintája `U-U-U-UU`; négy jambus sora nem
 végződhet két rövidre, a hímrímes anyegin-sor `U-U-U-U-`. Az utolsó jel valószínűleg elgépelés.
 
 ## Mi változott ehhez a kiadáshoz
 
-Ez a szakasz az **én Java portomról** szól, nem az eredeti programról: a felsorolt hibák a
-visszafejtett motor első Java változatában keletkeztek.
+Ez a szakasz az **én Java portomról** szól, nem az eredeti programról: a felsorolt hibákat én
+követtem el, a visszafejtett motor első Java változatában.
 
-Az előző változat egyetlen Java fájl volt, a metrikai adatbázissal beágyazott **szövegként**, saját
+Az akkori változat egyetlen Java fájl volt, a metrikai adatbázissal beágyazott **szövegként**, saját
 szintaxissal (`;` komment, `.` mezőnév, `!` beállítás, `@` konstans, `#complex`, `$` szó). A
 mélyaudit 137 megerősített hibát talált (25 további állítást az ellenőrzés megcáfolt); a többségük
 két forrásból jött:
 
-**1. A saját szövegformátum és a hozzá írt parser.** Ez a réteg most nincs: a kánon **típusos Java
+**1. A saját szövegformátum és a hozzá írt parser.** Ezt a réteget kidobtam: a kánon **típusos Java
 adat**, a hivatkozás objektumhivatkozás. Ezzel egy csapásra megszűnt az elgépelt hivatkozás
 (`nib.alex.1.fiktiv` ↔ `.fictive` — emiatt mind a 6 „nibelungizált alexandrin" némán csonka volt),
 a némán elnyelt feloldási hiba, a kis/nagybetű-érzékeny konstansnév, a névalias-tábla láncolt
@@ -332,13 +392,13 @@ csere miatti önrontása (`adoniszi` → `adonisziizi`), a körkörös hivatkoz�
 
 **2. Valódi verstani hibák a skandálóban és a rímdetektorban.** A javítottak közül:
 
-- a kétjegyű betűket az első betűjükre csonkolta, ezért a `gy`/`ty`/`dz` zárhangnak, az `ly`
+- a kétjegyű betűket az első betűjükre csonkoltam, ezért a `gy`/`ty`/`dz` zárhangnak, az `ly`
   likvidának látszott → hamis *muta cum liquida*: `hegyre`, `szablyáját` közös lett hosszú helyett;
 - a *muta cum liquida* szóhatáron is elsült (`vak róka`), ahol nem szabad;
 - az `x` egy hangnak számított, a `dz`/`dzs` rövidnek;
 - az illesztő a minta összes realizációját kifejtette — ez a szabad pozíciók számában exponenciális
   —, és 8192 fölött **csonkolt**, majd a csonkolt előtagokat hasonlította: egy negyven szótagos sor
-  „hexameter" lett. Helyette pozíciónkénti dinamikus programozás;
+  „hexameter" lett. Helyette pozíciónkénti dinamikus programozást írtam;
 - az elemző eldobta az üres sorokat, ezért többstrófás versen **soha egyetlen szakaszmértéket sem**
   talált, és a rímbetűk végigfutottak az egész versen;
 - a disztichon csak pontosan kétsoros versre illett — egy hatsoros elégia nem volt három disztichon;
@@ -356,8 +416,8 @@ csere miatti önrontása (`adoniszi` → `adonisziizi`), a körkörös hivatkoz�
 **3. A README állításai.** A korábbi szöveg azt írta, „minden beállítás ténylegesen befolyásolja a
 kimenetet" — négy közülük sehol nem volt beolvasva.
 
-A valódi verskorpusz utólag még két hibát fogott, amit szintetikus teszt nem talált volna meg: a
-magánhangzó nélküli „s" kötőszó kiesett a megjelenítésből (a felület „Fegyvert, vitézt…"-et írt
+A valódi verskorpusz utólag még két hibát fogott, amit szintetikus teszttel nem találtam volna meg:
+a magánhangzó nélküli „s" kötőszó kiesett a megjelenítésből (a felület „Fegyvert, vitézt…"-et írt
 volna), a kánon-kereső pedig lekisbetűsítve kereste a mintát is, így `-UU-?`-re sosem talált.
 
 ### Eltérések az eredeti kánontól
@@ -376,9 +436,9 @@ vitatható. Ezért minden eltérés megőrzi az eredeti mintát és a hivatkozot
 | `anapesztikus dimeter`, `daktilikus tetrameter` | tiszta lábak | `=-\|=-\|…`, `-=\|-=\|…` | a nevük spondeusz-helyettesítést ígért, a mintájuk tiltotta |
 | `glykoni2a/2b` | `-?-UU-U`, `U--UU-U` | törölve | hét pozíciós, rövidre végződő „glükóni" nem létezik, viszont minden valódi glükóni első hét szótagjára ráillett |
 
-Új: `versus spondiacus` (spondeuszi ötödik lábú hexameter).
+Újként felvettem: `versus spondiacus` (spondeuszi ötödik lábú hexameter).
 
-**Amihez nem nyúltam.** Az ellenőrzés több „javítási" javaslatot megcáfolt: a `szapphói sor` 4.
+**Amihez nem nyúltam.** Az ellenőrzés több „javítási" javaslatomat megcáfolta: a `szapphói sor` 4.
 pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovitziánus`, a
 `téleszilleion` és az anakreóni sorok az eredeti szerző saját, védhető kódolásai maradtak.
 
@@ -393,9 +453,9 @@ pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovi
 - Az ütemhangsúlyos illesztés szótagszámon és szóhatáron alapul, nem valódi hangsúlyelemzésen.
 - A szótagszintű indoklás az elsődleges olvasatra vonatkozik; ha a sor csak összevont
   kettőshangzóval illeszkedik, azt a felület külön jelzi („összevonással").
-- A `kalliope.exe` futásidejű, bit-pontos összevetése nem történt meg (ahhoz Wine kellene). Helyette
-  a szerző [webes változatával](https://csillagtura.ro/projektek/kalliope/) vetettem össze a
-  korpuszt — lásd az [Összevetés a webes változattal](#összevetés-a-webes-változattal) szakaszt.
+- A `kalliope.exe` futásidejű, bit-pontos összevetését nem végeztem el (ahhoz Wine kellene).
+  Helyette a szerző [webes változatával](https://csillagtura.ro/projektek/kalliope/) vetettem össze
+  a korpuszt — lásd az [Összevetés a webes változattal](#összevetés-a-webes-változattal) szakaszt.
 
 ## A projekt története
 
@@ -403,33 +463,36 @@ pozíciója, a `léküthion`, a `dochmius`, a `phalaikoszi` bázisa, a `wilamovi
 program: Váradi Nagy Pál egyetemi munkája. A forráskód sosem került nyilvánosságra, így nekem csak
 a lefordított bináris állt rendelkezésre, egy Ghidra reverse-engineering projekt formájában.
 
-**2. Visszafejtés.** A logikát a dekompilátumból kellett kibányászni: a `.gzf` konténer felbontása,
-a VCL-alapú architektúra azonosítása (a vers párhuzamos `TStringList`-ekként tárolva), és a
-verstani logika kihorgonyzása a program magyar string-konstansairól (`rimkeplet`, `strofa`,
-`utemhangsuly`…).
+**2. Visszafejtés.** A logikát a dekompilátumból kellett kibányásznom: felbontottam a `.gzf`
+konténert, azonosítottam a VCL-alapú architektúrát (a vers párhuzamos `TStringList`-ekként
+tárolva), és a verstani logikát a program magyar string-konstansairól horgonyoztam ki
+(`rimkeplet`, `strofa`, `utemhangsuly`…).
 
 **3. Az adatbázis.** A program külső metrikai adatbázisa külön került elő, és megadta a teljes
 formátum-nyelvtant és az adatot. Mivel a klasszikus versmérték-kánon gyakorlatilag zárt halmaz,
-nincs mögötte adatbázis: a kánon a forrásban él, típusos adatként.
+nem tettem mögé adatbázist: a kánon a forrásban él, típusos adatként.
 
-**4. Hitelesítés a binárisból.** A `kalliope.exe` saját címtartományának összes string-literálja
-végigvizsgálva. Ez igazolta a rekonstruált szkenner magját (a **digráf-lista** és a **muta cum
+**4. Hitelesítés a binárisból.** Végigvizsgáltam a `kalliope.exe` saját címtartományának összes
+string-literálját. Ez igazolta a rekonstruált szkenner magját (a **digráf-lista** és a **muta cum
 liquida** halmaz pontosan egyezik), és innen való a **normalizáló előfeldolgozó** (`tv→tévé`,
 `w→v`, betűnevek), a **központozás-lista**, a **név-alias tábla**, az **ütemhangsúly-jelek**
 (`U`/`Ú`/`-`/`÷`) és a **verzió** (`VNP's Kalliope 1.71 beta`).
 
 **5. Ez a kiadás.** Mélyaudit, a talált hibák javítása, modularizálás, REST API, webes felület,
-konténerezés, majd az elemzés kiterjesztése az ütemhangsúlyos verselésre. A rímdetektor a binárisból
-portolt tábla helyett Arany János rokonsági rendszerére és a mai verstani szakirodalomra épül — a
-portolt tábla ugyanis a szó végén is egyesített, ami épp az ellenkezője Arany kódaszabályának.
+konténerezés, majd az elemzés kiterjesztése az ütemhangsúlyos verselésre. A rímdetektort a
+binárisból portolt tábla helyett Arany János rokonsági rendszerére és a mai verstani szakirodalomra
+építettem — a portolt tábla ugyanis a szó végén is egyesített, ami épp az ellenkezője Arany
+kódaszabályának.
 
 ## Szövegek és jogi helyzet
 
-A példatár szövegei hiteles forrásból valók (Wikiforrás, Magyar Elektronikus Könyvtár, Sulinet
+A példatár szövegeit hiteles forrásból vettem (Wikiforrás, Magyar Elektronikus Könyvtár, Sulinet
 szöveggyűjtemény). Nagy részük közkincs — a szerző halála után hetven évvel. **Két kivétel**
-Devecseri Gábor (1917–1971) Homérosz-fordítása: az Íliász és az Odüsszeia negyven-negyven sora
-szemléltetésként, oktatási célú szabad felhasználás keretében szerepel (Szjt. 33–35. §), a forrás és
-a fordító megjelölésével. Ha a projektet más célra használod, ezt a két szöveget cseréld le.
+Devecseri Gábor (1917–1971) Homérosz-fordítása: az [Íliász](https://mek.oszk.hu/00400/00406/) és az
+[Odüsszeia](https://mek.oszk.hu/00400/00408/) negyven-negyven sora szemléltetésként, oktatási célú
+szabad felhasználás keretében szerepel (Szjt. 33–35. §), a forrás és a fordító megjelölésével. Ha a
+projektet más célra használod, ezt a két szöveget cseréld le — a példatár az `Examples.java`-ban
+van, minden darabnál ott a forrás és az `expected` mező, ami a `CorpusTest`-be köt.
 
 A kód **MIT licenc** alatt áll, Váradi Nagy Pál és Porkoláb Ádám közös szerzőségével — lásd a
 [`LICENSE`](LICENSE) fájlt. A licenc a kódra és a metrikai adatra vonatkozik, a példatár
