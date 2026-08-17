@@ -4,8 +4,7 @@ Magyar verstani elemző: **skandál**, **versmértéket ismer fel**, és **rímk
 
 Minden szótagról megmondja, **miért** olyan hosszú; ha egy sor nem illeszkedik, megmutatja, **min múlik**; a végén pedig egy mondatban összegzi, milyen vers ez: *„Időmértékes verselés: disztichonok."*
 
-> A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján. Ez a modernizált változat az ő munkájára épül; **közösen tesszük közzé**, társszerzőként, MIT licenc alatt. → [Eredet és
-> szerzőség](#eredet-és-fejlesztés)
+> A Kalliopét **Váradi Nagy Pál** (vnp85) írta 2004–2006 táján. Ez a modernizált változat az ő munkájára épül; **közösen tesszük közzé**, társszerzőként, MIT licenc alatt. → [Eredet és fejlesztés](#eredet-és-fejlesztés)
 
 **Kipróbálni telepítés nélkül:** <https://aporkolab.github.io/Kalliope/> — teljes elemzés a böngészőben, backend nélkül.
 
@@ -48,7 +47,7 @@ Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope
 | --- | --- |
 | **Időmértékes** | 56 sorfajta, 38 kolón, 11 versláb, 8 összetett sor, 20 szakaszmérték; szigorú illesztés, kapcsolható licenciákkal. |
 | **Ütemhangsúlyos** | 20 magyaros sorfajta ütemtagolással; a metszet minősége (tiszta vagy laza) külön látszik. |
-| **Kettős ritmus** | Ha a szakasz mindkét rendnek megfelel, jelzi. |
+| **Kettős ritmus** | Ha a szakasz mindkét rendnek megfelel, jelzi — de nem mondja rá, hogy „szimultán vers". |
 | **Rím** | Képlet vaksorral (`x`), a képlet neve, és soronként a rím fajtája (tiszta rím, ragrím, asszonánc, önrím). |
 | **Cezúra** | A mérték jelölt metszete, valamint a hexameter klasszikus metszeteinek felismerése. |
 | **Szótagszintű indoklás** | 12-féle ok (pl. természeténél fogva hosszú, *muta cum liquida*, összevont kettőshangzó). |
@@ -71,7 +70,7 @@ A felület színrendszere vizuálisan is elkülöníti a szótagokat (hosszú, r
 
 ## Felépítés
 
-Három modul, egyetlen futtatható artefaktum:
+Négy modul, egyetlen futtatható artefaktum (a negyedik csak a statikus változathoz kell):
 
 | Modul | Funkció | Függőségek |
 | --- | --- | --- |
@@ -163,7 +162,7 @@ A főbb beállítások környezeti változóként is megadhatók:
 
 ### CI és Ellenőrzés
 
-A projekt szigorú minőségi kapukkal rendelkezik (80%-os tesztlefedettségi küszöb mindhárom modulban, Spotless és Prettier kódformázás). Helyi ellenőrzéshez:
+A projekt szigorú minőségi kapukkal rendelkezik (80%-os tesztlefedettségi küszöb a motorban, az API-ban és a felületen, Spotless és Prettier kódformázás). Helyi ellenőrzéshez:
 
 ```bash
 ./mvnw verify
@@ -201,6 +200,32 @@ A motor számos elemzési beállítást támogat (pl. `a_rovid_kotoszok_kozombos
 ## Korpusz-riport és Tesztelés
 
 A rendszer stabilitását és pontosságát egy 245 sorból álló, klasszikus verseket tartalmazó korpusz (Zrínyi, Arany, Homérosz, Radnóti, Berzsenyi, Petőfi) garantálja. Az automatizált `CorpusTest` elbukik, ha az algoritmus felismerési aránya (alapbeállításokkal 86% a teljes korpuszon, versenként külön küszöbbel) romlana egy kódmódosítás során.
+
+## Döntések
+
+Amit egy kódolvasásból nem lehet kitalálni: miért így van.
+
+**A fejlesztőkörnyezetet méréssel állapítottam meg, nem emlékezetből.** A szerző maga jelezte, hogy húsz év után nem tudja biztosan, Delphi volt-e vagy Lazarus. A bináris viszont eldönti: a `.rsrc` szekcióban ott a `DVCLAL` (Delphi VCL Application License) és a `PACKAGEINFO` resource, a `Delphi%.8X` ablakosztály-string és a `Borland` cégnév, a szekciónevek pedig a Delphi sémája (`CODE`/`DATA`/`BSS`, nem `.text`/`.data`). FreePascal-nyom nulla. Egy ideig Lazarus szerepelt itt — az emlékre hallgattam a mérés helyett, és tévedtem.
+
+**Az eredeti adathoz csak bizonyíték mellett nyúltam.** Öt mintát módosítottam, mindenhol ott az eredeti minta és a hivatkozott forrás, a felület `Kánon` nézetében kinyitva. Több saját javítási javaslatomat pedig az ellenőrzés **megcáfolta** — azok a szerző védhető kódolásai maradtak. Húszéves adatnál az eltérés normális, a döntés vitatható, ezért nyomon követhető.
+
+**A skandáló szigorú, a licenciák kapcsolók.** Ha egy sor nem illeszkedik, az a hű válasz, nem hiba: a motor megmondja, min múlik. A költői licenciák (szókezdő hangsúly, kettőshangzó-összevonás) külön beállítások, és az egyik alapból ki van kapcsolva — így látszik, hol kell a licencia.
+
+**A közös szótag közös marad, és a mérték dönt.** Ahol a hagyomány kétféle olvasatot enged, ott nem döntök előre: a motor változatokat állít elő, és az illeszkedő mérték választ. Ez a döntés fogta meg a görög aspiráta hibáját is — `kap+hat` és *A-khil-leusz* ugyanazt a `kh`-t írja le, kétféle olvasattal.
+
+**A rímfelismerés Arany rendszerére épül, nem a binárisból portolt táblára.** A portolt tábla a szó **végén** is egyesített, ami épp az ellenkezője Arany kódaszabályának. Az asszonáncnál a magánhangzó-hosszúságot megtartom, mert Aranynál a felcserélése külön, gyengébb fokozat — összemosva a `dögmadaraknak` is rímelne az `akhájnak`-ra.
+
+**A „kettős ritmus" nem „szimultán vers".** Ha egy szakasz mindkét rendnek megfelel, azt jelzem, de nem minősítem: a szimultán vershez *maradéktalan* megfelelés kell, és ezt a szótagszám egybeesése nem bizonyítja. A két tényt egymás mellé teszem, az ítélet az olvasóé.
+
+**A motornak nulla futásidejű függősége van.** Ez elvi döntés volt, és utólag ez tette lehetővé a böngészőbe fordítást: a TeaVM csak azért eszi meg, mert a motor `java.util` kollekciókon és stringeken kívül semmit nem használ. Ezért került ki belőle a regex és az `Integer::sum` is — mindkettő viselkedés-semlegesen, tesztekkel bizonyítva.
+
+**Egy szerializáló van, nem kettő.** A böngészőben nincs reflexió, tehát Jackson sincs. Ha az API Jacksont használna, a webes változat pedig egy külön kézi kiírót, akkor két JSON-alak volna, és elcsúsznának. Így egyetlen kézi szerializáló van a magban, három ponton lehorgonyozva — a legerősebb kötés az, ami a **lefordított motor kimenetét a JVM-éhez** méri, bájtra, a teljes korpuszon.
+
+**LTS-fegyelem.** Java 25 LTS és Node 24 LTS. Négy Dependabot-PR-t ezért zártam le: a Java 26 nem LTS (jövő hónapban kifut), a Node 26 csak októbertől lesz az, a Maven-image bumpja pedig a pinjét lebegő `3`-ra oldotta volna, amivel a build nem reprodukálható. A TypeScript 7-et nem az elv, hanem az Angular zárta ki (`@angular/build` peer igénye `typescript >=6.0 <6.1`); a csoportból a jsdom emelését átvettem.
+
+**A korpuszban a nulla százalék is helyes válasz.** Zrínyi és Arany verse ütemhangsúlyos, nem időmértékes — ezekre a „nincs időmértékes találat" a hű felelet, és a motor a másik ágon ismeri fel őket. A küszöbök ezért versenkéntiek, nem globálisak.
+
+**Két futtatókörnyezet, egy motorforrás.** A GitHub Pages-változat és a Docker-image ugyanabból a `kalliope-core`-ból él, és a felület **ugyanaz a bundle** — futásidőben derül ki, van-e backend. Nincs kettős karbantartás.
 
 ## Ismert korlátok
 
