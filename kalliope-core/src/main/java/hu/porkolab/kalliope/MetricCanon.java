@@ -11,7 +11,10 @@ import java.util.Set;
  * A metrikai kánon — verslábak, kolónok, sorfajták, összetett sorok és
  * szakaszmértékek, típusos adatként.
  *
- * <p>Az eredeti, 2006-os Delphi-program ezt egy saját szintaxisú szövegfájlból
+ * <p>Az adat Váradi Nagy Pál (vnp85) munkája; a {@code VNP sorfajták} és
+ * {@code VNP-strófák} szekció az ő saját versformái.
+ *
+ * <p>Az eredeti, 2004–2006-os Lazarus-program ezt egy saját szintaxisú szövegfájlból
  * ({@code kalliope.txt}) olvasta: {@code ;} komment, {@code .} mezőnév,
  * {@code !} beállítás, {@code @}/{@code #define} konstans, {@code #complex},
  * {@code $} hangsúlytalan szó, {@code #start_strofa} blokk. Az a formátum
@@ -225,6 +228,13 @@ public final class MetricCanon {
     public static final Meter ANAKREONI_7 = line("U-U-U-?", "anakreóni 7", "negyedfeles jambikus");
     public static final Meter ANAKREONI_16 = line("UU--|UU--||UU--|UU--", "anakreóni 16", "négy ión a minore");
 
+    /**
+     * A szerző webes változatában {@code valami_anakreon} néven szerepel; ión a
+     * minore nyitás után jambikus folytatás. A bizonytalan nevet megtartjuk,
+     * mert a besorolás maga is bizonytalan.
+     */
+    public static final Meter VALAMI_ANAKREON = line("UU--UU-U-U-U-?", "anakreóni-féle sor", "valami_anakreon");
+
     public static final Meter SZEPT_VEGEN_1 = line("?-UU-UU-UU-?", "Szeptember végén 1");
     public static final Meter SZEPT_VEGEN_2 = line("?-UU-UU-UU?", "Szeptember végén 2");
 
@@ -239,6 +249,8 @@ public final class MetricCanon {
     public static final Meter UTOLSO_MOSAS_2 = line("U--U--UU-U", "utolsó mosás 2");
     public static final Meter UTOLSO_MOSAS_3 = line("---------", "utolsó mosás 3");
     public static final Meter LETEPARTJA = line("?-?-U-U--", "létépartja");
+    public static final Meter MOZDONYSZONETT_A = line("UUUU-UU-U-?", "Mozdonyszonett a");
+    public static final Meter MOZDONYSZONETT_B = line("UUUU-U-U-?", "Mozdonyszonett b");
     public static final Meter HAL_EJI_ENEKE =
             line("-UU---UUUU---UUUU---UUUU---UUUU---UU-", "hal éji éneke", "Morgenstern formája, Parti Nagy nyomán");
 
@@ -295,6 +307,7 @@ public final class MetricCanon {
             ANAKREONI_8,
             ANAKREONI_7,
             ANAKREONI_16,
+            VALAMI_ANAKREON,
             SZEPT_VEGEN_1,
             SZEPT_VEGEN_2,
             GYILKOSOK,
@@ -307,6 +320,8 @@ public final class MetricCanon {
             UTOLSO_MOSAS_2,
             UTOLSO_MOSAS_3,
             LETEPARTJA,
+            MOZDONYSZONETT_A,
+            MOZDONYSZONETT_B,
             HAL_EJI_ENEKE,
             BI_TROCHEUS,
             BI_JAMBUS,
@@ -357,6 +372,18 @@ public final class MetricCanon {
                     List.of(ASZKLEPIADESZI_D13, ASZKLEPIADESZI_A123, ASZKLEPIADESZI_D13, ASZKLEPIADESZI_A123),
                     null),
             closed("aszklepiadeszi E", repeat(ASZKLEPIADESZI_E1234, 4), null),
+            // Két további Horatius-strófa, a szerző webes változatából. Nem
+            // önálló forma: az A–E sorainak más sorrendje, de a versek, amelyeken
+            // Horatius használja, e nélkül nem kapnának szakaszmértéket.
+            // F: „Míg én voltam a kedvesed…”, G: „Úgy futsz, félve, Chloé…”
+            closed(
+                    "aszklepiadeszi F",
+                    List.of(ASZKLEPIADESZI_B4, ASZKLEPIADESZI_A123, ASZKLEPIADESZI_B4, ASZKLEPIADESZI_A123),
+                    null),
+            closed(
+                    "aszklepiadeszi G",
+                    List.of(ASZKLEPIADESZI_A123, ASZKLEPIADESZI_A123, ASZKLEPIADESZI_D13, ASZKLEPIADESZI_B4),
+                    null),
             closed("alkaioszi strófa", List.of(ALKAIOSZI_12, ALKAIOSZI_12, ALKAIOSZI_3, ALKAIOSZI_4), null),
             closed("szapphói strófa", List.of(SZAPPHOI, SZAPPHOI, SZAPPHOI, ADONISZI), null),
             closed(

@@ -55,7 +55,7 @@ class AnalyzeControllerTest {
         mvc.perform(get("/api/canon"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.meters.length()").value(org.hamcrest.Matchers.greaterThan(100)))
-                .andExpect(jsonPath("$.stanzas.length()").value(18))
+                .andExpect(jsonPath("$.stanzas.length()").value(20))
                 .andExpect(jsonPath("$.settings[0].label").isNotEmpty())
                 .andExpect(jsonPath("$.reasons[0].explanation").isNotEmpty());
     }

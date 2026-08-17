@@ -162,7 +162,7 @@ class KalliopeIntegrationTest {
         assertThat(response.statusCode()).isEqualTo(200);
         JsonNode canon = json.readTree(response.body());
         assertThat(canon.get("meters").size()).isGreaterThan(100);
-        assertThat(canon.get("stanzas").size()).isEqualTo(18);
+        assertThat(canon.get("stanzas").size()).isEqualTo(20);
         assertThat(canon.get("settings").size()).isEqualTo(10);
         assertThat(canon.get("reasons").size()).isGreaterThan(5);
         for (JsonNode setting : canon.get("settings")) {

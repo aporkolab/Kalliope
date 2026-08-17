@@ -54,7 +54,9 @@ class CorpusTest {
                 new Expectation(Examples.SZIGETI, null, 0, null, def),
                 new Expectation(Examples.TOLDI, null, 0, null, def),
                 new Expectation(Examples.ILIASZ, "hexameter", 85, null, def),
-                new Expectation(Examples.ODUSSZEIA, "hexameter", 85, null, def),
+                // 95%: a görög aspiráta közössé tétele óta 98% — a küszöb azért
+                // ilyen magas, hogy a lelet vissza ne csússzon (lásd ScansionTest)
+                new Expectation(Examples.ODUSSZEIA, "hexameter", 95, null, def),
                 new Expectation(Examples.ZALAN, "hexameter", 90, null, def),
                 new Expectation(Examples.HETEDIK_ECLOGA, "hexameter", 90, null, def),
                 new Expectation(Examples.NAGY_TITOK, null, 0, "disztichon", def),

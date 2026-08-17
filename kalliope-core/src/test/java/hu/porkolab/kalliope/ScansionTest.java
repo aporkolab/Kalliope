@@ -50,6 +50,26 @@ class ScansionTest {
     }
 
     @Test
+    @DisplayName("a görög aspiráta (kh, th, ph) írásképe kétértelmű, ezért közös")
+    void greekAspiratesAreAmbiguous() {
+        // Egy hang a görög névben (Akhilleusz = χ), kettő a magyar
+        // morfémahatáron (csak+hogy, halandó+k+hoz, kap+hat, át+hat). A leírt
+        // alakból nem dönthető el, melyik — a mérték választ.
+        // A leletet a szerző webes változatával összevetve találtuk: az „akháj"
+        // sorokat mi rontottuk el, az „-okhoz" ragosakat ő.
+        assertThat(scan("Akhilleusz")).startsWith("?");
+        assertThat(scan("Ithaka")).startsWith("?");
+        assertThat(scan("csakhogy")).startsWith("?");
+        assertThat(scan("kaphat")).startsWith("?");
+        assertThat(Scansion.scan("kaphat", STRICT).syllables().get(0).reason())
+                .isEqualTo(Scansion.Reason.AMBIGUOUS_CLUSTER);
+
+        // aspiráta + likvida: a szótag közös marad (a görög olvasat muta cum
+        // liquidája és a magyar kétmássalhangzós olvasat is megengedi)
+        assertThat(scan("Aphrodité")).startsWith("?");
+    }
+
+    @Test
     @DisplayName("regresszió: az x két hangot jelöl (ksz), tehát helyzeti hosszút ad")
     void xIsTwoConsonants() {
         assertThat(scan("taxi")).startsWith("-");

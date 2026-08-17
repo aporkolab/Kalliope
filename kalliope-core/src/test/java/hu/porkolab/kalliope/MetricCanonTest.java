@@ -15,7 +15,7 @@ class MetricCanonTest {
         assertThat(MetricCanon.FEET).hasSize(11);
         assertThat(MetricCanon.COLA).hasSize(38);
         assertThat(MetricCanon.COMPLEXES).hasSize(8);
-        assertThat(MetricCanon.STANZAS).hasSize(18);
+        assertThat(MetricCanon.STANZAS).hasSize(20);
         assertThat(MetricCanon.UNSTRESSED_WORDS).hasSize(16);
     }
 

@@ -302,9 +302,18 @@ public final class Scansion {
             singleWordFinal = singleWordFinal && cluster.size() == 1;
             int min = 0;
             int max = 0;
+            int positions = 0;
             for (int k = 0; k < cluster.size(); k++) {
                 Phonology.Consonant c = cluster.get(k);
-                max += c.positions();
+                positions += c.positions();
+                // A kétjegyű görög aspiráta (kh, th, ph, rh, ch) írásképe két
+                // olvasatot fed: EGY hang a görög névben (A-khil-leusz, I-tha-ka,
+                // Aph-ro-di-té), de KETTŐ a magyar morfémahatáron (csak+hogy,
+                // halandó+k+hoz, kap+hat, át+hat). A leírt alakból nem dönthető
+                // el, melyik — ezért a maximum két pozíció, a minimum egy, és a
+                // mérték választ. Ez a különbség méri be az Íliász „akháj" sorait
+                // és az Odüsszeia „-okhoz" ragos sorait egyszerre.
+                max += c.ambiguous() ? c.letters() : c.positions();
                 if (!optional.get(k) && !c.ambiguous()) {
                     min += c.positions();
                 }
@@ -312,9 +321,11 @@ public final class Scansion {
             // Muta cum liquida csak szón BELÜL: a licencia oka, hogy a zárhang +
             // likvida egyetlen szótagkezdetet alkothat (a-pra-ja). Szóhatáron
             // (vak | róka) a zárhang az előző szótag zárója, tehát valódi
-            // helyzeti hosszúságot ad.
+            // helyzeti hosszúságot ad. A próba a grafémák névleges
+            // pozíciószámán fut, nem a maximumon: az aspiráta + likvida
+            // (Aph-ro-di-té) így marad muta cum liquida.
             if (cluster.size() == 2
-                    && max == 2
+                    && positions == 2
                     && !clusterSplitByWordBoundary
                     && cluster.get(0).isStop()
                     && cluster.get(1).isLiquid()) {
