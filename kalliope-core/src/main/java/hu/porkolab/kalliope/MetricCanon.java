@@ -184,7 +184,7 @@ public final class MetricCanon {
     public static final Meter TROCHAICUS_4MTR = corrected(
             line("-U-?-U-?-U-?-U-", "trochaikus tetrameter (katalektikus)"),
             "-U-U-U-U-U-U-U-",
-            "A trochaikus metrum második eleme közös. Fix rövidként a minta csak a teljesen "
+            "A trochaikus metrum második eleme közömbös. Fix rövidként a minta csak a teljesen "
                     + "„tiszta” sorokra illett, a valódi görög-latin gyakorlat szinte minden sorát elutasította.",
             "https://en.wikipedia.org/wiki/Trochaic_septenarius");
 
@@ -219,7 +219,7 @@ public final class MetricCanon {
     public static final Meter ALKAIOSZI_3 = corrected(
             line("?-U-?-U-?", "alkaioszi 3", "ötödfeles jambus, alkaioszi kilences"),
             "?-U-U-U-?",
-            "Az alkaioszi kilences ötödik pozíciója közös — Horatiusnál rendre hosszú. "
+            "Az alkaioszi kilences ötödik pozíciója közömbös — Horatiusnál rendre hosszú. "
                     + "Fix rövidként a teljes alkaioszi strófa illeszthetetlen volt.",
             "https://en.wikipedia.org/wiki/Alcaic_stanza");
     public static final Meter ALKAIOSZI_4 = line("-UU-UU-U-?", "alkaioszi 4", "kis alkaioszi, alkaioszi tízes");

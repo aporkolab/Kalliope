@@ -31,7 +31,7 @@ public final class NearMiss {
             return switch (c) {
                 case Notation.LONG -> "hosszú";
                 case Notation.SHORT -> "rövid";
-                default -> "közös";
+                default -> "közömbös";
             };
         }
     }

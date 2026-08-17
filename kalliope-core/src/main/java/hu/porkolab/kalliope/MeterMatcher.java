@@ -6,12 +6,12 @@ import java.util.List;
 /**
  * Sor- és szakaszmérték-illesztés.
  *
- * <p>Szigorú: hosszú↔hosszú, rövid↔rövid, közös↔bármelyik. Nincs feltételezett
+ * <p>Szigorú: hosszú↔hosszú, rövid↔rövid, közömbös↔bármelyik. Nincs feltételezett
  * költői licencia — ha egy sor így nem illeszkedik, az a hű válasz.
  *
  * <p>Az illesztés {@link Notation#matches} pozíciónkénti dinamikus programozással
  * történik, nem a minta realizációinak kifejtésével: utóbbi a szabad pozíciók
- * számában exponenciális, és egy sok közös szótagot tartalmazó soron
+ * számában exponenciális, és egy sok eldöntetlen szótagot tartalmazó soron
  * kezelhetetlenné vált (a korábbi változat 8192 realizáció fölött CSONKOLT, és a
  * csonkolt előtagokat hasonlította össze, ami hamis találatokat adott).
  */

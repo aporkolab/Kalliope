@@ -20,7 +20,7 @@ import java.util.List;
  *
  * <p>A kimenetet mindig UTF-8-cal írjuk, függetlenül a rendszer alapértelmezett
  * kódlapjától — különben a {@code ÷}, {@code Ú} és az ékezetek elromlanak, és a
- * {@code ÷} épp a közös szótag {@code ?} jelére esne vissza.
+ * {@code ÷} épp az eldöntetlen szótag {@code ?} jelére esne vissza.
  */
 public final class KalliopeCli {
 

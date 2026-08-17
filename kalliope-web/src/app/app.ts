@@ -226,7 +226,7 @@ export class App {
   }
 
   /**
-   * Kattintásra körbejárja a hosszúságot: hosszú → rövid → közös → automatikus.
+   * Kattintásra körbejárja a hosszúságot: hosszú → rövid → eldöntetlen → automatikus.
    * A verstan értelmezés kérdése; az olvasónak joga van más olvasathoz.
    */
   protected cycleQuantity(line: Line, index: number): void {
@@ -287,8 +287,8 @@ export class App {
 
   /**
    * A kiírandó hosszúság: ha egy mérték illeszkedik, a MEGVALÓSULT hosszúság,
-   * mert a közös szótag kérdése ilyenkor eldőlt. Ha nincs találat, a nyers
-   * skandálás marad, közös jellel.
+   * mert az eldöntetlen szótag kérdése ilyenkor eldőlt. Ha nincs találat, a
+   * nyers skandálás marad, × jellel.
    */
   protected shownQuantity(line: Line, index: number): string {
     const realized = line.realized;
@@ -346,7 +346,7 @@ export class App {
     return at === index;
   }
 
-  /** Közös volt-e a szótag, mielőtt a mérték eldöntötte. */
+  /** Eldöntetlen volt-e a szótag, mielőtt a mérték eldöntötte. */
   protected wasAnceps(line: Line, index: number): boolean {
     return line.syllables[index].quantity === '?';
   }

@@ -58,7 +58,7 @@ megcáfolt). A lényegesebbek:
   (*A-khil-leusz* = χ), de kettő a magyar morfémahatáron (*csak+hogy*,
   *halandó+k+hoz*, **kap+hat**, **át+hat**). Eddig mindig egynek vettem, ezért az
   Odüsszeia `-okhoz` ragos sorai nem illeszkedtek, és a `kaphat` első szótaga is
-  tévesen rövid volt. Mostantól közös, és a mérték dönt: **Odüsszeia 90% → 98%,
+  tévesen rövid volt. Mostantól közös szótag, és a mérték dönt: **Odüsszeia 90% → 98%,
   a korpusz 84% → 86%**;
 - az illesztő a minta összes realizációját kifejtette — ez a szabad pozíciók
   számában exponenciális —, és 8192 fölött **csonkolt**, majd a csonkolt
@@ -114,9 +114,9 @@ pedig lekisbetűsítve kereste a mintát is, így `-UU-?`-re sosem talált.
 | Mérték | Miért |
 | --- | --- |
 | `choliambus` | hiányzott az utolsó előtti hosszú, ami *definiálja* a sánta jambust |
-| `alkaioszi 3` | az 5. pozíció közös; fix rövidként a teljes strófa illeszthetetlen volt |
+| `alkaioszi 3` | az 5. pozíció közömbös; fix rövidként a teljes strófa illeszthetetlen volt |
 | `aszklepiadeszi D13` | a 4. aszklepiadeszi strófa rövid sora glükóni, nem pherekrateus |
-| `4mtr trochaicus` | a trochaikus metrum második eleme közös |
+| `4mtr trochaicus` | a trochaikus metrum második eleme közömbös |
 | `anapesztikus dimeter`, `daktilikus tetrameter` | a nevük spondeusz-helyettesítést ígért, a mintájuk tiltotta |
 | `glykoni2a/2b` | hét pozíciós, rövidre végződő „glükóni" nem létezik — törölve |
 

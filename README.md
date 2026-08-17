@@ -62,12 +62,12 @@ Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope
 | --- | --- |
 | `—` | hosszú szótag |
 | `∪` | rövid szótag |
-| `×` | közös (anceps) — a mérték dönti el |
+| `×` | eldöntetlen: **közös szótag** (a hangtani minősítés ambivalens) vagy **közömbös szótaghelyzet** (a mérték nem kér számot róla — ilyen a sorvég) |
 | `\|` | lábhatár |
 | `‖` | sormetszet, cezúra |
-| pontozott aláhúzás | a szótag eredetileg közös volt, a mérték döntötte el |
+| pontozott aláhúzás | a szótag eredetileg eldöntetlen volt, a mérték döntötte el |
 
-A felület színrendszere vizuálisan is elkülöníti a szótagokat (hosszú, rövid, közös), támogatja a sötét/világos témát, és mobilon is kényelmesen használható (kártyás tördelés).
+A felület színrendszere vizuálisan is elkülöníti a szótagokat (hosszú, rövid, eldöntetlen), támogatja a sötét/világos témát, és mobilon is kényelmesen használható (kártyás tördelés).
 
 ## Felépítés
 
@@ -188,7 +188,8 @@ Az algoritmus hiteles magyar verstani forrásokra épül (Fazekas Enciklopédia,
 
 * A szótag a következő magánhangzóig tart, **átlépve a szóhatárt**.
 * A kétjegyű betűk (`cs, sz, gy` stb.) egy, az `x` két mássalhangzónak számít. A kettőzött kétjegyűek (`ssz, ggy`) egy hosszú hangot jelölnek.
-* **Közös (anceps, `?`) szótagok:** Sorvégi szótagok, határozott névelők, rövid kötőszók, *muta cum liquida* szón belül, görög aspiráták (`kh`, `th`), és az eldönthetetlen torlódások.
+* **Közös szótag** (*syllaba communis*, `?`): a határozott névelő, a rövid nyílt szótagú kötőszók, a *muta cum liquida* szón belül, a görög aspiráták (`kh`, `th`) és az eldönthetetlen torlódások — itt a **szótag** hangtani minősítése ambivalens.
+* **Közömbös szótaghelyzet** (*syllaba anceps*, `?`): a **sorvég**. Itt nem a szótag kétértékű, hanem a *mérték* nem kér számot a hosszúságáról; a sorvégi szünet kitölti az időt. A két fogalmat a jelölés nem, az indoklás viszont megkülönbözteti.
 * **Kettőshangzók:** A görög-latin diftongusokra (`eu`, `au`) a motor változatokat állít elő, és a minta alapján dönti el az optimális olvasatot.
 
 A skandáló alapértelmezetten **szigorú**: költői licenciát nem feltételez, de pontosan megmutatja, hol tér el a szöveg a mértéktől.
@@ -212,7 +213,9 @@ Amit egy kódolvasásból nem lehet kitalálni: miért így van.
 
 **A skandáló szigorú, a licenciák kapcsolók.** Ha egy sor nem illeszkedik, az a hű válasz, nem hiba: a motor megmondja, min múlik. A költői licenciák (szókezdő hangsúly, kettőshangzó-összevonás) külön beállítások, és az egyik alapból ki van kapcsolva — így látszik, hol kell a licencia.
 
-**A közös szótag közös marad, és a mérték dönt.** Ahol a hagyomány kétféle olvasatot enged, ott nem döntök előre: a motor változatokat állít elő, és az illeszkedő mérték választ. Ez a döntés fogta meg a görög aspiráta hibáját is — `kap+hat` és *A-khil-leusz* ugyanazt a `kh`-t írja le, kétféle olvasattal.
+**Ami eldöntetlen, az eldöntetlen marad, és a mérték dönt.** Ahol a hagyomány kétféle olvasatot enged, ott nem döntök előre: a motor változatokat állít elő, és az illeszkedő mérték választ. Ez a döntés fogta meg a görög aspiráta hibáját is — `kap+hat` és *A-khil-leusz* ugyanazt a `kh`-t írja le, kétféle olvasattal.
+
+**A közös szótagot és a közömbös szótaghelyzetet külön tartom.** Ugyanaz a `?` áll mindkettőre, de nem ugyanaz a kettő: a *syllaba communis* a **szótag** hangtani ambivalenciája, a *syllaba anceps* a **mértéknek** a helye, amely hosszút és rövidet is elfogad — ilyen a sorvég. Egy ideig a sorvéget is „közös szótagnak" írtam; ez tévedés volt, mert a sorvégi szótag hosszúsága nem kétértékű, csak érdektelen. Az indoklás most a kettőt külön nevezi meg.
 
 **A rímfelismerés Arany rendszerére épül, nem a binárisból portolt táblára.** A portolt tábla a szó **végén** is egyesített, ami épp az ellenkezője Arany kódaszabályának. Az asszonáncnál a magánhangzó-hosszúságot megtartom, mert Aranynál a felcserélése külön, gyengébb fokozat — összemosva a `dögmadaraknak` is rímelne az `akhájnak`-ra.
 

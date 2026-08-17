@@ -9,7 +9,7 @@ import java.util.List;
  * <pre>
  *   U  rövid szótag
  *   -  hosszú szótag
- *   ?  közös (anceps): hosszúnak és rövidnek is számít
+ *   ?  közömbös szótaghelyzet (anceps): hosszút és rövidet is elfogad
  *   =  "UU"-nak vagy "-"-nak megfelelő rész (feloldás / összevonás)
  *   |  verslábhatár
  *   || cezúra (csak emlékeztető)
@@ -112,7 +112,7 @@ public final class Notation {
         return n;
     }
 
-    /** Illeszkedik-e a jel a szkennelt szótaghoz. Közös (?) mindkét irányban elfogadó. */
+    /** Illeszkedik-e a jel a szkennelt szótaghoz. A közömbös helyzet (?) mindkét irányban elfogadó. */
     private static boolean fits(char patternSymbol, char scanned) {
         if (scanned == ANCEPS || patternSymbol == ANCEPS) {
             return true;
@@ -121,7 +121,7 @@ public final class Notation {
     }
 
     /**
-     * Szigorú illesztés: hosszú↔hosszú, rövid↔rövid, közös↔bármelyik, a '=' pedig
+     * Szigorú illesztés: hosszú↔hosszú, rövid↔rövid, közömbös↔bármelyik, a '=' pedig
      * vagy egy hosszúra, vagy két rövidre. Nincs feltételezett költői licencia.
      */
     public static boolean matches(String scanned, String pattern) {
@@ -211,7 +211,7 @@ public final class Notation {
             if (sym == RESOLVE) {
                 sb.append(consumed[i] == 1 ? LONG : "UU");
             } else if (sym == ANCEPS) {
-                // a szkennelt sor dönt; ha az is közös, hosszúnak írjuk ki
+                // a szkennelt sor dönt; ha az is eldöntetlen, hosszúnak írjuk ki
                 char actual = scanned.charAt(sb.length());
                 sb.append(actual == ANCEPS ? LONG : actual);
             } else {

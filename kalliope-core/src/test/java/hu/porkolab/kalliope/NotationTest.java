@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class NotationTest {
 
     @Test
-    @DisplayName("a közös szótag mindkét irányban elfogadó")
+    @DisplayName("a közömbös szótaghelyzet mindkét irányban elfogadó")
     void ancepsMatchesBoth() {
         assertThat(Notation.matches("?", "U")).isTrue();
         assertThat(Notation.matches("?", "-")).isTrue();
@@ -36,7 +36,7 @@ class NotationTest {
     }
 
     @Test
-    @DisplayName("regresszió: sok közös szótag nem robbantja fel az illesztést, és nem ad hamis találatot")
+    @DisplayName("regresszió: sok eldöntetlen szótag nem robbantja fel az illesztést, és nem ad hamis találatot")
     void manyAncepsDoesNotExplode() {
         // A korábbi változat a realizációk kifejtésével dolgozott, 8192 fölött
         // CSONKOLT, és a csonkolt előtagokat hasonlította — egy negyven szótagos
@@ -46,7 +46,7 @@ class NotationTest {
         assertThat(Notation.matches(forty, MetricCanon.HEXAMETER.pattern())).isFalse();
         assertThat(System.nanoTime() - start).isLessThan(1_000_000_000L);
 
-        // ugyanakkor a valódi hosszúságú közös sor illeszkedik
+        // ugyanakkor a valódi hosszúságú, eldöntetlen szótagos sor illeszkedik
         assertThat(Notation.matches("?".repeat(17), MetricCanon.HEXAMETER.pattern()))
                 .isTrue();
     }

@@ -6,7 +6,8 @@ import java.util.List;
  * Egy versmérték: versláb, kolón, sorfajta vagy összetett sor.
  *
  * <p>A minta {@link Notation} jelöléssel: {@code U} rövid, {@code -} hosszú,
- * {@code ?} közös, {@code =} feloldás, {@code |} lábhatár, {@code ||} cezúra.
+ * {@code ?} közömbös szótaghelyzet, {@code =} feloldás, {@code |} lábhatár,
+ * {@code ||} cezúra.
  */
 public record Meter(
         String id, String name, String pattern, Kind kind, boolean fictive, String note, Correction correction) {

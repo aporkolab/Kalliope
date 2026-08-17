@@ -76,7 +76,7 @@ public record Analysis(List<Stanza> stanzas, Settings settings, Summary summary,
     /**
      * Egy sor teljes elemzése.
      *
-     * @param scansion a nyers skandálás, közös ({@code ?}) szótagokkal
+     * @param scansion a nyers skandálás, eldöntetlen ({@code ?}) szótagokkal
      * @param realized a megvalósult hosszúságsor az első illeszkedő mérték
      *     szerint, vagy {@code null}, ha nincs találat. A közös szótag ugyanis
      *     csak addig kérdés, amíg a mérték el nem dönti: a „Még nyílnak a

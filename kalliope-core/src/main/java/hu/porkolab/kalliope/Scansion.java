@@ -17,10 +17,17 @@ import java.util.Set;
  *   <li>hosszú magánhangzó → hosszú (természeténél fogva);
  *   <li>rövid magánhangzó után egy hosszú vagy legalább két rövid mássalhangzó →
  *       hosszú (helyzeténél fogva);
- *   <li>közös (?): a sorvégi szótag, a névelő, a rövid nyílt szótagú kötőszók, a
- *       muta cum liquida (zárhang + likvida), és minden olyan torlódás, amelynek
- *       az olvasata bizonytalan.
+ *   <li><b>közös szótag</b> (syllaba communis, {@code ?}): a névelő, a rövid nyílt
+ *       szótagú kötőszók, a muta cum liquida (zárhang + likvida), és minden olyan
+ *       torlódás, amelynek az olvasata bizonytalan — a szótag hangtani
+ *       minősítése ambivalens;
+ *   <li><b>közömbös szótaghelyzet</b> (syllaba anceps, {@code ?}): a sorvég. Itt
+ *       nem a szótag kétértékű, hanem a <i>mérték</i> nem kér számot a
+ *       hosszúságáról — a sorvégi szünet kitölti az időt.
  * </ul>
+ *
+ * <p>A kettő külön fogalom, és ugyanaz a {@code ?} jel áll mindkettőre; a
+ * megkülönböztetés az indoklásban látszik.
  *
  * <p>A skandáló <b>szigorú</b>: költői licenciát nem feltételez. Ahol a magyar
  * helyesírás valóban kétféle olvasatot enged (görög nevek {@code eu}/{@code au}
@@ -34,7 +41,7 @@ public final class Scansion {
         NATURAL_LONG("természeténél fogva hosszú"),
         POSITION_LONG("helyzeténél fogva hosszú"),
         SHORT("rövid"),
-        LINE_END("sorvégi közös szótag"),
+        LINE_END("sorvégi közömbös szótaghelyzet — a mérték nem kér számot a hosszúságáról"),
         ARTICLE("a határozott névelő közös"),
         SHORT_WORD("rövid, nyílt szótagú kötőszó vagy névmás — közös"),
         WORD_FINAL_CONSONANT("szóvégi mássalhangzó magánhangzó előtt: zárt és nyílt olvasat is lehet — közös"),

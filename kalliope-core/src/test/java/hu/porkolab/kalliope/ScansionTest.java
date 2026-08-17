@@ -88,7 +88,7 @@ class ScansionTest {
     @DisplayName("a kettőzött kétjegyű betű egy hosszú mássalhangzó (AkH. 7. § b)")
     void doubledDigraphs() {
         assertThat(scan("asszony")).startsWith("-");
-        assertThat(scan("meggy")).startsWith("?"); // egyetlen szótag: sorvégi közös
+        assertThat(scan("meggy")).startsWith("?"); // egyetlen szótag: sorvégi közömbös helyzet
         assertThat(scan("könnyű")).startsWith("-");
     }
 
@@ -100,7 +100,7 @@ class ScansionTest {
     }
 
     @Test
-    @DisplayName("a sorvégi szótag közös, a névelő közös")
+    @DisplayName("a sorvég közömbös szótaghelyzet, a névelő közös szótag")
     void ancepsPositions() {
         Scansion.Reading r = Scansion.scan("a nagy ház", STRICT);
         assertThat(r.pattern()).isEqualTo("?-?");
