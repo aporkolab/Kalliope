@@ -35,6 +35,13 @@ RUN java -Djarmode=tools -jar application.jar extract --layers --destination ext
 # ---------- 4. Futtatás ----------
 FROM eclipse-temurin:25.0.3_9-jre-alpine
 
+# Ettől a GHCR magától a repóhoz köti a csomagot, és a csomag oldalán
+# megjelenik a readme meg a licenc — enélkül gazdátlan image marad.
+LABEL org.opencontainers.image.source="https://github.com/aporkolab/Kalliope" \
+      org.opencontainers.image.description="Kalliopé — magyar verstani elemző" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.authors="Váradi Nagy Pál (vnp85), Porkoláb Ádám"
+
 # A felhasználó ELŐBB jön létre, és minden COPY rögtön neki másol. A záró
 # `chown -R` ugyanis az egész könyvtárról új réteget csinálna — nyolcvan
 # megabájt fölösleges másolat.
