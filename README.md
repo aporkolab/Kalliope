@@ -26,7 +26,7 @@ docker compose up --build          # → http://localhost:8080
 
 ## Eredet és fejlesztés
 
-A Kalliopé eredetileg Váradi Nagy Pál egyetemi munkájaként született, Lazarus/FreePascal környezetben. A szerző saját webes változata itt érhető el: [https://csillagtura.ro/projektek/kalliope/](https://csillagtura.ro/projektek/kalliope/).
+A Kalliopé eredetileg Váradi Nagy Pál egyetemi munkájaként született, **Borland Delphiben** (a bináris `DVCLAL` és `PACKAGEINFO` resource-a alapján). A szerző szerint a forrás lényegében változtatás nélkül fordul Lazarus/FreePascal alatt is, amire később állt át. A saját webes változata itt érhető el: [https://csillagtura.ro/projektek/kalliope/](https://csillagtura.ro/projektek/kalliope/).
 
 Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope.exe` binárisából, visszafejtéssel (reverse-engineering) készítettem el. A motort Java nyelven újraírtam, de **az adatbázis magja az eredeti**.
 
@@ -196,7 +196,7 @@ A skandáló alapértelmezetten **szigorú**: költői licenciát nem feltétele
 ### Beállítások
 
 A motor számos elemzési beállítást támogat (pl. `a_rovid_kotoszok_kozombosek`, `a_szokezdo_hangsuly_nyujthat`).
-*Megjegyzés:* Az eredeti Lazarus-kliens három, tisztán ablakkezelési kapcsolója (`a_jobb_oldali_szoveg_formazott_legyen`, `a_fuggoleges_toszogalos_mutyur_helye`, `a_beallitasokat_tartalmazo_felulet_elrejtve`) **nincs** a motorban: itt nem volna értelmük, és nem is teszek úgy, mintha lenne. A tíz megmaradt beállításból hat az eredeti adatbázisé, négy az én kiegészítésem.
+*Megjegyzés:* Az eredeti Delphi-kliens három, tisztán ablakkezelési kapcsolója (`a_jobb_oldali_szoveg_formazott_legyen`, `a_fuggoleges_toszogalos_mutyur_helye`, `a_beallitasokat_tartalmazo_felulet_elrejtve`) **nincs** a motorban: itt nem volna értelmük, és nem is teszek úgy, mintha lenne. A tíz megmaradt beállításból hat az eredeti adatbázisé, négy az én kiegészítésem.
 
 ## Korpusz-riport és Tesztelés
 
@@ -210,6 +210,6 @@ A rendszer stabilitását és pontosságát egy 245 sorból álló, klasszikus v
 
 ## Szövegek és Jogi helyzet
 
-A kód **MIT licenc** alatt áll, Váradi Nagy Pál és Porkoláb Ádám közös szerzőségével (lásd a `LICENSE` fájlt).
+A kód **MIT licenc** alatt áll, Váradi Nagy Pál és Porkoláb Ádám közös szerzőségével (lásd a [`LICENSE`](LICENSE) fájlt). Hogy ehhez a kiadáshoz pontosan mi változott, és mi maradt érintetlenül az eredetiből: [`CHANGELOG.md`](CHANGELOG.md).
 
 A példatárban (`Examples.java`) szereplő versek nagyrészt közkincsek. A két kivétel Devecseri Gábor Homérosz-fordítása, amelyek oktatási célú szabad felhasználás keretében (Szjt. 33–35. §) szerepelnek a tesztkorpuszban, a forrás pontos megjelölésével. Más célú felhasználás esetén ezeket a szövegeket cserélni szükséges.

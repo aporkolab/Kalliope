@@ -9,7 +9,7 @@ import java.util.Map;
  *
  * <p>A tisztán megjelenítésbeli beállítások ({@code a_jobb_oldali_szoveg_formazott_legyen},
  * {@code a_fuggoleges_toszogalos_mutyur_helye}, {@code a_beallitasokat_tartalmazo_felulet_elrejtve})
- * az eredeti Lazarus-felület ablakkezeléséhez tartoztak; itt nincs értelmük, és
+ * az eredeti Delphi-felület ablakkezeléséhez tartoztak; itt nincs értelmük, és
  * nem is teszünk úgy, mintha lenne.
  */
 public record Settings(

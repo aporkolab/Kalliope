@@ -14,7 +14,7 @@ import java.util.Set;
  * <p>Az adat Váradi Nagy Pál (vnp85) munkája; a {@code VNP sorfajták} és
  * {@code VNP-strófák} szekció az ő saját versformái.
  *
- * <p>Az eredeti, 2004–2006-os Lazarus-program ezt egy saját szintaxisú szövegfájlból
+ * <p>Az eredeti, 2004–2006-os Delphi-program ezt egy saját szintaxisú szövegfájlból
  * ({@code kalliope.txt}) olvasta: {@code ;} komment, {@code .} mezőnév,
  * {@code !} beállítás, {@code @}/{@code #define} konstans, {@code #complex},
  * {@code $} hangsúlytalan szó, {@code #start_strofa} blokk. Az a formátum
