@@ -13,8 +13,6 @@ docker compose up --build          # → http://localhost:8080
 
 ```
 
-> **Megjegyzés:** A CI a `main` ágról feltölt egy Docker image-et a GitHub Container Registry-be is (`ghcr.io/aporkolab/kalliope:latest`). Mivel a GitHub ezeket a csomagokat alapértelmezetten privátként kezeli, idegen felhasználóknak a fenti lokális build (`docker compose up --build`) a legbiztosabb módszer a futtatásra.
-
 ## Eredet és fejlesztés
 
 A Kalliopé eredetileg Váradi Nagy Pál egyetemi munkájaként született, Lazarus/FreePascal környezetben. A szerző saját webes változata itt érhető el: [https://csillagtura.ro/projektek/kalliope/](https://csillagtura.ro/projektek/kalliope/).
