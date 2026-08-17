@@ -231,8 +231,29 @@
                   </div>
 
                   <div class="verdict-line">
-                    @if (line.meters.length) {
-                      <span class="meter">{{ meterNames(line) }}</span>
+                    <!--
+                      A mértéknév a MEGJELENÍTETT olvasathoz tartozik. Ha a sor
+                      többféleképp is skandálható, a többi olvasat gombként áll
+                      mellette — nem hallgatjuk el, de nem is mossuk össze.
+                    -->
+                    @if (reading(line); as r) {
+                      <span class="meter">{{ readingNames(r) }}</span>
+                    }
+                    @if (readings(line).length > 1) {
+                      <span class="alt-readings">
+                        <span class="muted">másik olvasat:</span>
+                        @for (alt of readings(line); track alt.realization; let i = $index) {
+                          @if (i !== readingIndex(line)) {
+                            <button
+                              class="alt"
+                              (click)="chooseReading(line, i)"
+                              [title]="alt.realization"
+                            >
+                              {{ readingNames(alt) }}
+                            </button>
+                          }
+                        }
+                      </span>
                     }
                     @if (!line.meters.length && line.nearMiss) {
                       <span class="nearmiss">{{ line.nearMiss.summary }}</span>

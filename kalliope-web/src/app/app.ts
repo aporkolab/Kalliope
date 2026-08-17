@@ -7,10 +7,20 @@ import {
   Example,
   Line,
   Meter,
+  MeterMatch,
   Override,
   Quantity,
   Syllable,
 } from './kalliope.models';
+
+/**
+ * Egy sor egy olvasata: egy megvalósult hosszúságsor, és az összes mérték,
+ * amelyik pontosan így skandálja. Több név, egy skandálás.
+ */
+interface Reading {
+  realization: string;
+  matches: MeterMatch[];
+}
 
 type Tab = 'elemzes' | 'adatbazis';
 
@@ -60,8 +70,41 @@ export class App {
   /** Kézi szótaghosszúság-felülbírálások — kattintásra körbejárnak. */
   protected readonly overrides = signal<Override[]>([]);
 
+  /**
+   * Melyik olvasatot mutatjuk az adott sorban (sorindex → olvasat sorszáma).
+   *
+   * Egy sorra több mérték is illeszkedhet, és NEM biztos, hogy ugyanúgy oldják
+   * fel az eldöntetlen szótagokat: az „Elmegy a kugli egy este berúgni mer”
+   * egyszerre aszklepiadeszi A123 (`---UU--UU-U-`) és daktilikus tetrameter
+   * (`-UU-UU-UU-UU`). Korábban minden név egymás mellett állt, a skandálás
+   * viszont mindig az elsőé volt — vagyis a kiírt hosszúságok ellentmondtak a
+   * mellettük álló mérték nevének. Váradi Nagy Pál találta meg.
+   */
+  protected readonly chosenReading = signal<Record<number, number>>({});
+
   /** A hoverelt szótag magyarázata — a felület fő tanító eszköze. */
   protected readonly hovered = signal<Syllable | null>(null);
+
+  /**
+   * A sor olvasatai: a mértéktalálatok a REALIZÁCIÓJUK szerint csoportosítva.
+   * Ami egyformán skandál, az egy olvasat — csak több neve van.
+   */
+  protected readonly readingsByLine = computed<Map<number, Reading[]>>(() => {
+    const map = new Map<number, Reading[]>();
+    for (const line of this.allLines()) {
+      const groups: Reading[] = [];
+      for (const m of line.meters) {
+        const same = groups.find((g) => g.realization === m.realization);
+        if (same) {
+          same.matches.push(m);
+        } else {
+          groups.push({ realization: m.realization, matches: [m] });
+        }
+      }
+      map.set(line.index, groups);
+    }
+    return map;
+  });
 
   protected readonly reasonText = computed(() => {
     const s = this.hovered();
@@ -285,13 +328,37 @@ export class App {
     }
   }
 
+  protected readings(line: Line): Reading[] {
+    return this.readingsByLine().get(line.index) ?? [];
+  }
+
+  /** A megjelenített olvasat sorszáma — alapból az első. */
+  protected readingIndex(line: Line): number {
+    const chosen = this.chosenReading()[line.index] ?? 0;
+    return chosen < this.readings(line).length ? chosen : 0;
+  }
+
+  /** A megjelenített olvasat, vagy null, ha nincs időmértékes találat. */
+  protected reading(line: Line): Reading | null {
+    return this.readings(line)[this.readingIndex(line)] ?? null;
+  }
+
+  protected chooseReading(line: Line, index: number): void {
+    this.chosenReading.set({ ...this.chosenReading(), [line.index]: index });
+  }
+
+  /** Az olvasathoz tartozó mértéknevek. */
+  protected readingNames(reading: Reading): string {
+    return reading.matches.map((m) => m.meter.name).join(' ~ ');
+  }
+
   /**
-   * A kiírandó hosszúság: ha egy mérték illeszkedik, a MEGVALÓSULT hosszúság,
-   * mert az eldöntetlen szótag kérdése ilyenkor eldőlt. Ha nincs találat, a
-   * nyers skandálás marad, × jellel.
+   * A kiírandó hosszúság: a MEGJELENÍTETT olvasat megvalósult hosszúsága, mert
+   * az eldöntetlen szótag kérdése ilyenkor eldőlt. Ha nincs találat, a nyers
+   * skandálás marad, × jellel.
    */
   protected shownQuantity(line: Line, index: number): string {
-    const realized = line.realized;
+    const realized = this.reading(line)?.realization ?? line.realized;
     if (realized && index < realized.length) {
       return realized.charAt(index);
     }
@@ -307,8 +374,11 @@ export class App {
     if (index === 0) {
       return false;
     }
-    if (line.meters.length) {
-      return line.meters[0].ictusSyllables.includes(index);
+    // A lábhatárok is a MEGJELENÍTETT olvasathoz tartoznak, nem az első
+    // találathoz: különben más mérték lábait rajzolnánk a másik skandálására.
+    const reading = this.reading(line);
+    if (reading) {
+      return reading.matches[0].ictusSyllables.includes(index);
     }
     const measures = line.accentual[0]?.form.measures;
     if (!measures) {
@@ -357,10 +427,6 @@ export class App {
 
   protected quantityMark(q: string): string {
     return q === '-' ? '—' : q === 'U' ? '∪' : '×';
-  }
-
-  protected meterNames(line: Line): string {
-    return line.meters.map((m) => m.meter.name).join(' ~ ');
   }
 
   protected rhymeKindLabel(kind: string): string {

@@ -71,7 +71,10 @@ const ANALYSIS: Analysis = {
           meters: [
             {
               meter: CANON.meters[0],
-              realization: '-U-',
+              // A realizáció EGYEZIK a sor realized mezőjével: a motor is így
+              // adja (a realized az első találat realizációja). Amíg itt '-U-'
+              // állt, a fixture maga volt inkonzisztens.
+              realization: '-UU',
               ictusSyllables: [0],
             },
           ],
@@ -233,6 +236,66 @@ describe('App megjelenítés', () => {
     const row = fixture.nativeElement.querySelector('.verdict-row');
     expect(row.classList.contains('with-rhythm')).toBe(false);
     expect(row.querySelector('.rhythm')).toBeNull();
+  });
+
+  it('regresszió: a kiírt skandálás a MEGNEVEZETT mértékhez tartozik', () => {
+    // Váradi Nagy Pál jelentette: az „Elmegy a kugli…” sorra két mérték
+    // illeszkedik, KÜLÖNBÖZŐ feloldással, és a felület mindkét nevet kiírta a
+    // skandálás mellé — amelyik viszont csak az elsőé volt. A kiírt hosszúságok
+    // így ellentmondtak a mellettük álló névnek.
+    analyze();
+    const line = ANALYSIS.stanzas[0].lines[0];
+    internals().analysis.set({
+      ...ANALYSIS,
+      stanzas: [
+        {
+          ...ANALYSIS.stanzas[0],
+          lines: [
+            {
+              ...line,
+              realized: '-UU',
+              meters: [
+                {
+                  meter: { ...CANON.meters[0], name: 'alfa' },
+                  realization: '-UU',
+                  ictusSyllables: [0],
+                },
+                {
+                  meter: { ...CANON.meters[0], name: 'béta' },
+                  realization: '---',
+                  ictusSyllables: [0, 1],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const shown = () =>
+      [...fixture.nativeElement.querySelectorAll('.syllable .mark')]
+        .map((e: Element) => e.textContent?.trim())
+        .join('');
+    const meterName = () => fixture.nativeElement.querySelector('.meter').textContent.trim();
+
+    // Alapból az első olvasat: a név és a skandálás összetartozik.
+    expect(meterName()).toBe('alfa');
+    expect(shown()).toBe('—∪∪');
+
+    // A másik olvasatra váltva MINDKETTŐ változik, együtt.
+    const alt = fixture.nativeElement.querySelector('.alt');
+    expect(alt.textContent.trim()).toBe('béta');
+    alt.click();
+    fixture.detectChanges();
+    expect(meterName()).toBe('béta');
+    expect(shown()).toBe('———');
+  });
+
+  it('egyetlen olvasatnál nincs váltógomb', () => {
+    analyze();
+    expect(fixture.nativeElement.querySelector('.alt')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.alt-readings')).toBeNull();
   });
 
   afterEach(() => http.verify());

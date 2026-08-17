@@ -907,6 +907,30 @@ tr.fictive {
   display: none;
 }
 
+/* ---------- több olvasat egy sorra ---------- */
+.alt-readings {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  align-items: baseline;
+}
+
+.alt {
+  padding: 0.1rem 0.45rem;
+  border: 1px dashed var(--accent-line);
+  border-radius: 999px;
+  background: none;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.alt:hover {
+  border-style: solid;
+  background: var(--accent-soft);
+}
+
 /* ============================ szerzőség ============================ */
 .credits {
   display: grid;
