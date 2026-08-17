@@ -37,6 +37,12 @@ export class App {
   protected readonly showSummary = signal(false);
   protected readonly focusedLine = signal<number | null>(null);
 
+  /**
+   * Igaz, ha a motor a lapon fut, backend nélkül (statikus változat). A lábléc
+   * ezt kiírja: enélkül nem derülne ki, miért nem indul egyetlen kérés sem.
+   */
+  protected readonly offline = this.api.offline;
+
   /** Téma: rendszerkövető, világos vagy sötét — a választás megmarad. */
   protected readonly theme = signal<'system' | 'light' | 'dark'>(readTheme());
 

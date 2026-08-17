@@ -125,6 +125,7 @@ describe('App megjelenítés', () => {
     poem: WritableSignal<string>;
     tab: WritableSignal<string>;
     canonQuery: WritableSignal<string>;
+    analysis: WritableSignal<Analysis | null>;
     analyze: () => void;
   }
 
@@ -198,6 +199,40 @@ describe('App megjelenítés', () => {
     const rows = fixture.nativeElement.querySelectorAll('tbody tr');
     expect(rows.length).toBe(1);
     expect(rows[0].textContent).toContain('choliambus');
+  });
+
+  it('a szerzőség mindkét nevet kiírja, a licenccel együtt', () => {
+    const credits = fixture.nativeElement.querySelector('.credits');
+    expect(credits).toBeTruthy();
+    const text = credits.textContent as string;
+    expect(text).toContain('Váradi Nagy Pál');
+    expect(text).toContain('Porkoláb Ádám');
+    expect(text).toContain('MIT');
+    const links = [...credits.querySelectorAll('a')].map((a: HTMLAnchorElement) => a.href);
+    expect(links.some((h) => h.includes('github.com/aporkolab/Kalliope'))).toBe(true);
+    expect(links.some((h) => h.includes('csillagtura.ro'))).toBe(true);
+  });
+
+  it('a ritmustérkép az ítélet MELLETT van, nem alatta', () => {
+    analyze();
+    // Négy sor fölött jelenik meg; a példaelemzés egysoros, ezért felnagyítjuk.
+    internals().analysis.set({
+      ...ANALYSIS,
+      summary: { ...ANALYSIS.summary, lineCount: 12 },
+    });
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('.verdict-row');
+    expect(row.classList.contains('with-rhythm')).toBe(true);
+    // Mindkettő a sor KÖZVETLEN gyereke — így kerülnek egy vonalba.
+    expect(row.querySelector(':scope > .verdict')).toBeTruthy();
+    expect(row.querySelector(':scope > .rhythm')).toBeTruthy();
+  });
+
+  it('rövid versnél nincs ritmustérkép, és a sor sem kap két hasábot', () => {
+    analyze(); // a példaelemzés egysoros
+    const row = fixture.nativeElement.querySelector('.verdict-row');
+    expect(row.classList.contains('with-rhythm')).toBe(false);
+    expect(row.querySelector('.rhythm')).toBeNull();
   });
 
   afterEach(() => http.verify());

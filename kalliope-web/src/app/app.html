@@ -118,50 +118,58 @@
       }
 
       @if (analysis(); as a) {
-        <article class="verdict">
-          <p class="print-only print-title">Kalliopé — verstani elemzés</p>
-          <p class="kicker">{{ systemLabel(a.verse.system) }}</p>
-          <h2>{{ a.verse.headline }}</h2>
-          <ul class="print-only print-details">
-            @for (d of a.verse.details; track d) {
-              <li>{{ d }}</li>
-            }
-          </ul>
-          <div class="verdict-foot">
-            <span>{{ a.summary.stanzaCount }} szakasz</span>
-            <span>{{ a.summary.lineCount }} sor</span>
-            <span>{{ a.summary.syllableCount }} szótag</span>
-            <button class="ghost" (click)="openSummary()">Részletek</button>
-          </div>
-        </article>
-
-        @if (a.summary.lineCount > 3) {
-          <section class="card rhythm" aria-label="Ritmustérkép">
-            <div class="card-head">
-              <h2>Ritmustérkép</h2>
-              <span class="muted">soronként a szótaghosszak</span>
-            </div>
-            <div class="rhythm-rows">
-              @for (line of allLines(); track line.index) {
-                <button
-                  class="rhythm-row"
-                  (click)="focusLine(line.index)"
-                  [attr.aria-label]="line.index + 1 + '. sor'"
-                  [title]="line.text"
-                >
-                  @for (s of line.syllables; track $index) {
-                    <span class="cell" [class]="quantityClass(shownQuantity(line, $index))"></span>
-                  }
-                </button>
+        <!--
+          Az ítélet és a ritmustérkép egy sorban: a térkép korábban egy teljes
+          szélességű sávot vitt el a lap tetején, és lenyomta magát az elemzést.
+        -->
+        <div class="verdict-row" [class.with-rhythm]="a.summary.lineCount > 3">
+          <article class="verdict">
+            <p class="print-only print-title">Kalliopé — verstani elemzés</p>
+            <p class="kicker">{{ systemLabel(a.verse.system) }}</p>
+            <h2>{{ a.verse.headline }}</h2>
+            <ul class="print-only print-details">
+              @for (d of a.verse.details; track d) {
+                <li>{{ d }}</li>
               }
+            </ul>
+            <div class="verdict-foot">
+              <span>{{ a.summary.stanzaCount }} szakasz</span>
+              <span>{{ a.summary.lineCount }} sor</span>
+              <span>{{ a.summary.syllableCount }} szótag</span>
+              <button class="ghost" (click)="openSummary()">Részletek</button>
             </div>
-            <p class="legend">
-              <span><i class="swatch cell long"></i> hosszú</span>
-              <span><i class="swatch cell short"></i> rövid</span>
-              <span><i class="swatch cell anceps"></i> közös</span>
-            </p>
-          </section>
-        }
+          </article>
+
+          @if (a.summary.lineCount > 3) {
+            <section class="card rhythm" aria-label="Ritmustérkép">
+              <div class="card-head">
+                <h2>Ritmustérkép</h2>
+              </div>
+              <div class="rhythm-rows">
+                @for (line of allLines(); track line.index) {
+                  <button
+                    class="rhythm-row"
+                    (click)="focusLine(line.index)"
+                    [attr.aria-label]="line.index + 1 + '. sor'"
+                    [title]="line.text"
+                  >
+                    @for (s of line.syllables; track $index) {
+                      <span
+                        class="cell"
+                        [class]="quantityClass(shownQuantity(line, $index))"
+                      ></span>
+                    }
+                  </button>
+                }
+              </div>
+              <p class="legend">
+                <span><i class="swatch cell long"></i> hosszú</span>
+                <span><i class="swatch cell short"></i> rövid</span>
+                <span><i class="swatch cell anceps"></i> közös</span>
+              </p>
+            </section>
+          }
+        </div>
 
         <p class="inspector" [class.idle]="!hovered()" role="status">
           @if (hovered(); as s) {
@@ -343,6 +351,31 @@
     </div>
   </main>
 }
+
+<!--
+  Szerzőség a lapon, nem csak a readme-ben: a kánon és az eredeti program
+  Váradi Nagy Pálé, a 2.0 motorja, API-ja és felülete Porkoláb Ádámé.
+-->
+<footer class="credits">
+  <p>
+    <strong>Kalliopé 2.0</strong> — az eredeti programot és a metrikai kánont
+    <strong>Váradi Nagy Pál</strong> (vnp85) írta 2004–2006 táján. A 2.0 motorját, REST API-ját és
+    ezt a felületet <strong>Porkoláb Ádám</strong> írta. Közös munka, MIT licenc alatt.
+  </p>
+  <p class="credits-links">
+    <a href="https://github.com/aporkolab/Kalliope" target="_blank" rel="noopener noreferrer"
+      >forráskód</a
+    >
+    <a href="https://csillagtura.ro/projektek/kalliope/" target="_blank" rel="noopener noreferrer"
+      >a szerző eredeti webes változata</a
+    >
+    @if (offline) {
+      <span class="badge" title="Nincs backend: a motor a böngészőben fut"
+        >motor a böngészőben</span
+      >
+    }
+  </p>
+</footer>
 
 @if (showSummary() && analysis(); as a) {
   <div class="overlay" (click)="closeSummary()">

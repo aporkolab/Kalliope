@@ -54,6 +54,7 @@ Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope
 | **Interaktivitás** | A felületen a szótagra kattintva a hosszúság felülbírálható, az elemzés azonnal újrafut. |
 | **Megosztás & Export** | A „Link” gomb paraméterbe kódolja a verset (adatbázis nélkül osztható). A JSON export letölti az API nyers válaszát. |
 | **Nyomtatás** | Tiszta, zavaró UI-elemek nélküli nyomtatási/PDF nézet, ahol a hosszúságot a jelek hordozzák a színek helyett. |
+| **Ritmustérkép** | Az ítélet mellett, soronként a szótaghosszak — egy negyvensoros eposzrészlet ritmusa egy pillantással befogható; a sorra kattintva odaugrik. |
 
 ### A jelölés és a felület
 
@@ -170,7 +171,7 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 
 ```
 
-Jelenleg **123 Java teszt** (100 motor + 23 API) és **39 frontend teszt** fut; a sorlefedettség 95% / 85% / 89%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
+Jelenleg **123 Java teszt** (100 motor + 23 API) és **42 frontend teszt** fut; a sorlefedettség 95% / 85% / 92%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
 
 ## API Referencia
 
