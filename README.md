@@ -8,6 +8,13 @@ Minden szótagról megmondja, **miért** olyan hosszú; ha egy sor nem illeszked
 > szerzőség](#eredet-és-fejlesztés)
 
 ```bash
+docker run -p 8080:8080 ghcr.io/aporkolab/kalliope:latest   # → http://localhost:8080
+
+```
+
+A kész image publikus, `linux/amd64` és `linux/arm64` alatt is fut, és **0,36 másodperc** alatt indul. Ha inkább forrásból építenéd:
+
+```bash
 git clone https://github.com/aporkolab/Kalliope.git && cd Kalliope
 docker compose up --build          # → http://localhost:8080
 
@@ -75,9 +82,21 @@ Az Angular build a Spring Boot `static/` mappájába kerül, így **nincs CORS p
 **Konténerből:**
 
 ```bash
-docker compose up --build
+docker run -p 8080:8080 ghcr.io/aporkolab/kalliope:latest   # kész image a GHCR-ből
+docker compose up --build                                   # vagy forrásból
 
 ```
+
+| | |
+| --- | --- |
+| platformok | `linux/amd64`, `linux/arm64` |
+| méret | 418 MB (ebből 56 MB az AOT-gyorsítótár) |
+| indulás | 0,36 s |
+| felhasználó | nem root (uid 10001) |
+
+Az image tartalmaz egy **AOT-gyorsítótárat**: a build végén egy tanítófutás elmenti a felépített JVM-állapotot, ettől indul 0,36 s alatt 0,87 helyett. A `--build-arg AOT_CACHE=false` kikapcsolja, ilyenkor az image 346 MB, cserébe lassabban indul.
+
+A build **kereszt-fordít**: az Angular- és a Maven-szakasz a build gép architektúráján fut (a kimenetük architektúrafüggetlen), és csak a záró JRE-réteg készül platformonként. Enélkül az arm64 változat emulált Maven-buildben készülne.
 
 **Fejlesztéshez (két terminál):**
 
@@ -103,6 +122,8 @@ A főbb beállítások környezeti változóként is megadhatók:
 | --- | --- | --- |
 | `server.port` | `8080` | HTTP port |
 | `kalliope.rate-limit.requests-per-minute` | `60` | `/api/analyze` kérésszám-korlát (`0` kikapcsolja) |
+| `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75.0` | a compose ezt adja a JVM-nek |
+| `AOT_CACHE` (build arg) | `true` | az AOT-gyorsítótár építése; `false` esetén 346 MB az image |
 
 ### CI és Ellenőrzés
 
@@ -113,6 +134,8 @@ A projekt szigorú minőségi kapukkal rendelkezik (80%-os tesztlefedettségi k�
 cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src/**/*.{ts,html,css}"
 
 ```
+
+Jelenleg **112 Java teszt** (92 motor + 20 API) és **33 frontend teszt** fut; a sorlefedettség 96% / 84% / 88%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be. Az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz.
 
 ## API Referencia
 
