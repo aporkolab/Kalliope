@@ -174,6 +174,8 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 
 Jelenleg **135 Java teszt** (112 motor + 23 API) és **49 frontend teszt** fut; a sorlefedettség 95% / 85% / 93%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
 
+A Pages-deploy után **füstpróba** fut (`smoke-pages.mjs`): letölti a kiélesített lapot, futtatja valódi DOM-ban, és tényleg begépel egy verset. Ezt se a unit teszt, se a `js-diff` nem fedi — az egyik a komponenst méri stubolt motorral, a másik a motort a JVM-hez. Ha a motor nem kerül a lapba vagy a bundle el sem indul, mindkettő zöld marad, és a lap mégis üres.
+
 ## API Referencia
 
 | Végpont | Leírás |
