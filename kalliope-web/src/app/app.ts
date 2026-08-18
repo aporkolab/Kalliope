@@ -1,5 +1,7 @@
 import { Component, HostBinding, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { Subject, debounceTime } from 'rxjs';
 import { KalliopeService } from './kalliope.service';
 import {
   Analysis,
@@ -66,6 +68,18 @@ export class App {
   protected readonly allLines = computed<Line[]>(() =>
     (this.analysis()?.stanzas ?? []).flatMap((s) => s.lines),
   );
+
+  /** Gépelés közbeni elemzés — a szerkesztő ezt táplálja. */
+  private readonly typed = new Subject<string>();
+
+  /** Az utoljára elemzett szöveg; enélkül a példabetöltés után újra futna. */
+  private lastAnalyzed = '';
+
+  /**
+   * Egyszerre csak a LEGFRISSEBB válasz számít. Gépelés közben több kérés is
+   * lehet a levegőben, és egy lassabb régi válasz felülírhatná az újat.
+   */
+  private requestId = 0;
 
   /** Kézi szótaghosszúság-felülbírálások — kattintásra körbejárnak. */
   protected readonly overrides = signal<Override[]>([]);
@@ -157,22 +171,48 @@ export class App {
       error: () => this.error.set('Nem sikerült betölteni a metrikai kánont.'),
     });
     this.api.examples().subscribe({ next: (e) => this.examples.set(e) });
+
+    // Gépelés közben magától elemez. A várakozás attól függ, mibe kerül egy
+    // elemzés: a beágyazott motor helyben fut, tehát olcsó; az API-s
+    // változatban viszont hálózat is van, és percenkénti kérésszám-korlát,
+    // ezért ott ritkábban indítunk.
+    this.typed
+      .pipe(debounceTime(this.api.offline ? 350 : 900), takeUntilDestroyed())
+      .subscribe((text) => {
+        if (text.trim() !== this.lastAnalyzed) {
+          this.analyze();
+        }
+      });
+  }
+
+  /** A szerkesztő minden változása: eltároljuk, és elindítjuk a várakozást. */
+  protected onPoemChange(text: string): void {
+    this.poem.set(text);
+    this.typed.next(text);
   }
 
   protected analyze(): void {
     const text = this.poem().trim();
     this.error.set(null);
+    this.lastAnalyzed = text;
     if (!text) {
       this.analysis.set(null);
       return;
     }
+    const id = ++this.requestId;
     this.busy.set(true);
     this.api.analyze(text, this.settings(), this.overrides()).subscribe({
       next: (a) => {
+        if (id !== this.requestId) {
+          return; // közben újabb kérés indult, ez a válasz elavult
+        }
         this.analysis.set(a);
         this.busy.set(false);
       },
       error: (err) => {
+        if (id !== this.requestId) {
+          return;
+        }
         this.error.set(err?.error?.detail ?? 'Az elemzés nem sikerült.');
         this.busy.set(false);
       },
@@ -261,6 +301,7 @@ export class App {
   }
 
   protected clear(): void {
+    this.lastAnalyzed = '';
     this.poem.set('');
     this.analysis.set(null);
     this.error.set(null);

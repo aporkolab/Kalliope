@@ -64,8 +64,8 @@
 
       <textarea
         [ngModel]="poem()"
-        (ngModelChange)="poem.set($event)"
-        placeholder="Illeszd be ide a verset. Az üres sor szakaszhatárt jelent."
+        (ngModelChange)="onPoemChange($event)"
+        placeholder="Illeszd be ide a verset — gépelés közben magától elemez. Az üres sor szakaszhatárt jelent."
         spellcheck="false"
         aria-label="A vers szövege"
       ></textarea>

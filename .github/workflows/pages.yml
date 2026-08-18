@@ -62,7 +62,29 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url || steps.retry.outputs.page_url || steps.last.outputs.page_url }}
+    # A deploy lépés többször elbukott GitHub-oldali 503-on ("No server is
+    # currently available"), miközben a build és a js-diff kapu végig zöld
+    # volt. Ez átmeneti hiba, nem a miénk — ezért kétszer újrapróbáljuk,
+    # növekvő várakozással, és csak a harmadik bukás számít bukásnak.
+    # Szándékosan nincs hozzá külön retry-action: nem hozunk be harmadik féltől
+    # függőséget egy sleep meg egy if kedvéért.
     steps:
       - id: deploy
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - if: steps.deploy.outcome == 'failure'
+        run: |
+          echo "A deploy elbukott (valószínűleg 503). Várok, és újrapróbálom."
+          sleep 60
+      - id: retry
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - if: steps.deploy.outcome == 'failure' && steps.retry.outcome == 'failure'
+        run: sleep 120
+      - id: last
+        if: steps.deploy.outcome == 'failure' && steps.retry.outcome == 'failure'
         uses: actions/deploy-pages@v4

@@ -51,7 +51,7 @@ Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope
 | **Rím** | Képlet vaksorral (`x`), a képlet neve, és soronként a rím fajtája (tiszta rím, ragrím, asszonánc, önrím). |
 | **Cezúra** | A mérték jelölt metszete, valamint a hexameter klasszikus metszeteinek felismerése. |
 | **Szótagszintű indoklás** | 12-féle ok (pl. természeténél fogva hosszú, *muta cum liquida*, összevont kettőshangzó). |
-| **Interaktivitás** | A felületen a szótagra kattintva a hosszúság felülbírálható, az elemzés azonnal újrafut. |
+| **Interaktivitás** | Gépelés közben magától elemez (a beágyazott motorral 350 ms, API-val 900 ms várakozás után). A szótagra kattintva a hosszúság felülbírálható, az elemzés azonnal újrafut. |
 | **Megosztás & Export** | A „Link” gomb paraméterbe kódolja a verset (adatbázis nélkül osztható). A JSON export letölti az API nyers válaszát. |
 | **Nyomtatás** | Tiszta, zavaró UI-elemek nélküli nyomtatási/PDF nézet, ahol a hosszúságot a jelek hordozzák a színek helyett. |
 | **Lüktetés** | Ha egyetlen sorfajta sem illeszkedik, kimondja a sor élének lábsorát: *„6 daktilus a sor élén — a 19. szótagnál megszakad"*. Sorfajtát nem állít. |
@@ -158,7 +158,7 @@ A főbb beállítások környezeti változóként is megadhatók:
 | Kulcs | Alapérték | Funkció |
 | --- | --- | --- |
 | `server.port` | `8080` | HTTP port |
-| `kalliope.rate-limit.requests-per-minute` | `60` | `/api/analyze` kérésszám-korlát (`0` kikapcsolja) |
+| `kalliope.rate-limit.requests-per-minute` | `60` | `/api/analyze` kérésszám-korlát (`0` kikapcsolja). Ezért vár tovább a gépelés közbeni elemzés API-s üzemmódban. |
 | `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75.0` | a compose ezt adja a JVM-nek |
 | `AOT_CACHE` (build arg) | `true` | az AOT-gyorsítótár építése; `false` esetén 346 MB az image |
 
@@ -172,7 +172,7 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 
 ```
 
-Jelenleg **135 Java teszt** (112 motor + 23 API) és **45 frontend teszt** fut; a sorlefedettség 95% / 85% / 93%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
+Jelenleg **135 Java teszt** (112 motor + 23 API) és **49 frontend teszt** fut; a sorlefedettség 95% / 85% / 93%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
 
 ## API Referencia
 

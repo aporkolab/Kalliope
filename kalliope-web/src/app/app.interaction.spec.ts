@@ -117,6 +117,7 @@ const ANALYSIS: Analysis = {
 
 interface Internals {
   poem: WritableSignal<string>;
+  onPoemChange: (text: string) => void;
   settings: WritableSignal<Record<string, boolean>>;
   analysis: WritableSignal<Analysis | null>;
   error: WritableSignal<string | null>;
@@ -316,4 +317,61 @@ describe('App interakciók', () => {
   });
 
   afterEach(() => http.verify());
+
+  describe('gépelés közbeni elemzés', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('gépelés után magától elemez, gombnyomás nélkül', () => {
+      bootstrap();
+      app.onPoemChange('kert alatt');
+      // a várakozás alatt még nem indul kérés
+      http.expectNone('/api/analyze');
+      vi.advanceTimersByTime(1000);
+      const request = http.expectOne('/api/analyze');
+      expect(request.request.body.text).toBe('kert alatt');
+      request.flush(ANALYSIS);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('kert');
+    });
+
+    it('a gyors gépelésből EGY kérés lesz, az utolsó szöveggel', () => {
+      bootstrap();
+      app.onPoemChange('ker');
+      vi.advanceTimersByTime(200);
+      app.onPoemChange('kert');
+      vi.advanceTimersByTime(200);
+      app.onPoemChange('kert alatt');
+      vi.advanceTimersByTime(1000);
+      const request = http.expectOne('/api/analyze');
+      expect(request.request.body.text).toBe('kert alatt');
+      request.flush(ANALYSIS);
+    });
+
+    it('ugyanazt a szöveget nem elemzi újra', () => {
+      bootstrap();
+      app.loadExample(EXAMPLE);
+      http.expectOne('/api/analyze').flush(ANALYSIS);
+      // a példa szövege már elemzett; a szerkesztő ugyanezt küldi vissza
+      app.onPoemChange('kert alatt');
+      vi.advanceTimersByTime(1000);
+      http.expectNone('/api/analyze');
+    });
+
+    it('a lassú régi válasz nem írja felül az újat', () => {
+      bootstrap();
+      app.onPoemChange('első');
+      vi.advanceTimersByTime(1000);
+      const first = http.expectOne('/api/analyze');
+      app.onPoemChange('második');
+      vi.advanceTimersByTime(1000);
+      const second = http.expectOne('/api/analyze');
+
+      // a MÁSODIK válasz érkezik előbb, aztán az elavult első
+      second.flush({ ...ANALYSIS, verse: { ...ANALYSIS.verse, headline: 'friss' } });
+      first.flush({ ...ANALYSIS, verse: { ...ANALYSIS.verse, headline: 'elavult' } });
+      fixture.detectChanges();
+      expect(app.analysis()?.verse.headline).toBe('friss');
+    });
+  });
 });
