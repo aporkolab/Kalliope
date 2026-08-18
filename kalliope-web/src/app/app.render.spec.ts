@@ -319,6 +319,7 @@ describe('App megjelenítés', () => {
               pulse: {
                 foot: '-UU',
                 footName: 'daktilus',
+                footAdjective: 'daktilikus',
                 feet: 1,
                 syllables: 3,
                 breaksAt: -1,

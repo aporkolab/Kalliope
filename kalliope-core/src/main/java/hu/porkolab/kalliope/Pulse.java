@@ -42,21 +42,23 @@ public final class Pulse {
      * @param pattern a láb jelölése, pl. {@code -UU}
      * @param name magyar neve, egyes számban
      * @param plural magyar neve, több lábra
+     * @param adjective melléknévi alakja („daktilikus lüktetés")
      */
-    private record Foot(String pattern, String name, String plural) {}
+    private record Foot(String pattern, String name, String plural, String adjective) {}
 
     /** Sorrendjük egyben a döntetlen esetek eldöntése is. */
     private static final List<Foot> FEET = List.of(
-            new Foot("-UU", "daktilus", "daktilus"),
-            new Foot("UU-", "anapesztus", "anapesztus"),
-            new Foot("-U", "trocheus", "trocheus"),
-            new Foot("U-", "jambus", "jambus"));
+            new Foot("-UU", "daktilus", "daktilus", "daktilikus"),
+            new Foot("UU-", "anapesztus", "anapesztus", "anapesztikus"),
+            new Foot("-U", "trocheus", "trocheus", "trochaikus"),
+            new Foot("U-", "jambus", "jambus", "jambikus"));
 
     /**
      * A megtalált lüktetés.
      *
      * @param foot a láb jelölése ({@code -UU})
      * @param footName a láb magyar neve
+     * @param footAdjective a láb melléknévi alakja — az összegzés ezt használja
      * @param feet hány láb áll egymás után
      * @param syllables hány szótagot fed a futam
      * @param breaksAt az első szótag indexe a futam UTÁN, vagy {@code -1}, ha a
@@ -73,6 +75,7 @@ public final class Pulse {
     public record Result(
             String foot,
             String footName,
+            String footAdjective,
             int feet,
             int syllables,
             int breaksAt,
@@ -80,9 +83,17 @@ public final class Pulse {
             String summary,
             boolean whole) {
 
-        static Result of(
-                String foot, String footName, int feet, int syllables, int breaksAt, String resolved, String summary) {
-            return new Result(foot, footName, feet, syllables, breaksAt, resolved, summary, breaksAt < 0);
+        static Result of(Foot foot, int feet, int syllables, int breaksAt, String resolved, String summary) {
+            return new Result(
+                    foot.pattern(),
+                    foot.name(),
+                    foot.adjective(),
+                    feet,
+                    syllables,
+                    breaksAt,
+                    resolved,
+                    summary,
+                    breaksAt < 0);
         }
     }
 
@@ -150,14 +161,7 @@ public final class Pulse {
         }
         resolved.append(scansion, covered, scansion.length());
         int breaksAt = covered < scansion.length() ? covered : -1;
-        return Result.of(
-                foot.pattern(),
-                foot.name(),
-                feet,
-                covered,
-                breaksAt,
-                resolved.toString(),
-                summary(foot, feet, breaksAt));
+        return Result.of(foot, feet, covered, breaksAt, resolved.toString(), summary(foot, feet, breaksAt));
     }
 
     private static String summary(Foot foot, int feet, int breaksAt) {

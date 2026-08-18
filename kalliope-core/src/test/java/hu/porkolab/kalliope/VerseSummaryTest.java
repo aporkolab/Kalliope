@@ -101,4 +101,41 @@ class VerseSummaryTest {
         assertThat(Analyzer.analyze(prose).verse().system())
                 .isIn(VerseSummary.System.SZABAD, VerseSummary.System.VEGYES);
     }
+
+    @Test
+    @DisplayName("a lüktetés időmértékes rend, nem szabadvers — de sorfajtát nem állít")
+    void pulseIsQuantitativeNotFreeVerse() {
+        // Váradi Nagy Pál tesztesete egy sorban: huszonegy szótag, hat
+        // daktilussal. Nincs ilyen hosszú kánoni sorfajta, de a ritmust a
+        // szótaghosszak hordozzák — „szabadversnek" nevezni rossz nem volna.
+        VerseSummary v = Analyzer.analyze("Elmegy a kugli egy este berúgni me' ő az a kugli ki nincs fából")
+                .verse();
+        assertThat(v.system()).isEqualTo(VerseSummary.System.IDOMERTEKES);
+        assertThat(v.headline()).isEqualTo("Időmértékes verselés: daktilikus lüktetés, kánoni sorfajta nélkül.");
+        assertThat(v.details()).anySatisfy(d -> assertThat(d).contains("daktilikus lüktetést"));
+        // A „költői licencia" magyarázat itt félrevezetne: nem licencia hiányzik,
+        // hanem ilyen hosszú sorfajta nincs.
+        assertThat(v.details()).noneSatisfy(d -> assertThat(d).contains("költői licencia"));
+    }
+
+    @Test
+    @DisplayName("a lüktetés nem írja felül az ütemhangsúlyos ítéletet, csak kiegészíti")
+    void pulseDoesNotOverrideAccentual() {
+        VerseSummary v = Analyzer.analyze("Elmegy a kugli egy este berúgni mer arra van kedve neki")
+                .verse();
+        assertThat(v.system()).isEqualTo(VerseSummary.System.UTEMHANGSULYOS);
+        assertThat(v.details()).anySatisfy(d -> assertThat(d).contains("daktilikus lüktetést"));
+    }
+
+    @Test
+    @DisplayName("a korpusz ítéletei nem változnak a lüktetéstől")
+    void corpusVerdictsUnchanged() {
+        // A lüktetés a korpusz egyetlen során sem szólal meg, tehát az
+        // ítéleteknek is változatlanul kell maradniuk.
+        assertThat(Analyzer.analyze(Examples.TOLDI.text()).verse().system())
+                .isEqualTo(VerseSummary.System.UTEMHANGSULYOS);
+        assertThat(Analyzer.analyze(Examples.ZALAN.text()).verse().system()).isEqualTo(VerseSummary.System.IDOMERTEKES);
+        assertThat(Analyzer.analyze(Examples.KOZELITO_TEL.text()).verse().system())
+                .isEqualTo(VerseSummary.System.SZIMULTAN);
+    }
 }

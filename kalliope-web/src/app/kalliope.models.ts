@@ -93,6 +93,7 @@ export interface StanzaMatch {
 export interface Pulse {
   foot: string;
   footName: string;
+  footAdjective: string;
   feet: number;
   syllables: number;
   /** Az első szótag indexe a futam UTÁN, vagy -1, ha végig tart. */

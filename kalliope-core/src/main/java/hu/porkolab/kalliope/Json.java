@@ -313,6 +313,8 @@ public final class Json {
         comma(b);
         pair(b, "footName", p.footName());
         comma(b);
+        pair(b, "footAdjective", p.footAdjective());
+        comma(b);
         pair(b, "feet", p.feet());
         comma(b);
         pair(b, "syllables", p.syllables());

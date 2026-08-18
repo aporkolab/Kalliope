@@ -56,6 +56,8 @@ public record VerseSummary(System system, String headline, List<String> details)
         Map<String, Integer> formCounts = new LinkedHashMap<>();
         Map<String, Integer> accentualCounts = new LinkedHashMap<>();
         Map<String, Integer> rhymeKinds = new LinkedHashMap<>();
+        Map<String, Integer> pulseKinds = new LinkedHashMap<>();
+        int pulsed = 0;
         int dual = 0;
 
         for (Analysis.Stanza stanza : stanzas) {
@@ -70,6 +72,10 @@ public record VerseSummary(System system, String headline, List<String> details)
                 }
                 if (line.rhymeKind() != RhymeDetector.Kind.VAKSOR) {
                     rhymeKinds.merge(line.rhymeKind().explanation(), 1, (a, b) -> a + b);
+                }
+                if (line.pulse() != null) {
+                    pulsed++;
+                    pulseKinds.merge(line.pulse().footAdjective(), 1, (a, b) -> a + b);
                 }
             }
             for (MeterMatcher.StanzaMatch f : stanza.forms()) {
@@ -92,6 +98,13 @@ public record VerseSummary(System system, String headline, List<String> details)
         boolean accentualDominant =
                 topAccentual != null && accentualCounts.get(topAccentual) >= stanzas.size() * DOMINANT;
 
+        String topPulse = top(pulseKinds);
+        // A lüktetés IDŐMÉRTÉKES rend: a ritmust a szótaghosszak hordozzák,
+        // csak nem tölt ki kánoni sorfajtát. „Szabadversnek" nevezni ezért
+        // rossz nem: a hat daktilus nem szabad ritmus. Sorfajtát viszont
+        // továbbra sem állítunk.
+        boolean pulseDominant = topPulse != null && pulsed >= lines * DOMINANT;
+
         System system;
         if (dual >= stanzas.size() * DOMINANT) {
             system = System.SZIMULTAN;
@@ -99,6 +112,8 @@ public record VerseSummary(System system, String headline, List<String> details)
             system = System.IDOMERTEKES;
         } else if (accentualDominant && classicalRatio < 0.4) {
             system = System.UTEMHANGSULYOS;
+        } else if (pulseDominant && classicalRatio < 0.4 && !accentualDominant) {
+            system = System.IDOMERTEKES;
         } else if (classicalRatio > 0.4 || topAccentual != null) {
             system = System.VEGYES;
         } else {
@@ -107,12 +122,27 @@ public record VerseSummary(System system, String headline, List<String> details)
 
         return new VerseSummary(
                 system,
-                headline(system, topForm, topMeter, topAccentual),
-                details(system, stanzas, lines, matched, synizesis, topForm, meterCounts, rhymeKinds));
+                headline(system, topForm, topMeter, topAccentual, pulseDominant ? topPulse : null),
+                details(
+                        system,
+                        stanzas,
+                        lines,
+                        matched,
+                        synizesis,
+                        topForm,
+                        meterCounts,
+                        rhymeKinds,
+                        pulsed,
+                        topPulse));
     }
 
-    private static String headline(System system, String form, String meter, String accentual) {
+    private static String headline(System system, String form, String meter, String accentual, String pulse) {
         String what = form != null ? form : meter;
+        // Sorfajta nélküli lüktetés: kimondjuk a ritmust, de nem nevezünk
+        // sorfajtát — épp az a lényeg, hogy egyik sem illeszkedik.
+        if (system == System.IDOMERTEKES && what == null && pulse != null) {
+            return "Időmértékes verselés: " + pulse + " lüktetés, kánoni sorfajta nélkül.";
+        }
         return switch (system) {
             case SZIMULTAN ->
                 what == null || accentual == null
@@ -157,7 +187,9 @@ public record VerseSummary(System system, String headline, List<String> details)
             int synizesis,
             String topForm,
             Map<String, Integer> meterCounts,
-            Map<String, Integer> rhymeKinds) {
+            Map<String, Integer> rhymeKinds,
+            int pulsed,
+            String topPulse) {
         List<String> out = new ArrayList<>();
         out.add(structure(stanzas, lines));
         if (topForm != null) {
@@ -175,10 +207,17 @@ public record VerseSummary(System system, String headline, List<String> details)
                             : "a metszet gyakran szóba esik")
                     + ".");
         }
+        if (pulsed > 0 && topPulse != null) {
+            out.add(pulsed + " sor mutat " + topPulse + " lüktetést, de egyik sem tölt ki kánoni sorfajtát; "
+                    + "a soronkénti magyarázat megmondja, hol szakad meg.");
+        }
         out.add(rhyme(stanzas, rhymeKinds));
         boolean classicalExpected =
                 system == System.IDOMERTEKES || system == System.SZIMULTAN || system == System.VEGYES;
-        if (classicalExpected && matched < lines) {
+        // Ha a nem illeszkedő sorokat a lüktetés már megmagyarázta, akkor nem
+        // költői licenciáról van szó, hanem arról, hogy ilyen sorfajta nincs.
+        boolean explainedByPulse = matched + pulsed >= lines;
+        if (classicalExpected && matched < lines && !explainedByPulse) {
             out.add((lines - matched) + " sor nem illeszkedik klasszikus mértékre "
                     + "(költői licencia); a soronkénti magyarázat megmondja, min múlik.");
         }

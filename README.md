@@ -172,7 +172,7 @@ cd kalliope-web && npm ci && npx ng test --no-watch && npx prettier --check "src
 
 ```
 
-Jelenleg **132 Java teszt** (109 motor + 23 API) és **45 frontend teszt** fut; a sorlefedettség 95% / 85% / 93%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
+Jelenleg **135 Java teszt** (112 motor + 23 API) és **45 frontend teszt** fut; a sorlefedettség 95% / 85% / 93%. A CI ugyanezt futtatja, majd `main`-re pusholva megépíti és felteszi a kétplatformos image-et a GHCR-be (az `org.opencontainers.image.source` label köti a csomagot ehhez a repóhoz), egy külön workflow pedig a motort JavaScriptre fordítja és kiteszi a GitHub Pages-re — de csak akkor, ha a `js-diff.mjs` szerint bájtra ugyanazt adja, mint a JVM.
 
 ## API Referencia
 
@@ -198,6 +198,8 @@ A skandáló alapértelmezetten **szigorú**: költői licenciát nem feltétele
 **Ha egy sor több mértékre is illeszkedik**, és nem ugyanúgy oldják fel a közös szótagokat, akkor a *vers* mértéke dönt — az egyértelmű sorok tanúsága szerint. A többi olvasat nem tűnik el: a sor mellett gombként ott van, és váltásra a skandálás, a mértéknév és a lábhatárok együtt változnak.
 
 **Ha egyetlen mérték sem illeszkedik**, még mindig lehet mit mondani. A *lüktetés* kimutatja a sor élén álló leghosszabb azonos lábsort, három korláttal: **sorfajtát nem állít**, **mindig megmondja, hol szakad meg**, és **bizonyítékot kér, nem engedélyt** — a közös szótag bármely lábba beleillik, ezért a futam pozícióinak legalább a fele a nyers skandálásban is eldöntött kell legyen. A korpusz 34 találat nélküli során egyszer sem szólal meg (Zrínyi és Arany magyaros sorai), Váradi Nagy Pál 21 szótagos tesztesetére viszont igen: *„6 daktilus a sor élén — a 19. szótagnál megszakad"*.
+
+Az **ítélet is ehhez igazodik**: a lüktetés időmértékes rend, csak nem tölt ki sorfajtát, ezért az összegzés nem „szabadverset" mond, hanem *„Időmértékes verselés: daktilikus lüktetés, kánoni sorfajta nélkül."* Ütemhangsúlyos ítéletet nem ír felül, csak kiegészíti.
 
 ### Beállítások
 
