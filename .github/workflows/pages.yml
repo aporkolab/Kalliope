@@ -26,7 +26,7 @@ jobs:
       # A TeaVM a Maven saját JVM-jében fut, és az ASM-je nem olvassa a Java
       # 25-ös osztályfájlokat — ezért JDK 21. A motor 17-es bytecode-ra fordul,
       # tehát ez nem visz el nyelvi elemet.
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
@@ -52,8 +52,8 @@ jobs:
           npx ng build --base-href=/${{ github.event.repository.name }}/
           node tools/build-pages.mjs
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: kalliope-web/dist/kalliope-web/browser
 
@@ -73,7 +73,7 @@ jobs:
     # függőséget egy sleep meg egy if kedvéért.
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
         continue-on-error: true
 
       - if: steps.deploy.outcome == 'failure'
@@ -82,14 +82,14 @@ jobs:
           sleep 60
       - id: retry
         if: steps.deploy.outcome == 'failure'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
         continue-on-error: true
 
       - if: steps.deploy.outcome == 'failure' && steps.retry.outcome == 'failure'
         run: sleep 120
       - id: last
         if: steps.deploy.outcome == 'failure' && steps.retry.outcome == 'failure'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # Deploy utáni füstpróba: a KIÉLESÍTETT lapot tölti le, futtatja valódi
   # DOM-ban, és tényleg begépel egy verset.
