@@ -11,7 +11,7 @@
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
-    <teavm.version>0.12.0</teavm.version>
+    <teavm.version>0.15.0</teavm.version>
   </properties>
 
   <dependencies>
