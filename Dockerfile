@@ -30,13 +30,13 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 # ---------- 3. Rétegekre bontás ----------
 # Spring Boot 4.1: a -Djarmode=layertools MEGSZŰNT, a helyes hívás a tools jarmode.
-FROM --platform=$BUILDPLATFORM eclipse-temurin:25.0.3_9-jre-alpine AS extract
+FROM --platform=$BUILDPLATFORM eclipse-temurin:26.0.2_10-jre-alpine AS extract
 WORKDIR /builder
 COPY --from=build /src/application.jar ./application.jar
 RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
 
 # ---------- 4. Futtatás ----------
-FROM eclipse-temurin:25.0.3_9-jre-alpine
+FROM eclipse-temurin:26.0.2_10-jre-alpine
 
 # Ettől a GHCR magától a repóhoz köti a csomagot, és a csomag oldalán
 # megjelenik a readme meg a licenc — enélkül gazdátlan image marad.
