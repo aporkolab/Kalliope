@@ -1,3 +1,5 @@
+# Angular 22 requires TypeScript 6; upgrade the compiler major with Angular deliberately.
+# The Maven image must retain Java 25 (the rejected floating tag downgrades it to 24).
 version: 2
 updates:
 - package-ecosystem: github-actions
@@ -38,7 +40,15 @@ updates:
       patterns:
       - '*'
   open-pull-requests-limit: 3
+  ignore:
+  - dependency-name: typescript
+    update-types:
+    - version-update:semver-major
 - package-ecosystem: docker
   directory: /
   schedule:
     interval: monthly
+  ignore:
+  - dependency-name: maven
+    versions:
+    - 3-eclipse-temurin-24-alpine
