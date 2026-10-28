@@ -38,6 +38,14 @@ class RhymeDetectorTest {
     }
 
     @Test
+    @DisplayName("regresszió: a rácság a -ság szavakkal rímel, nem a -ség szavakkal")
+    void suffixBoundaryKeepsTheVowel() {
+        // A binárisból örökölt „cság → csség" átírás a magánhangzót is átírta,
+        // ezért a „rácság" rímkulcsa -ség lett, és a „barátság" mellett vaksor maradt.
+        assertThat(pattern(List.of("ez a rácság", "nagy barátság"))).isEqualTo("aa");
+    }
+
+    @Test
     @DisplayName("regresszió: a szóvégi mássalhangzót nem mossuk össze — kard és part nem rímel")
     void finalConsonantIsStrict() {
         // A korábbi tábla az r→l zöngétlenítést a szó VÉGÉN is alkalmazta, majd

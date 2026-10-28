@@ -128,7 +128,7 @@ public final class RhymeDetector {
             }
             String matched = null;
             for (String d : Phonology.DIGRAPHS) {
-                if (w.regionMatches(i, d, 0, d.length())) {
+                if (w.regionMatches(i, d, 0, d.length()) && !Morphology.splits(w, i, d.length())) {
                     matched = d;
                     break;
                 }

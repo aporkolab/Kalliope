@@ -120,11 +120,13 @@ public final class Phonology {
 
     /**
      * A {@code i} pozíción kezdődő mássalhangzó-fonéma. A hívó garantálja, hogy
-     * ott mássalhangzó áll.
+     * ott mássalhangzó áll. Szóelem-határon át nem olvas kétjegyűt
+     * ({@code köz|ség}, {@code kékes|zöld}, lásd {@link Morphology}).
      */
     static Consonant consonantAt(String word, int i) {
         for (Grapheme g : GRAPHEMES) {
-            if (word.regionMatches(i, g.text(), 0, g.text().length())) {
+            if (word.regionMatches(i, g.text(), 0, g.text().length())
+                    && !Morphology.splits(word, i, g.text().length())) {
                 // az 'y'-ra végződő digráf csak akkor digráf, ha az y nem magánhangzó
                 return new Consonant(g.text(), g.text().length(), g.positions(), g.ambiguous());
             }

@@ -18,6 +18,16 @@ class ScansionTest {
         return Scansion.scan(line, STRICT).pattern();
     }
 
+    private static Scansion.Reason reason(String line, int syllable) {
+        return Scansion.scan(line, STRICT).syllables().get(syllable).reason();
+    }
+
+    private static List<String> texts(String line) {
+        return Scansion.scan(line, STRICT).syllables().stream()
+                .map(Scansion.Syllable::text)
+                .toList();
+    }
+
     @Test
     @DisplayName("természetes hosszúság: a hosszú magánhangzó hosszú szótagot ad")
     void naturalLength() {
@@ -51,21 +61,50 @@ class ScansionTest {
     }
 
     @Test
-    @DisplayName("regresszió: a képzőhatáron álló z+s ragozott alakban is két mássalhangzó (igazságot)")
-    void voicingAssimilationInsideTheWord() {
-        // A binárisból örökölt „gazság → gasság" átírás csak szóvégen futott, így
-        // a ragozott és képzett alakban a z+s kétjegyű zs-nek, EGY mássalhangzónak
-        // látszott, és a „ga" rövid lett: „Az igazságot" ?UU-? lett ?U--? helyett.
-        for (String word : List.of("igazság", "igazságot", "igazságos", "igazságtalan")) {
+    @DisplayName("regresszió: a képzőhatáron álló z+s, c+s két mássalhangzó — ragozva és -ség képzővel is")
+    void suffixBoundaryIsTwoConsonants() {
+        // A z/c végű tő és a -ság/-ség képző határán az írásképi zs/cs két hang, a
+        // rövid magánhangzó utáni szótag tehát helyzeténél fogva hosszú. A
+        // binárisból örökölt „gazság → gasság" átírás ebből csak a szóvégi
+        // igazság-típust fogta meg: „Az igazságot" ?UU-? lett ?U--? helyett, a
+        // „község" első szótaga pedig rövid maradt.
+        for (String word : List.of("igazság", "igazságot", "igazságos", "igazságtalan", "malacság", "kukacság")) {
             assertThat(scan(word)).as(word).startsWith("U-");
-            assertThat(Scansion.scan(word, STRICT).syllables().get(1).reason())
-                    .as(word)
-                    .isEqualTo(Scansion.Reason.POSITION_LONG);
+            assertThat(reason(word, 1)).as(word).isEqualTo(Scansion.Reason.POSITION_LONG);
         }
-        assertThat(scan("gazságot")).startsWith("--");
+        for (String word : List.of("község", "községben", "gazságot")) {
+            assertThat(scan(word)).as(word).startsWith("-");
+            assertThat(reason(word, 0)).as(word).isEqualTo(Scansion.Reason.POSITION_LONG);
+        }
 
-        // a valódi zs viszont egy mássalhangzó marad
+        // A kiírt szótag az eredeti betűket mutatja: a régi átírás „i | gas | ság"-ot
+        // írt, a „cság → csség" pedig a magánhangzót is elcsúsztatta („rács | ség").
+        assertThat(texts("igazság")).containsExactly("i", "gaz", "ság");
+        assertThat(texts("rácság")).containsExactly("rác", "ság");
+
+        // a valódi zs viszont egy mássalhangzó marad — tőben és ágy-összetételben is
         assertThat(scan("mazsola")).startsWith("UU");
+        assertThat(texts("masszázságy")).endsWith("zságy");
+    }
+
+    @Test
+    @DisplayName("regresszió: az ellenőrzött összetételekben a határon álló betűpár két hang")
+    void compoundBoundaryIsTwoConsonants() {
+        // kékes|zöld, tejes|zacskó, malac|sült: íráskép szerint sz és cs, valójában
+        // két hang — a rövid magánhangzó utáni szótag helyzeténél fogva hosszú
+        assertThat(texts("tejeszacskó")).containsExactly("te", "jes", "zacs", "kó");
+        assertThat(reason("tejeszacskó", 1)).isEqualTo(Scansion.Reason.POSITION_LONG);
+        assertThat(texts("kékeszöld")).containsExactly("ké", "kes", "zöld");
+        assertThat(reason("kékeszöld", 1)).isEqualTo(Scansion.Reason.POSITION_LONG);
+        assertThat(texts("malacsült")).containsExactly("ma", "lac", "sült");
+        assertThat(reason("malacsült", 1)).isEqualTo(Scansion.Reason.POSITION_LONG);
+        // a d+z a skandálást nem érinti, csak a szótagolást
+        assertThat(texts("vadzab")).containsExactly("vad", "zab");
+
+        // a szó elejéhez kötött előtag nem áll meg a szó belsejében: pipere|csomag
+        assertThat(texts("piperecsomag")).containsExactly("pi", "pe", "re", "cso", "mag");
+        assertThat(scan("piperecsomag")).startsWith("UUU");
+        assertThat(texts("szilvadzsem")).containsExactly("szil", "va", "dzsem");
     }
 
     @Test
