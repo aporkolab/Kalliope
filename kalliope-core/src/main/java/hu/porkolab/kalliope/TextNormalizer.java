@@ -25,8 +25,13 @@ public final class TextNormalizer {
     /** Magában álló mássalhangzók betűneve. */
     private static final Map<String, String> LETTER_NAMES = letterNames();
 
-    /** Szóvégi zöngésségi hasonulások. */
-    private static final Map<String, String> FINAL_REWRITES = Map.of("gazság", "gasság", "cság", "csség");
+    /**
+     * Zöngésségi hasonulások a képzőhatáron. A bináris csak szóvégen alkalmazta
+     * őket, így a ragozott és képzett alakban ({@code igazságot}, {@code igazságos})
+     * a {@code z+s} újra kétjegyű {@code zs}-nek látszott — ezért a szón belül
+     * bárhol cserélünk.
+     */
+    private static final Map<String, String> REWRITES = Map.of("gazság", "gasság", "cság", "csség");
 
     private TextNormalizer() {}
 
@@ -93,18 +98,18 @@ public final class TextNormalizer {
                     continue;
                 }
             }
-            out.add(applyFinalRewrites(w));
+            out.add(applyRewrites(w));
         }
         return out;
     }
 
-    private static String applyFinalRewrites(String word) {
-        for (Map.Entry<String, String> e : FINAL_REWRITES.entrySet()) {
-            if (word.endsWith(e.getKey())) {
-                return word.substring(0, word.length() - e.getKey().length()) + e.getValue();
-            }
+    private static String applyRewrites(String word) {
+        String out = word;
+        // a kulcsok nem fedik át egymást, tehát a Map.of bejárási sorrendje közömbös
+        for (Map.Entry<String, String> e : REWRITES.entrySet()) {
+            out = out.replace(e.getKey(), e.getValue());
         }
-        return word;
+        return out;
     }
 
     private static String keepLetters(String w) {

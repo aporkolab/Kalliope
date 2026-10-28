@@ -2,6 +2,7 @@ package hu.porkolab.kalliope;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,24 @@ class ScansionTest {
         assertThat(scan("apraja")).startsWith("?");
         assertThat(Scansion.scan("apraja", STRICT).syllables().get(0).reason())
                 .isEqualTo(Scansion.Reason.MUTA_CUM_LIQUIDA);
+    }
+
+    @Test
+    @DisplayName("regresszió: a képzőhatáron álló z+s ragozott alakban is két mássalhangzó (igazságot)")
+    void voicingAssimilationInsideTheWord() {
+        // A binárisból örökölt „gazság → gasság" átírás csak szóvégen futott, így
+        // a ragozott és képzett alakban a z+s kétjegyű zs-nek, EGY mássalhangzónak
+        // látszott, és a „ga" rövid lett: „Az igazságot" ?UU-? lett ?U--? helyett.
+        for (String word : List.of("igazság", "igazságot", "igazságos", "igazságtalan")) {
+            assertThat(scan(word)).as(word).startsWith("U-");
+            assertThat(Scansion.scan(word, STRICT).syllables().get(1).reason())
+                    .as(word)
+                    .isEqualTo(Scansion.Reason.POSITION_LONG);
+        }
+        assertThat(scan("gazságot")).startsWith("--");
+
+        // a valódi zs viszont egy mássalhangzó marad
+        assertThat(scan("mazsola")).startsWith("UU");
     }
 
     @Test
