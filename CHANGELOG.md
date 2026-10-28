@@ -1,5 +1,15 @@
 # Változásjegyzék
 
+## Kiadatlan
+
+### Verstani javítások
+
+- a binárisból örökölt kiejtési átírás (`gazság → gasság`, `cság → csség`) csak
+  szóvégen futott, ezért a ragozott és képzett alakban (`igazságot`,
+  `igazságos`, `gazságot`) a `z+s` újra `zs`-nek, egy mássalhangzónak látszott,
+  és a `ga` rövid lett: „Az igazságot" `?UU-?` volt `?U--?` helyett. Most a
+  szón belül bárhol fut; a 245 soros korpusz eredménye nem változott.
+
 ## 2.0.0
 
 A kiindulás egy `Kalliope.java` volt: egyetlen fájl, a metrikai adatbázissal
