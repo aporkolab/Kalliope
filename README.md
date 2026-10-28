@@ -40,6 +40,7 @@ Mivel a forráskód nem volt nyilvános, ezt a verziót a lefordított `kalliope
 * Ütemhangsúlyos elemzési ág és szakaszmérték-illesztés.
 * REST API és modern (Angular) webes felület.
 * A skandáló algoritmus és a rímdetektor finomhangolása (pl. Arany János szabályai szerinti rímfelismerés, közös szótagok dinamikus értékelése).
+* Szóelem-határ a kétjegyű betűk felismerésében: a -ság/-ség képzőhatár szabályként, összetételben ellenőrzött előtag-lista. Ez váltotta ki a kiejtési tábla két `z+s`/`c+s` átírását.
 
 ## Amit tud
 
@@ -191,6 +192,7 @@ Az algoritmus hiteles magyar verstani forrásokra épül (Fazekas Enciklopédia,
 
 * A szótag a következő magánhangzóig tart, **átlépve a szóhatárt**.
 * A kétjegyű betűk (`cs, sz, gy` stb.) egy, az `x` két mássalhangzónak számít. A kettőzött kétjegyűek (`ssz, ggy`) egy hosszú hangot jelölnek.
+* A szóelem-határon álló betűpár viszont két hang: a -ság/-ség képző előtt (`igaz|ság`, `köz|ség`) szabályból, összetételben (`kékes|zöld`, `malac|sült`) egy ellenőrzött előtag-listából.
 * **Közös szótag** (*syllaba communis*, `?`): a határozott névelő, a rövid nyílt szótagú kötőszók, a *muta cum liquida* szón belül, a görög aspiráták (`kh`, `th`) és az eldönthetetlen torlódások — itt a **szótag** hangtani minősítése ambivalens.
 * **Közömbös szótaghelyzet** (*syllaba anceps*, `?`): a **sorvég**. Itt nem a szótag kétértékű, hanem a *mérték* nem kér számot a hosszúságáról; a sorvégi szünet kitölti az időt. A két fogalmat a jelölés nem, az indoklás viszont megkülönbözteti.
 * **Kettőshangzók:** A görög-latin diftongusokra (`eu`, `au`) a motor változatokat állít elő, és a minta alapján dönti el az optimális olvasatot.
@@ -243,7 +245,7 @@ Amit egy kódolvasásból nem lehet kitalálni: miért így van.
 ## Ismert korlátok
 
 * **Ragrímek:** Mivel a rímdetektor a sorvégeket fonetikailag vizsgálja, a magyar ragrímek (pl. két `-nak` végződés) rímként jelennek meg.
-* **Íráskép vs. Kiejtés:** A szóösszetételi határon álló találkozások (pl. `község` -> `z+s`) íráskép alapján egy hangnak tűnhetnek, a kiejtési kivételszótár csak a leggyakoribb eseteket (pl. `igazság`) fedi le.
+* **Íráskép vs. Kiejtés:** A szóelem-határt a motor a -ság/-ség képzőnél szabályból, összetételben egy ellenőrzött előtag-listából ismeri. A listán kívüli összetételben (pl. egy alkalmi szóalkotásban) a határon álló `z+s`, `s+z`, `c+s` továbbra is egy hangnak látszik. A `zsz` (`száz|szor` vagy `varázs|zene`) és a `csz` (`lánc|szem` vagy `kulcs|zár`) írásképből eldönthetetlen; a skandálást nem érinti, csak a kiírt szótagolást.
 * **Ütemhangsúly:** Az illesztés szótagszámon és szóhatáron alapul, nem végez mély, kontextuális hangsúlyelemzést.
 
 ## Szövegek és Jogi helyzet

@@ -4,11 +4,44 @@
 
 ### Verstani javítások
 
-- a binárisból örökölt kiejtési átírás (`gazság → gasság`, `cság → csség`) csak
-  szóvégen futott, ezért a ragozott és képzett alakban (`igazságot`,
-  `igazságos`, `gazságot`) a `z+s` újra `zs`-nek, egy mássalhangzónak látszott,
-  és a `ga` rövid lett: „Az igazságot" `?UU-?` volt `?U--?` helyett. Most a
-  szón belül bárhol fut; a 245 soros korpusz eredménye nem változott.
+**Szóelem-határ a kétjegyű betűk felismerésében.** A felismerés írásképi volt,
+ezért a szóelem-határon álló `z+s`, `s+z`, `c+s`, `d+z` egy hangnak látszott, és
+rövid magánhangzó után a szótag rövid lett hosszú helyett:
+
+| Sor | Előtte | Utána |
+| --- | --- | --- |
+| Az igazságot | `?UU-?` | `?U--?` |
+| A község | `?U?` · `kö \| zség` | `?-?` · `köz \| ség` |
+| Malacsült | `UU?` · `ma \| la \| csült` | `U-?` · `ma \| lac \| sült` |
+| Kékeszöld | `-U?` · `ké \| ke \| szöld` | `--?` · `ké \| kes \| zöld` |
+| Tejeszacskó | `UU-?` · `te \| je \| szacs \| kó` | `U--?` · `te \| jes \| zacs \| kó` |
+| A vadzab | `?-?` · `va \| dzab` | `?-?` · `vad \| zab` |
+
+Az új `Morphology` a határt két forrásból ismeri:
+
+- **képzőhatár**: `z` vagy `c` végű tő és a -ság/-ség képző (`igaz|ság`,
+  `köz|ség`, `rác|ság`), szabályként, tehát ragozott alakban is;
+- **összetétel**: kézzel átnézett előtag-lista (`kékes`, `malac`, `ritmus`,
+  `tejes` és társaik). A jelölteket a huhyphn elválasztási mintái adták egy 3,1
+  millió szóalakos gyakorisági listán (OpenSubtitles 2018); a minta maga nem
+  került a motorba, mert idegen neveken téved (Argoszölő, Vaszilij), és a
+  böngészős változatot is megnövelné.
+
+Mindkettőt a minta ellen mértem a teljes listán: a képzőszabály 2706 szóalakon
+fut, és csak elírásokon (`igazség`, `kölcség`) vagy a minta saját tévedésein
+(`kukac|ság`, `nyápic|ság`) tér el tőle. Két előtagot az ütközések miatt
+kihagytam (`leves` → `le|veszem`, `pénzes` → `pénz|eszköz`), és általános `z|sz`
+szabály sem lett, mert a `száz|szor` mellett ott a `varázs|zene`.
+
+**A kiejtési tábla két bejegyzése helyett.** A binárisból örökölt
+`gazság → gasság` és `cság → csség` átírást a képzőszabály váltja ki. Ugyanazt
+méri, de a kiírt szótag az eredeti betűket mutatja (`i | gaz | ság`, nem
+`i | gas | ság`), és a `cság → csség` magánhangzó-csúszása sem marad meg: a
+`rácság` eddig `rács | ség` lett, és a rímdetektor a -ség szavakhoz sorolta, nem
+a `barátság` mellé.
+
+A 245 soros korpusz eredménye bájtra azonos, és a böngészős motor is bájtra
+egyezik a JVM-mel.
 
 ## 2.0.0
 

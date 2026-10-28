@@ -7,10 +7,16 @@ import java.util.Map;
 
 /**
  * Kiejtés szerinti előfeldolgozás — a {@code kalliope.exe} saját adata
- * ({@code FUN_00462a94}): rövidítések feloldása, magában álló mássalhangzók
- * betűnévvé bontása, és két zöngésségi hasonulás, ami megakadályozza, hogy a
- * szóösszetételi határon álló {@code z+s} kétjegyű betűnek látsszon
- * (igazság → igasság).
+ * ({@code FUN_00462a94}): rövidítések feloldása és a magában álló mássalhangzók
+ * betűnévvé bontása.
+ *
+ * <p>A bináris tábla két zöngésségi hasonulást is tartalmazott
+ * ({@code gazság → gasság}, {@code cság → csség}), hogy a képzőhatáron álló
+ * {@code z+s} ne látsszon kétjegyűnek. Ezt a {@link Morphology} képzőszabálya
+ * váltotta ki: ugyanazt méri, de ragozott alakban és a -ség képzővel is
+ * ({@code község}), a kiírt szótag az eredeti betűket mutatja, és a
+ * {@code cság → csség} magánhangzó-csúszását ({@code rácság → rács|ség}) sem
+ * viszi tovább.
  *
  * <p>A központozás-lista szintén a binárisé (0x463114).
  */
@@ -24,14 +30,6 @@ public final class TextNormalizer {
 
     /** Magában álló mássalhangzók betűneve. */
     private static final Map<String, String> LETTER_NAMES = letterNames();
-
-    /**
-     * Zöngésségi hasonulások a képzőhatáron. A bináris csak szóvégen alkalmazta
-     * őket, így a ragozott és képzett alakban ({@code igazságot}, {@code igazságos})
-     * a {@code z+s} újra kétjegyű {@code zs}-nek látszott — ezért a szón belül
-     * bárhol cserélünk.
-     */
-    private static final Map<String, String> REWRITES = Map.of("gazság", "gasság", "cság", "csség");
 
     private TextNormalizer() {}
 
@@ -98,16 +96,7 @@ public final class TextNormalizer {
                     continue;
                 }
             }
-            out.add(applyRewrites(w));
-        }
-        return out;
-    }
-
-    private static String applyRewrites(String word) {
-        String out = word;
-        // a kulcsok nem fedik át egymást, tehát a Map.of bejárási sorrendje közömbös
-        for (Map.Entry<String, String> e : REWRITES.entrySet()) {
-            out = out.replace(e.getKey(), e.getValue());
+            out.add(w);
         }
         return out;
     }
