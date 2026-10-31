@@ -4,7 +4,7 @@
 # A build szakaszok a BUILD gépen futnak, nem a célarchitektúrán: a kimenetük
 # (statikus bundle, jar) architektúra-független, tehát a több platformra
 # fordítás nem QEMU-emulációban zajlik. Csak a 4. szakasz per-platform.
-FROM --platform=$BUILDPLATFORM node:24-alpine AS web
+FROM --platform=$BUILDPLATFORM node:26-alpine AS web
 WORKDIR /web
 COPY kalliope-web/package.json kalliope-web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
@@ -14,7 +14,7 @@ RUN npm run build
 
 # ---------- 2. Maven build ----------
 # A pom-ok külön rétegben: kódmódosításkor nem tölti újra a világot.
-FROM --platform=$BUILDPLATFORM maven:3.9.16-eclipse-temurin-25-alpine AS build
+FROM --platform=$BUILDPLATFORM maven:3.10.0-eclipse-temurin-25-alpine AS build
 WORKDIR /src
 COPY pom.xml ./
 COPY kalliope-core/pom.xml kalliope-core/
@@ -30,13 +30,13 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 # ---------- 3. Rétegekre bontás ----------
 # Spring Boot 4.1: a -Djarmode=layertools MEGSZŰNT, a helyes hívás a tools jarmode.
-FROM --platform=$BUILDPLATFORM eclipse-temurin:26.0.2.1_1-jre-alpine AS extract
+FROM --platform=$BUILDPLATFORM eclipse-temurin:25.0.5_8-jre-alpine AS extract
 WORKDIR /builder
 COPY --from=build /src/application.jar ./application.jar
 RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
 
 # ---------- 4. Futtatás ----------
-FROM eclipse-temurin:26.0.2.1_1-jre-alpine
+FROM eclipse-temurin:25.0.5_8-jre-alpine
 
 # Ettől a GHCR magától a repóhoz köti a csomagot, és a csomag oldalán
 # megjelenik a readme meg a licenc — enélkül gazdátlan image marad.

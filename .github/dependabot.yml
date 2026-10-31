@@ -1,5 +1,6 @@
 # Angular 22 requires TypeScript 6; upgrade the compiler major with Angular deliberately.
 # The Maven image must retain Java 25 (the rejected floating tag downgrades it to 24).
+# Runtime images follow the Java LTS line (25), see the eclipse-temurin ignore below.
 version: 2
 updates:
 - package-ecosystem: github-actions
@@ -52,3 +53,8 @@ updates:
   - dependency-name: maven
     versions:
     - 3-eclipse-temurin-24-alpine
+  # LTS only: the JRE 26.0.2.1 AOT cache crashed the published image on startup.
+  # Remove the 26-28 range deliberately when the next LTS (29) arrives.
+  - dependency-name: eclipse-temurin
+    versions:
+    - ">= 26, < 29"
