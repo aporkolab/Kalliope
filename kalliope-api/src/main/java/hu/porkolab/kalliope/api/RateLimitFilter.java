@@ -43,9 +43,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return requestsPerMinute;
     }
 
+    /**
+     * A servlet path már dekódolt és normalizált: a nyers request URI-val a
+     * {@code /api/analyze;x=1} alak elkerülte a számlálót, a Spring mégis
+     * ugyanarra a végpontra vitte.
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !"/api/analyze".equals(request.getRequestURI());
+        String pathInfo = request.getPathInfo();
+        String path = pathInfo == null ? request.getServletPath() : request.getServletPath() + pathInfo;
+        return !"/api/analyze".equals(path);
     }
 
     @Override
@@ -56,7 +63,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
         long minute = System.currentTimeMillis() / Duration.ofMinutes(1).toMillis();
-        String client = clientKey(request);
+        // Az X-Forwarded-For-t NEM itt olvassuk: a kliens bármit beleírhat, és
+        // fejlécenként új számlálót kapott volna. A server.forward-headers-strategy
+        // a Tomcat RemoteIpValve-jára bízza, ami csak megbízható proxytól fogadja
+        // el, és jobbról olvassa — a remoteAddr így már a valódi kliens.
+        String client = request.getRemoteAddr();
         Window window = windows.compute(
                 client,
                 (key, current) -> current == null || current.minute() != minute
@@ -77,14 +88,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
             windows.entrySet().removeIf(e -> e.getValue().minute() != minute);
         }
         chain.doFilter(request, response);
-    }
-
-    private static String clientKey(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            int comma = forwarded.indexOf(',');
-            return (comma > 0 ? forwarded.substring(0, comma) : forwarded).trim();
-        }
-        return request.getRemoteAddr();
     }
 }
