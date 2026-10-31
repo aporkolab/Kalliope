@@ -196,6 +196,7 @@ export class App {
     this.error.set(null);
     this.lastAnalyzed = text;
     if (!text) {
+      this.discardPending();
       this.analysis.set(null);
       return;
     }
@@ -217,6 +218,15 @@ export class App {
         this.busy.set(false);
       },
     });
+  }
+
+  /**
+   * A még úton lévő kérés elavul: a válasza nem hozhatja vissza a törölt
+   * elemzést, és a „dolgozom” jelzés sem ragadhat be miatta.
+   */
+  private discardPending(): void {
+    this.requestId++;
+    this.busy.set(false);
   }
 
   protected toggleSetting(key: string): void {
@@ -301,6 +311,7 @@ export class App {
   }
 
   protected clear(): void {
+    this.discardPending();
     this.lastAnalyzed = '';
     this.poem.set('');
     this.analysis.set(null);
