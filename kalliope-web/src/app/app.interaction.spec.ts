@@ -126,6 +126,7 @@ interface Internals {
   canonQuery: WritableSignal<string>;
   tab: WritableSignal<string>;
   analyze: () => void;
+  cycleTheme: () => void;
   clear: () => void;
   share: () => void;
   exportJson: () => void;
@@ -203,6 +204,27 @@ describe('App interakciók', () => {
     expect(app.busy()).toBe(false);
     pending.flush(ANALYSIS);
     expect(app.analysis()).toBeNull();
+  });
+
+  it('a téma körbejár, a gyökérelemre kerül és megmarad', () => {
+    localStorage.removeItem('kalliope-theme');
+    bootstrap();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.hasAttribute('data-theme')).toBe(false);
+
+    app.cycleTheme();
+    fixture.detectChanges();
+    expect(host.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem('kalliope-theme')).toBe('light');
+
+    app.cycleTheme();
+    fixture.detectChanges();
+    expect(host.getAttribute('data-theme')).toBe('dark');
+
+    app.cycleTheme();
+    fixture.detectChanges();
+    expect(host.hasAttribute('data-theme')).toBe(false);
+    localStorage.removeItem('kalliope-theme');
   });
 
   it('üres szövegre nem küld kérést', () => {

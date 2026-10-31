@@ -1,4 +1,4 @@
-import { Component, HostBinding, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime } from 'rxjs';
@@ -31,6 +31,7 @@ type Tab = 'elemzes' | 'adatbazis';
   imports: [FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
+  host: { '[attr.data-theme]': 'themeAttribute()' },
 })
 export class App {
   private readonly api = inject(KalliopeService);
@@ -58,11 +59,11 @@ export class App {
   /** Téma: rendszerkövető, világos vagy sötét — a választás megmarad. */
   protected readonly theme = signal<'system' | 'light' | 'dark'>(readTheme());
 
-  @HostBinding('attr.data-theme')
-  get themeAttribute(): string | null {
+  /** A gyökérelem `data-theme` attribútuma; rendszerkövetőnél nincs. */
+  protected readonly themeAttribute = computed(() => {
     const t = this.theme();
     return t === 'system' ? null : t;
-  }
+  });
 
   /** Minden sor egyben — a ritmustérkép ezen fut végig. */
   protected readonly allLines = computed<Line[]>(() =>
