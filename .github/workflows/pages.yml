@@ -23,17 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # A TeaVM a Maven saját JVM-jében fut, és az ASM-je nem olvassa a Java
-      # 25-ös osztályfájlokat — ezért JDK 21. A motor 17-es bytecode-ra fordul,
-      # tehát ez nem visz el nyelvi elemet.
+      # Ugyanaz a JDK, mint a CI-ben: a TeaVM 0.16 már olvassa a Java 25-ös
+      # osztályfájlokat, a korábbi külön JDK 21 fölöslegessé vált.
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
           cache: maven
       - uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: "26"
           cache: npm
           cache-dependency-path: kalliope-web/package-lock.json
 
@@ -106,7 +105,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: "26"
           cache: npm
           cache-dependency-path: kalliope-web/package-lock.json
       - working-directory: kalliope-web
