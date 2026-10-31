@@ -80,7 +80,7 @@ Négy modul, egyetlen futtatható artefaktum (a negyedik csak a statikus változ
 | `kalliope-core` | A verstani motor, a metrikai kánon és a példatár. | **Csak a JDK** |
 | `kalliope-api` | REST-réteg + a felület kiszolgálása. | Spring Boot 4.1 |
 | `kalliope-web` | A webes felület. | Angular 22 |
-| `kalliope-js` | A motor JavaScriptre fordítva (TeaVM), a statikus változathoz. | TeaVM 0.12 |
+| `kalliope-js` | A motor JavaScriptre fordítva (TeaVM), a statikus változathoz. | TeaVM 0.16 |
 
 Az Angular build a Spring Boot `static/` mappájába kerül, így **nincs CORS probléma, és nem kell külön statikus hosting**.
 
@@ -88,7 +88,7 @@ Az Angular build a Spring Boot `static/` mappájába kerül, így **nincs CORS p
 
 | | GitHub Pages | Docker-image |
 | --- | --- | --- |
-| a motor | JavaScriptre fordítva a lapban (239 kB) | JVM-en, a REST API mögött |
+| a motor | JavaScriptre fordítva a lapban (259 kB) | JVM-en, a REST API mögött |
 | hálózat | nem kell, minden helyben fut | `/api` hívások |
 | felület | **ugyanaz a bundle** | ugyanaz a bundle |
 
@@ -102,7 +102,7 @@ A felület nem tud a különbségről: a `KalliopeService` futásidőben megnéz
 
 Az utolsó a legfontosabb: a TeaVM más futtatókörnyezetre képezi le a Java szemantikát, és ha bármi elcsúszik, a webes változat csendben adna más skandálást. A Pages-deploy elbukik, ha nem egyezik.
 
-A motor ezért 17-es bytecode-ra fordul (a TeaVM ASM-je nem olvas 25-öst), és nincs benne se regex, se `Integer::sum` — a `String.split` a `Character.UnicodeScript`-en át olyan JDK-belsőket ér el, amiket a TeaVM nem emulál. A kézi vágás egyenértékűségét a `StringsTest` a JDK kimenetéhez méri.
+A motor 17-es bytecode-ra fordul (könyvtárként ne kényszerítsen futásidejű verziót a hívójára), és nincs benne se regex, se `Integer::sum` — a `String.split` a `Character.UnicodeScript`-en át olyan JDK-belsőket ér el, amiket a TeaVM nem emulál. A kézi vágás egyenértékűségét a `StringsTest` a JDK kimenetéhez méri.
 
 ## Futtatás és Fejlesztés
 
@@ -143,7 +143,7 @@ java -jar kalliope-core/target/kalliope-core-*.jar --canon            # A metrik
 
 ```
 
-**A statikus változat építése** (ehhez JDK 21 kell a TeaVM-nek — a szokásos `verify` nem igényli):
+**A statikus változat építése** (ugyanazzal a JDK 25-tel; a szokásos `verify` nem futtatja):
 
 ```bash
 ./mvnw -Pjs -pl kalliope-js -am package     # a motor JavaScriptre
@@ -160,12 +160,13 @@ A főbb beállítások környezeti változóként is megadhatók:
 | --- | --- | --- |
 | `server.port` | `8080` | HTTP port |
 | `kalliope.rate-limit.requests-per-minute` | `60` | `/api/analyze` kérésszám-korlát (`0` kikapcsolja). Ezért vár tovább a gépelés közbeni elemzés API-s üzemmódban. |
+| `server.tomcat.remoteip.internal-proxies` | privát címtartományok | Melyik proxytól fogadjuk el az `X-Forwarded-For`-t. A korlát erre a címre számol; ha az image közvetlenül, Docker port-továbbítással néz az internetre, a híd címe (`172.17.0.1`) is privát, ilyenkor érdemes a saját proxy címére szűkíteni. |
 | `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75.0` | a compose ezt adja a JVM-nek |
 | `AOT_CACHE` (build arg) | `true` | az AOT-gyorsítótár építése; `false` esetén 346 MB az image |
 
 ### CI és Ellenőrzés
 
-A projekt szigorú minőségi kapukkal rendelkezik (80%-os tesztlefedettségi küszöb a motorban, az API-ban és a felületen, Spotless és Prettier kódformázás). Helyi ellenőrzéshez:
+A projekt szigorú minőségi kapukkal rendelkezik (80%-os tesztlefedettségi küszöb a motorban, az API-ban és a felületen, Spotless és Prettier kódformázás). A CI a Docker-image-et el is indítja, és egy valódi elemzést kér tőle, mielőtt bárhová publikálná. Helyi ellenőrzéshez (JDK 25, Node 26):
 
 ```bash
 ./mvnw verify
@@ -236,7 +237,7 @@ Amit egy kódolvasásból nem lehet kitalálni: miért így van.
 
 **Egy szerializáló van, nem kettő.** A böngészőben nincs reflexió, tehát Jackson sincs. Ha az API Jacksont használna, a webes változat pedig egy külön kézi kiírót, akkor két JSON-alak volna, és elcsúsznának. Így egyetlen kézi szerializáló van a magban, három ponton lehorgonyozva — a legerősebb kötés az, ami a **lefordított motor kimenetét a JVM-éhez** méri, bájtra, a teljes korpuszon.
 
-**LTS-fegyelem.** Java 25 LTS és Node 24 LTS. Négy Dependabot-PR-t ezért zártam le: a Java 26 nem LTS (jövő hónapban kifut), a Node 26 csak októbertől lesz az, a Maven-image bumpja pedig a pinjét lebegő `3`-ra oldotta volna, amivel a build nem reprodukálható. A TypeScript 7-et nem az elv, hanem az Angular zárta ki (`@angular/build` peer igénye `typescript >=6.0 <6.1`); a csoportból a jsdom emelését átvettem.
+**LTS-fegyelem.** Java 25 LTS és Node 26 LTS (októbertől az). Négy Dependabot-PR-t ezért zártam le: a Java 26 nem LTS, a Node 26 akkor még nem volt az, a Maven-image bumpja pedig a pinjét lebegő `3`-ra oldotta volna, amivel a build nem reprodukálható. A TypeScript 7-et nem az elv, hanem az Angular zárta ki (`@angular/build` peer igénye `typescript >=6.0 <6.1`); a csoportból a jsdom emelését átvettem. Ami mégis átcsúszott, az megbosszulta magát: a futtató réteg egy Dependabot-bumppal JRE 26.0.2.1-re került, aminek az AOT-gyorsítótára induláskor összeomlott, és a publikált image el sem indult. Azóta a futtató réteg is JRE 25 LTS, a Dependabot a 26–28-as JRE-ket figyelmen kívül hagyja, és a CI elindítja az image-et.
 
 **A korpuszban a nulla százalék is helyes válasz.** Zrínyi és Arany verse ütemhangsúlyos, nem időmértékes — ezekre a „nincs időmértékes találat" a hű felelet, és a motor a másik ágon ismeri fel őket. A küszöbök ezért versenkéntiek, nem globálisak.
 
