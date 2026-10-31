@@ -122,6 +122,7 @@ interface Internals {
   analysis: WritableSignal<Analysis | null>;
   error: WritableSignal<string | null>;
   copied: WritableSignal<boolean>;
+  busy: WritableSignal<boolean>;
   canonQuery: WritableSignal<string>;
   tab: WritableSignal<string>;
   analyze: () => void;
@@ -179,6 +180,29 @@ describe('App interakciók', () => {
     expect(app.poem()).toBe('');
     expect(app.analysis()).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Írj be egy verset');
+  });
+
+  it('a törlés után beérkező régi válasz nem hozza vissza az elemzést', () => {
+    bootstrap();
+    app.loadExample(EXAMPLE);
+    const pending = http.expectOne('/api/analyze');
+    app.clear();
+    expect(app.busy()).toBe(false);
+    pending.flush(ANALYSIS);
+    expect(app.analysis()).toBeNull();
+    expect(app.poem()).toBe('');
+  });
+
+  it('a szöveg kiürítése után beérkező régi válasz elavult', () => {
+    bootstrap();
+    app.poem.set('vers');
+    app.analyze();
+    const pending = http.expectOne('/api/analyze');
+    app.poem.set('');
+    app.analyze();
+    expect(app.busy()).toBe(false);
+    pending.flush(ANALYSIS);
+    expect(app.analysis()).toBeNull();
   });
 
   it('üres szövegre nem küld kérést', () => {
