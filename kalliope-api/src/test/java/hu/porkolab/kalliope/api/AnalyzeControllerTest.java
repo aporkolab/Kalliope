@@ -50,6 +50,26 @@ class AnalyzeControllerTest {
     }
 
     @Test
+    @DisplayName("null felülbírálás 400-at ad, nem 500-at")
+    void nullOverrideIsBadRequest() throws Exception {
+        mvc.perform(post("/api/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"vers\",\"overrides\":[null]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("hibás hosszúságjel a felülbírálásban 400")
+    void invalidOverrideQuantityIsBadRequest() throws Exception {
+        mvc.perform(post("/api/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"vers\",\"overrides\":[{\"line\":0,\"syllable\":0,\"quantity\":\"X\"}]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("U, - vagy ?")));
+    }
+
+    @Test
     @DisplayName("a kánon egyben adja a mértékeket, a beállításokat és a szótárakat")
     void canonIsSelfContained() throws Exception {
         mvc.perform(get("/api/canon"))
