@@ -2,6 +2,31 @@
 
 ## Kiadatlan
 
+### Üzemeltetés és biztonság
+
+- **A publikált image el sem indult.** A futtató réteg egy Dependabot-bumppal
+  JRE 26.0.2.1-re került, aminek az AOT-gyorsítótára induláskor fatálisan
+  összeomlott (`Unexpected exception when loading aot-linked classes`), azon a
+  gépen is, ahol tanították. A CI csak építette az image-et, ezért zölden ment
+  ki. A futtató réteg most JRE 25.0.5 LTS, a CI pedig elindítja az image-et, és
+  egy valódi `/api/analyze` választ kér tőle publikálás előtt.
+- **Két kiskapu a kérésszám-korlátban.** A szűrő bármelyik kliens
+  `X-Forwarded-For` fejlécét elhitte, így kérésenként új hamis címmel új
+  számlálót kapott; és a `/api/analyze;x=1` alak számlálás nélkül ért el a
+  végpontig. A fejlécet most a Tomcat `RemoteIpValve` dolgozza fel (csak
+  megbízható proxytól, jobbról olvasva), az útvonalat a normalizált servlet
+  path alapján nézem.
+- `{"overrides":[null]}` 500 helyett 400-at ad.
+- A felület törléskor eldobja a még úton lévő elemzést; eddig a késve érkező
+  válasz visszahozta a törölt eredményt.
+
+### Függőségek
+
+Spring Boot 4.1.2, Angular 22.2.4, Vitest 5.0.5, TeaVM 0.16, Node 26 LTS,
+Maven 3.10.0 a Docker-buildben. A TeaVM 0.16 olvassa a Java 25-ös
+osztályfájlokat, így a statikus változat építéséhez sem kell külön JDK 21.
+A TypeScript 6.0-n marad, mert az Angular 22 `>=6.0 <6.1`-et kér.
+
 ### Verstani javítások
 
 **Szóelem-határ a kétjegyű betűk felismerésében.** A felismerés írásképi volt,
