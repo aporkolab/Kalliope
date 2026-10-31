@@ -25,16 +25,16 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <spring-boot.version>4.1.1</spring-boot.version>
+    <spring-boot.version>4.1.2</spring-boot.version>
 
     <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
     <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
     <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
     <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
-    <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
-    <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
-    <palantir-java-format.version>2.97.0</palantir-java-format.version>
+    <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
+    <spotless-maven-plugin.version>3.10.4</spotless-maven-plugin.version>
+    <palantir-java-format.version>2.103.0</palantir-java-format.version>
   </properties>
 
   <dependencyManagement>
@@ -137,10 +137,10 @@
   </build>
 
   <!--
-    A böngészőbe fordított motor külön profilban van, mert a TeaVM a Maven saját
-    JVM-jében fut, és az ASM-je nem olvassa a Java 25-ös osztályfájlokat: ezt a
-    modult JDK 21 alatt kell építeni (./mvnw -Pjs -pl kalliope-js -am package).
-    Így a szokásos `./mvnw verify` nem igényel második JDK-t.
+    A böngészőbe fordított motor külön profilban van (./mvnw -Pjs -pl kalliope-js
+    -am package): a TeaVM-fordítás és a js-diff kapu csak a Pages-deployhoz kell,
+    a szokásos `./mvnw verify` ne fizessen érte. A TeaVM 0.16 óta ugyanaz a JDK 25
+    viszi, mint a többi modult — második JDK nem kell.
   -->
   <profiles>
     <profile>
